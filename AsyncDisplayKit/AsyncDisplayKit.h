@@ -98,3 +98,4 @@
 #import <AsyncDisplayKit/ASDisplayNode+Deprecated.h>
 
 #import <AsyncDisplayKit/ASCollectionNode+Beta.h>
+#import <AsyncDisplayKit/ASCollectionNode+ListKitBeta.h>

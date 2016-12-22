@@ -14,6 +14,7 @@
 #import "ASDelegateProxy.h"
 #import "ASCellNode+Internal.h"
 #import "ASCollectionDataController.h"
+#import "ASCollectionInternal.h"
 #import "ASCollectionViewLayoutController.h"
 #import "ASCollectionViewFlowLayoutInspector.h"
 #import "ASDisplayNodeExtras.h"
@@ -26,6 +27,8 @@
 #import "ASCollectionViewLayoutFacilitatorProtocol.h"
 #import "ASSectionContext.h"
 #import "ASCollectionView+Undeprecated.h"
+#import "ASIGListKitHelpers.h"
+#import <objc/runtime.h>
 
 /**
  * A macro to get self.collectionNode and assign it to a local variable, or return
@@ -58,6 +61,7 @@ typedef NS_ENUM(NSUInteger, ASCollectionViewInvalidationStyle) {
 
 static const NSUInteger kASCollectionViewAnimationNone = UITableViewRowAnimationNone;
 static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
+static NSString * const kSupplementaryReuseIdentifier = @"_ASCollectionSupplementaryView";
 
 #pragma mark -
 #pragma mark ASCellNode<->UICollectionViewCell bridging.
@@ -183,7 +187,13 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
    * (0 sections) we always check at least once after each update (initial reload is the first update.)
    */
   BOOL _hasEverCheckedForBatchFetchingDueToUpdate;
-    
+
+#if IG_LIST_KIT
+  __weak IGListAdapter *_listAdapter;
+#else
+  __weak id _listAdapter;
+#endif
+
   struct {
     unsigned int scrollViewDidScroll:1;
     unsigned int scrollViewWillBeginDragging:1;
@@ -243,8 +253,6 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
   } _layoutInspectorFlags;
 }
 
-@property (nonatomic, weak)   ASCollectionNode *collectionNode;
-
 @end
 
 @interface ASCollectionNode ()
@@ -256,12 +264,31 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
   __weak id<ASCollectionDelegate> _asyncDelegate;
   __weak id<ASCollectionDataSource> _asyncDataSource;
 }
+#if IG_LIST_KIT
+@synthesize listAdapter = _listAdapter;
+#endif
 
 // Using _ASDisplayLayer ensures things like -layout are properly forwarded to ASCollectionNode.
 + (Class)layerClass
 {
   return [_ASDisplayLayer class];
 }
+
+#if IG_LIST_KIT
++ (void)initialize
+{
+  /**
+   * Set ASCollectionView's superclass to IGListCollectionView.
+   * Scary! If IGListKit removed the subclassing restriction, we could
+   * use #if in the @interface to choose the superclass based on
+   * whether we have IGListKit available.
+   */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  class_setSuperclass([self class], [IGListCollectionView class]);
+#pragma clang diagnostic pop
+}
+#endif
 
 #pragma mark -
 #pragma mark Lifecycle.
@@ -394,14 +421,26 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 
 - (void)setDataSource:(id<UICollectionViewDataSource>)dataSource
 {
-  // UIKit can internally generate a call to this method upon changing the asyncDataSource; only assert for non-nil.
-  ASDisplayNodeAssert(dataSource == nil, @"ASCollectionView uses asyncDataSource, not UICollectionView's dataSource property.");
+  if (_listAdapter) {
+    // IGListAdapter sets collectionView.dataSource. We know that it really wants to be our
+    // asyncDataSource.
+    self.asyncDataSource = (id<ASCollectionDataSource>)dataSource;
+  } else {
+    // UIKit can internally generate a call to this method upon changing the asyncDataSource; only assert for non-nil.
+    ASDisplayNodeAssert(dataSource == nil, @"ASCollectionView uses asyncDataSource, not UICollectionView's dataSource property.");
+  }
 }
 
 - (void)setDelegate:(id<UICollectionViewDelegate>)delegate
 {
-  // Our UIScrollView superclass sets its delegate to nil on dealloc. Only assert if we get a non-nil value here.
-  ASDisplayNodeAssert(delegate == nil, @"ASCollectionView uses asyncDelegate, not UICollectionView's delegate property.");
+  if (_listAdapter) {
+    // IGListAdapter sets collectionView.delegate. We know that it really wants to be our
+    // asyncDelegate.
+    self.asyncDelegate = (id<ASCollectionDelegate>)delegate;
+  } else {
+    // Our UIScrollView superclass sets its delegate to nil on dealloc. Only assert if we get a non-nil value here.
+    ASDisplayNodeAssert(delegate == nil, @"ASCollectionView uses asyncDelegate, not UICollectionView's delegate property.");
+  }
 }
 
 - (void)proxyTargetHasDeallocated:(ASDelegateProxy *)proxy
@@ -417,6 +456,15 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 {
   return _asyncDataSource;
 }
+
+#if IG_LIST_KIT
+- (void)setListAdapter:(IGListAdapter *)listAdapter
+{
+  ASDisplayNodeAssertMainThread();
+  _listAdapter = listAdapter;
+  listAdapter.collectionView = (IGListCollectionView *)self;
+}
+#endif
 
 - (void)setAsyncDataSource:(id<ASCollectionDataSource>)asyncDataSource
 {
@@ -453,7 +501,8 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 
 
     ASDisplayNodeAssert(_asyncDataSourceFlags.collectionNodeNumberOfItemsInSection || _asyncDataSourceFlags.collectionViewNumberOfItemsInSection, @"Data source must implement collectionNode:numberOfItemsInSection:");
-    ASDisplayNodeAssert(_asyncDataSourceFlags.collectionNodeNodeBlockForItem
+    ASDisplayNodeAssert(_listAdapter != nil
+                        || _asyncDataSourceFlags.collectionNodeNodeBlockForItem
                         || _asyncDataSourceFlags.collectionNodeNodeForItem
                         || _asyncDataSourceFlags.collectionViewNodeBlockForItem
                         || _asyncDataSourceFlags.collectionViewNodeForItem, @"Data source must implement collectionNode:nodeBlockForItemAtIndexPath: or collectionNode:nodeForItemAtIndexPath:");
@@ -770,7 +819,7 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
   ASDisplayNodeAssert(elementKind != nil, @"A kind is needed for supplementary node registration");
   [_registeredSupplementaryKinds addObject:elementKind];
   [self registerClass:[UICollectionReusableView class] forSupplementaryViewOfKind:elementKind
-                                            withReuseIdentifier:[self __reuseIdentifierForKind:elementKind]];
+                                            withReuseIdentifier:kSupplementaryReuseIdentifier];
 }
 
 - (void)insertSections:(NSIndexSet *)sections
@@ -833,11 +882,6 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
   [_dataController moveRowAtIndexPath:indexPath toIndexPath:newIndexPath withAnimationOptions:kASCollectionViewAnimationNone];
 }
 
-- (NSString *)__reuseIdentifierForKind:(NSString *)kind
-{
-  return [@"_ASCollectionSupplementaryView_" stringByAppendingString:kind];
-}
-
 #pragma mark -
 #pragma mark Intercepted selectors.
 
@@ -859,8 +903,14 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 
 - (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
 {
-  NSString *identifier = [self __reuseIdentifierForKind:kind];
-  UICollectionReusableView *view = [self dequeueReusableSupplementaryViewOfKind:kind withReuseIdentifier:identifier forIndexPath:indexPath];
+  // Get the view, either from IGListKit or UIKit
+  UICollectionReusableView *view = nil;
+  if (_listAdapter) {
+    view = [(id<UICollectionViewDataSource>)_listAdapter collectionView:collectionView viewForSupplementaryElementOfKind:kind atIndexPath:indexPath];
+  } else {
+    view = [self dequeueReusableSupplementaryViewOfKind:kind withReuseIdentifier:kSupplementaryReuseIdentifier forIndexPath:indexPath];
+  }
+
   ASCellNode *node = [_dataController supplementaryNodeOfKind:kind atIndexPath:indexPath];
   ASDisplayNodeAssert(node != nil, @"Supplementary node should exist.  Kind = %@, indexPath = %@, collectionDataSource = %@", kind, indexPath, self);
   [_rangeController configureContentView:view forCellNode:node];
@@ -871,7 +921,14 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-  _ASCollectionViewCell *cell = [self dequeueReusableCellWithReuseIdentifier:kCellReuseIdentifier forIndexPath:indexPath];
+  // Get the cell, either from IGListKit or UIKit
+  _ASCollectionViewCell *cell = nil;
+  if (_listAdapter) {
+    cell = (_ASCollectionViewCell *)[(id<UICollectionViewDataSource>)_listAdapter collectionView:collectionView cellForItemAtIndexPath:indexPath];
+    ASDisplayNodeAssert([cell isKindOfClass:[_ASCollectionViewCell class]], @"Expected _ASCollectionViewCell.");
+  } else {
+    cell = [self dequeueReusableCellWithReuseIdentifier:kCellReuseIdentifier forIndexPath:indexPath];
+  }
   
   ASCellNode *node = [self nodeForItemAtIndexPath:indexPath];
   cell.node = node;
@@ -902,6 +959,10 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 
   ASDisplayNodeAssertNotNil(cellNode, @"Expected node associated with cell that will be displayed not to be nil. indexPath: %@", indexPath);
 
+  if (_listAdapter) {
+    [(id<UICollectionViewDelegate>)_listAdapter collectionView:collectionView willDisplayCell:cell forItemAtIndexPath:indexPath];
+  }
+
   if (_asyncDelegateFlags.collectionNodeWillDisplayItem) {
     if (ASCollectionNode *collectionNode = self.collectionNode) {
     	[_asyncDelegate collectionNode:collectionNode willDisplayItemWithNode:cellNode];
@@ -926,6 +987,10 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 {
   ASCellNode *cellNode = [cell node];
   ASDisplayNodeAssertNotNil(cellNode, @"Expected node associated with removed cell not to be nil.");
+
+  if (_listAdapter) {
+    [(id<UICollectionViewDelegate>)_listAdapter collectionView:collectionView didEndDisplayingCell:cell forItemAtIndexPath:indexPath];
+  }
 
   if (_asyncDelegateFlags.collectionNodeDidEndDisplayingItem) {
     if (ASCollectionNode *collectionNode = self.collectionNode) {
@@ -1286,6 +1351,21 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 
 - (BOOL)canBatchFetch
 {
+#if IG_LIST_KIT
+  if (_listAdapter) {
+    NSInteger sectionCount = self.dataController.numberOfSections;
+    if (sectionCount > 0) {
+      id<ASIGListSectionType> ctrl = [_listAdapter as_sectionControllerAtSection:sectionCount - 1];
+      // TODO: Cache these selectors. Could use a map table or associated objects. Probably map table to avoid runtime.
+      if ([ctrl respondsToSelector:@selector(shouldBatchFetch)]) {
+        return [ctrl shouldBatchFetch];
+      } else {
+        return [ctrl respondsToSelector:@selector(beginBatchFetchWithContext:)];
+      }
+    }
+  }
+#endif
+
   // if the delegate does not respond to this method, there is no point in starting to fetch
   BOOL canFetch = _asyncDelegateFlags.collectionNodeWillBeginBatchFetch || _asyncDelegateFlags.collectionViewWillBeginBatchFetch;
   if (canFetch && _asyncDelegateFlags.shouldBatchFetchForCollectionNode) {
@@ -1335,6 +1415,17 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 - (void)_beginBatchFetching
 {
   [_batchContext beginBatchFetching];
+#if IG_LIST_KIT
+  if (_listAdapter) {
+    NSInteger sectionCount = self.dataController.numberOfSections;
+    if (sectionCount > 0) {
+      id<ASIGListSectionType> ctrl = [_listAdapter as_sectionControllerAtSection:sectionCount - 1];
+      if ([ctrl respondsToSelector:@selector(beginBatchFetchWithContext:)]) {
+        [ctrl beginBatchFetchWithContext:_batchContext];
+      }
+    }
+  } else
+#endif
   if (_asyncDelegateFlags.collectionNodeWillBeginBatchFetch) {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
       GET_COLLECTIONNODE_OR_RETURN(collectionNode, (void)0);
@@ -1356,6 +1447,12 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 - (ASCellNodeBlock)dataController:(ASDataController *)dataController nodeBlockAtIndexPath:(NSIndexPath *)indexPath {
   ASCellNodeBlock block = nil;
 
+#if IG_LIST_KIT
+  if (_listAdapter) {
+    id<ASIGListSectionType> ctrl = [_listAdapter as_sectionControllerAtSection:indexPath.section];
+    block = [ctrl nodeBlockForItemAtIndex:indexPath.item];
+  } else
+#endif
   if (_asyncDataSourceFlags.collectionNodeNodeBlockForItem) {
     GET_COLLECTIONNODE_OR_RETURN(collectionNode, ^{ return [[ASCellNode alloc] init]; });
     block = [_asyncDataSource collectionNode:collectionNode nodeBlockForItemAtIndexPath:indexPath];
@@ -1451,6 +1548,14 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
 - (ASCellNode *)dataController:(ASCollectionDataController *)dataController supplementaryNodeOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
 {
   ASCellNode *node = nil;
+#if IG_LIST_KIT
+  if (_listAdapter) {
+    IGListSectionController<ASIGListSectionType> *ctrl = [_listAdapter as_sectionControllerAtSection:indexPath.section];
+    id<ASIGListSupplementaryViewSource> src = (id<ASIGListSupplementaryViewSource>)ctrl.supplementaryViewSource;
+    ASDisplayNodeAssert([src conformsToProtocol:@protocol(ASIGListSupplementaryViewSource)], @"Expected supplementary view source %@ to conform to %@", src, NSStringFromProtocol(@protocol(ASIGListSupplementaryViewSource)));
+    node = [src nodeForSupplementaryElementOfKind:kind atIndex:indexPath.item];
+  } else
+#endif
   if (_asyncDataSourceFlags.collectionNodeNodeForSupplementaryElement) {
     GET_COLLECTIONNODE_OR_RETURN(collectionNode, [[ASCellNode alloc] init] );
     node = [_asyncDataSource collectionNode:collectionNode nodeForSupplementaryElementOfKind:kind atIndexPath:indexPath];
@@ -1464,10 +1569,22 @@ static NSString * const kCellReuseIdentifier = @"_ASCollectionViewCell";
   return node;
 }
 
-// TODO: Lock this
-- (NSArray *)supplementaryNodeKindsInDataController:(ASCollectionDataController *)dataController
+- (NSArray *)supplementaryNodeKindsInDataController:(ASCollectionDataController *)dataController sections:(NSIndexSet *)sections
 {
-  return [_registeredSupplementaryKinds allObjects];
+#if IG_LIST_KIT
+  if (_listAdapter) {
+    NSMutableSet *kinds = [NSMutableSet set];
+    [sections enumerateIndexesUsingBlock:^(NSUInteger section, BOOL * _Nonnull stop) {
+      NSArray *kindsForSection = [[_listAdapter as_sectionControllerAtSection:section].supplementaryViewSource supportedElementKinds];
+      [kinds addObjectsFromArray:kindsForSection];
+    }];
+    return [kinds allObjects];
+  } else
+#endif
+  {
+    // TODO: Lock this
+    return [_registeredSupplementaryKinds allObjects];
+  }
 }
 
 - (ASSizeRange)dataController:(ASCollectionDataController *)dataController constrainedSizeForSupplementaryNodeOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
