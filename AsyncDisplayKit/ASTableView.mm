@@ -61,7 +61,7 @@ static NSString * const kCellReuseIdentifier = @"_ASTableViewCell";
 - (void)layoutSubviews
 {
   [super layoutSubviews];
-  [_delegate didLayoutSubviewsOfTableViewCell:self];
+  self.node.frame = self.contentView.bounds;
 }
 
 - (void)didTransitionToState:(UITableViewCellStateMask)state

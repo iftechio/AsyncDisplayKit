@@ -468,10 +468,7 @@ static UIApplicationState __ApplicationState = UIApplicationStateActive;
     [view removeFromSuperview];
   }
   
-  UIView *nodeView = node.view;
-  nodeView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  nodeView.frame = contentView.bounds;
-  [contentView addSubview:nodeView];
+  [contentView addSubview:node.view];
 }
 
 - (void)setTuningParameters:(ASRangeTuningParameters)tuningParameters forRangeMode:(ASLayoutRangeMode)rangeMode rangeType:(ASLayoutRangeType)rangeType
