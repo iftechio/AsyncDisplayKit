@@ -46,7 +46,6 @@
     [_textStorage addLayoutManager:_layoutManager];
     
     // Instead of calling [NSTextStorage initWithAttributedString:], setting attributedString just after calling addlayoutManager can fix CJK language layout issues.
-    // See https://github.com/facebook/AsyncDisplayKit/issues/2894
     if (attributedString) {
       [_textStorage setAttributedString:attributedString];
     }
