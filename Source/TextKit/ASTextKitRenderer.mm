@@ -35,8 +35,8 @@ static NSCharacterSet *_defaultAvoidTruncationCharacterSet()
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     NSMutableCharacterSet *mutableCharacterSet = [[NSMutableCharacterSet alloc] init];
-    [mutableCharacterSet formUnionWithCharacterSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    [mutableCharacterSet addCharactersInString:@".,!?:;"];
+    [mutableCharacterSet formUnionWithCharacterSet:[NSCharacterSet newlineCharacterSet]];
+//    [mutableCharacterSet addCharactersInString:@".,!?:;"];
     truncationCharacterSet = mutableCharacterSet;
   });
   return truncationCharacterSet;
