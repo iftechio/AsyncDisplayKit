@@ -48,7 +48,7 @@ ASLayoutElementContext ASLayoutElementContextMake(int32_t transitionID, BOOL nee
 }
 
 // Note: This is a non-recursive static lock. If it needs to be recursive, use ASDISPLAYNODE_MUTEX_RECURSIVE_INITIALIZER
-static ASDN::StaticMutex _layoutElementContextLock = ASDISPLAYNODE_MUTEX_INITIALIZER;
+static ASDN::StaticMutex& _layoutElementContextLock = *new ASDN::StaticMutex;
 static std::map<mach_port_t, ASLayoutElementContext> layoutElementContextMap;
 
 static inline mach_port_t ASLayoutElementGetCurrentContextKey()
