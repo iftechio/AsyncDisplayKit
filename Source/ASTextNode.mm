@@ -957,7 +957,8 @@ static CGRect ASTextNodeAdjustRenderRectForShadowPadding(CGRect rendererRect, UI
   if (inAdditionalTruncationMessage) {
     return YES;
   } else if (range.length && !linkCrossesVisibleRange && linkAttributeValue != nil && linkAttributeName != nil) {
-    return YES;
+    CGRect frame = [self frameForTextRange:range];
+    return CGRectContainsPoint(frame, point);
   } else {
     return NO;
   }
