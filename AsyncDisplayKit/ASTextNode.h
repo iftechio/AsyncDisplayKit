@@ -254,7 +254,7 @@ typedef NS_ENUM(NSUInteger, ASTextNodeHighlightStyle) {
 - (void)textNode:(ASTextNode *)textNode longPressedLinkAttribute:(NSString *)attribute value:(id)value atPoint:(CGPoint)point textRange:(NSRange)textRange;
 
 //! @abstract Called when the text node's truncation string has been tapped.
-- (void)textNodeTappedTruncationToken:(ASTextNode *)textNode;
+- (void)textNodeTappedTruncationToken:(ASTextNode *)textNode atPoint:(CGPoint)point;
 
 /**
  @abstract Indicates to the text node if an attribute should be considered a link.
