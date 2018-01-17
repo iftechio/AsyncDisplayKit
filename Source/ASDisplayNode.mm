@@ -914,6 +914,7 @@ static ASDisplayNodeMethodOverrides GetASDisplayNodeMethodOverrides(Class c)
     __instanceLock__.unlock();
     [self _u_measureNodeWithBoundsIfNecessary:bounds];
     __instanceLock__.lock();
+    _pendingDisplayNodeLayout = nullptr;
 
     [self _locked_layoutPlaceholderIfNecessary];
   }
