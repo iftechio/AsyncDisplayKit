@@ -1,11 +1,11 @@
 Pod::Spec.new do |spec|
   spec.name         = 'Texture'
-  spec.version      = '2.6'
+  spec.version      = '2.6-static'
   spec.license      =  { :type => 'BSD and Apache 2',  }
   spec.homepage     = 'http://texturegroup.org'
   spec.authors      = { 'Huy Nguyen' => 'huy@pinterest.com', 'Garrett Moon' => 'garrett@excitedpixel.com', 'Scott Goodson' => 'scottgoodson@gmail.com', 'Michael Schneider' => 'schneider@pinterest.com', 'Adlai Holler' => 'adlai@pinterest.com' }
   spec.summary      = 'Smooth asynchronous user interfaces for iOS apps.'
-  spec.source       = { :git => 'https://github.com/TextureGroup/Texture.git', :tag => spec.version.to_s }
+  spec.source       = { :git => 'https://github.com/ruguoapp/AsyncDisplayKit', :branch => 'patched-2.6' }
   spec.module_name  = 'AsyncDisplayKit'
   spec.header_dir   = 'AsyncDisplayKit'
 
@@ -13,6 +13,7 @@ Pod::Spec.new do |spec|
 
   spec.weak_frameworks = 'Photos','MapKit','AssetsLibrary'
   spec.requires_arc = true
+  spec.static_framework = true
 
   spec.ios.deployment_target = '8.0'
 
@@ -62,7 +63,7 @@ Pod::Spec.new do |spec|
   end
 
   # Include optional PINRemoteImage module
-  spec.default_subspec = 'PINRemoteImage'
+  # spec.default_subspec = 'PINRemoteImage'
 
   spec.social_media_url = 'https://twitter.com/TextureiOS'
   spec.library = 'c++'
