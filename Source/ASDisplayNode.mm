@@ -1544,7 +1544,7 @@ void recursivelyTriggerDisplayForLayer(CALayer *layer, BOOL shouldBlock)
         if (_clipCornerLayers[idx] == nil) {
           _clipCornerLayers[idx] = [[CALayer alloc] init];
           _clipCornerLayers[idx].zPosition = 99999;
-          _clipCornerLayers[idx].delegate = self;
+//          _clipCornerLayers[idx].delegate = self;
         }
       }
       [self _updateClipCornerLayerContentsWithRadius:_cornerRadius backgroundColor:self.backgroundColor];
