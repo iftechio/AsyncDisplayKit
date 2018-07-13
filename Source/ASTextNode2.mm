@@ -767,14 +767,14 @@ static NSArray *DefaultLinkAttributeNames = @[ NSLinkAttributeName ];
   ASDisplayNodeAssertMainThread();
   [super touchesEnded:touches withEvent:event];
   
+  CGPoint point = [[touches anyObject] locationInView:self.view];
   if ([self _pendingLinkTap] && [_delegate respondsToSelector:@selector(textNode:tappedLinkAttribute:value:atPoint:textRange:)]) {
-    CGPoint point = [[touches anyObject] locationInView:self.view];
     [_delegate textNode:(ASTextNode *)self tappedLinkAttribute:_highlightedLinkAttributeName value:_highlightedLinkAttributeValue atPoint:point textRange:_highlightRange];
   }
   
   if ([self _pendingTruncationTap]) {
-    if ([_delegate respondsToSelector:@selector(textNodeTappedTruncationToken:)]) {
-      [_delegate textNodeTappedTruncationToken:(ASTextNode *)self];
+    if ([_delegate respondsToSelector:@selector(textNodeTappedTruncationToken:atPoint:)]) {
+      [_delegate textNodeTappedTruncationToken:(ASTextNode *)self atPoint:point];
     }
   }
   
