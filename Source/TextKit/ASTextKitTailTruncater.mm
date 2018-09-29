@@ -158,7 +158,6 @@
     NSUInteger originalStringLength = textStorage.length;
 
     [layoutManager ensureLayoutForTextContainer:textContainer];
-    [self adjustTextContainerSize:textContainer byAddingLinespacingOf:textStorage];
     NSRange visibleGlyphRange = [layoutManager glyphRangeForBoundingRect:{ .size = textContainer.size }
                                                          inTextContainer:textContainer];
     NSRange visibleCharacterRange = [layoutManager characterRangeForGlyphRange:visibleGlyphRange
@@ -194,26 +193,6 @@
   }
 
   return NSMakeRange(NSNotFound, 0);
-}
-
-- (void)adjustTextContainerSize:(NSTextContainer *)textContainer
-          byAddingLinespacingOf:(NSTextStorage *)textStorage
-{
-  __block CGFloat lineSpacing = 0;
-  
-  if (textStorage != nil) {
-    [textStorage enumerateAttribute:NSParagraphStyleAttributeName inRange:NSMakeRange(0, textStorage.length) options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
-      if (value) {
-        NSParagraphStyle *paragraphStyle = (NSParagraphStyle *)value;
-        lineSpacing = paragraphStyle.lineSpacing;
-      }
-    }];
-  }
-  
-  CGFloat width = textContainer.size.width;
-  CGFloat height = textContainer.size.height + lineSpacing;
-  CGSize adjustedSize = CGSizeMake(width, height);
-  textContainer.size = adjustedSize;
 }
 
 @end
