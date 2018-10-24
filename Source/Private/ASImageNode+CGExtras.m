@@ -56,11 +56,11 @@ void ASCroppedImageBackingSizeAndDrawRectInBounds(CGSize sourceImageSize,
 
   size_t destinationWidth = boundsSize.width;
   size_t destinationHeight = boundsSize.height;
-  
+
   // Often, an image is too low resolution to completely fill the width and height provided.
   // Per the API contract as commented in the header, we will adjust input parameters (destinationWidth, destinationHeight) to ensure that the image is not upscaled on the CPU.
   CGFloat boundsAspectRatio = (CGFloat)destinationWidth / (CGFloat)destinationHeight;
-  
+
   CGSize minimumDestinationSize = sourceImageSize;
   BOOL cropToRectDimensions = !CGRectIsEmpty(cropRect);
   
@@ -73,7 +73,7 @@ void ASCroppedImageBackingSizeAndDrawRectInBounds(CGSize sourceImageSize,
     else if (contentMode == UIViewContentModeScaleAspectFit)
       minimumDestinationSize = _ASSizeFillWithAspectRatio(boundsAspectRatio, sourceImageSize);
   }
-  
+
   // If fitting the desired aspect ratio to the image size actually results in a larger buffer, use the input values.
   // However, if there is a pixel savings (e.g. we would have to upscale the image), override the function arguments.
   if (CGSizeEqualToSize(CGSizeZero, forcedSize) == NO) {
@@ -88,11 +88,11 @@ void ASCroppedImageBackingSizeAndDrawRectInBounds(CGSize sourceImageSize,
       return;
     }
   }
-  
+
   // Figure out the scaled size within the destination bounds.
   CGFloat sourceImageAspectRatio = sourceImageSize.width / sourceImageSize.height;
   CGSize scaledSizeForImage = CGSizeMake(destinationWidth, destinationHeight);
-  
+
   if (cropToRectDimensions) {
     scaledSizeForImage = CGSizeMake(boundsSize.width / cropRect.size.width, boundsSize.height / cropRect.size.height);
   } else {
@@ -101,7 +101,7 @@ void ASCroppedImageBackingSizeAndDrawRectInBounds(CGSize sourceImageSize,
     else if (contentMode == UIViewContentModeScaleAspectFit)
       scaledSizeForImage = _ASSizeFitWithAspectRatio(sourceImageAspectRatio, scaledSizeForImage);
   }
-  
+
   // Figure out the rectangle into which to draw the image.
   CGRect drawRect = CGRectZero;
   if (cropToRectDimensions) {
@@ -126,7 +126,7 @@ void ASCroppedImageBackingSizeAndDrawRectInBounds(CGSize sourceImageSize,
                             scaledSizeForImage.height);
     }
   }
-  
+
   *outDrawRect = drawRect;
   *outBackingSize = CGSizeMake(destinationWidth, destinationHeight);
 }
