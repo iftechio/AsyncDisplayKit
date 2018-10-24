@@ -67,10 +67,7 @@ void ASCroppedImageBackingSizeAndDrawRectInBounds(CGSize sourceImageSize,
   if (cropToRectDimensions) {
     scaledSizeForImage = CGSizeMake(boundsSize.width / cropRect.size.width, boundsSize.height / cropRect.size.height);
   } else {
-    if (contentMode == UIViewContentModeScaleAspectFill)
-      scaledSizeForImage = _ASSizeFillWithAspectRatio(boundsAspectRatio, sourceImageSize);
-    else if (contentMode == UIViewContentModeScaleAspectFit)
-      scaledSizeForImage = _ASSizeFitWithAspectRatio(boundsAspectRatio, sourceImageSize);
+    scaledSizeForImage = _ASSizeFillWithAspectRatio(boundsAspectRatio, sourceImageSize);
   }
 
   // If fitting the desired aspect ratio to the image size actually results in a larger buffer, use the input values.
