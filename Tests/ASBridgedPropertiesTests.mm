@@ -2,19 +2,9 @@
 //  ASBridgedPropertiesTests.mm
 //  Texture
 //
-//  Created by Adlai Holler on 1/7/16.
-//
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 #import <XCTest/XCTest.h>
@@ -31,6 +21,7 @@
 
 @interface ASBridgedPropertiesTestView : UIView
 @property (nonatomic, readonly) BOOL receivedSetNeedsLayout;
+@property (nonatomic, readonly) NSUInteger setNeedsDisplayCount;
 @end
 
 @implementation ASBridgedPropertiesTestView
@@ -39,6 +30,12 @@
 {
   _receivedSetNeedsLayout = YES;
   [super setNeedsLayout];
+}
+
+- (void)setNeedsDisplay
+{
+  _setNeedsDisplayCount += 1;
+  [super setNeedsDisplay];
 }
 
 @end
@@ -146,6 +143,32 @@ static inline void ASDispatchSyncOnOtherThread(dispatch_block_t block) {
   ASDispatchSyncOnOtherThread(^{
     XCTAssertThrows(node.contentsScale);
   });
+}
+
+- (void)testThatSettingTintColorSetNeedsDisplayOnView
+{
+  ASPendingStateController *ctrl = [ASPendingStateController sharedInstance];
+
+  ASDisplayNode *node = [[ASDisplayNode alloc] initWithViewClass:ASBridgedPropertiesTestView.class];
+  ASBridgedPropertiesTestView *view = (ASBridgedPropertiesTestView *)node.view;
+  NSUInteger initialSetNeedsDisplayCount = view.setNeedsDisplayCount;
+#if AS_AT_LEAST_IOS13
+  // This is called an extra time on iOS13 for unknown reasons. Need to Investigate.
+  if (@available(iOS 13.0, *)) {
+    XCTAssertEqual(initialSetNeedsDisplayCount, 2);
+  } else {
+    XCTAssertEqual(initialSetNeedsDisplayCount, 1);
+  }
+#endif
+
+  ASDispatchSyncOnOtherThread(^{
+    node.tintColor = UIColor.orangeColor;
+  });
+  XCTAssertNotEqualObjects(view.tintColor, UIColor.orangeColor);
+  XCTAssertEqual(view.setNeedsDisplayCount, initialSetNeedsDisplayCount);
+  [ctrl flush];
+  XCTAssertEqualObjects(view.tintColor, UIColor.orangeColor);
+  XCTAssertEqual(view.setNeedsDisplayCount, initialSetNeedsDisplayCount + 1);
 }
 
 - (void)testThatManuallyFlushingTheSyncControllerImmediatelyAppliesChanges

@@ -1,11 +1,10 @@
 //
 //  OverviewViewController.m
-//  Sample
+//  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the root directory of this source tree. An additional grant
-//  of patent rights can be found in the PATENTS file in the same directory.
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 #import "OverviewViewController.h"
@@ -37,7 +36,10 @@
     _layoutExamples = @[[HeaderWithRightAndLeftItems class],
                         [PhotoWithInsetTextOverlay class],
                         [PhotoWithOutsetIconOverlay class],
-                        [FlexibleSeparatorSurroundingContent class]];
+                        [FlexibleSeparatorSurroundingContent class],
+                        [CornerLayoutExample class],
+                        [UserProfileSample class]
+                        ];
   }
   
   return self;
@@ -60,9 +62,11 @@
   return [_layoutExamples count];
 }
 
-- (ASCellNode *)tableNode:(ASTableNode *)tableNode nodeForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-  return [[OverviewCellNode alloc] initWithLayoutExampleClass:_layoutExamples[indexPath.row]];
+- (ASCellNodeBlock)tableNode:(ASTableNode *)tableNode nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath {
+    Class layoutExample = _layoutExamples[indexPath.row];
+    return ^{
+        return [[OverviewCellNode alloc] initWithLayoutExampleClass:layoutExample];
+    };
 }
 
 - (void)tableNode:(ASTableNode *)tableNode didSelectRowAtIndexPath:(NSIndexPath *)indexPath

@@ -1,24 +1,16 @@
 //
 //  ViewController.swift
-//  Sample
+//  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 import UIKit
 import AsyncDisplayKit
 
-final class ViewController: ASViewController<ASDisplayNode>, ASTableDataSource, ASTableDelegate {
+final class ViewController: ASDKViewController<ASDisplayNode>, ASTableDataSource, ASTableDelegate {
 
   struct State {
     var itemCount: Int
@@ -37,7 +29,7 @@ final class ViewController: ASViewController<ASDisplayNode>, ASTableDataSource, 
 
   fileprivate(set) var state: State = .empty
 
-  init() {
+  override init() {
     super.init(node: ASTableNode())
     tableNode.delegate = self
     tableNode.dataSource = self
@@ -49,21 +41,24 @@ final class ViewController: ASViewController<ASDisplayNode>, ASTableDataSource, 
 
   // MARK: ASTableNode data source and delegate.
 
-  func tableNode(_ tableNode: ASTableNode, nodeForRowAt indexPath: IndexPath) -> ASCellNode {
+  func tableNode(_ tableNode: ASTableNode, nodeBlockForRowAt indexPath: IndexPath) -> ASCellNodeBlock {
     // Should read the row count directly from table view but
     // https://github.com/facebook/AsyncDisplayKit/issues/1159
     let rowCount = self.tableNode(tableNode, numberOfRowsInSection: 0)
 
     if state.fetchingMore && indexPath.row == rowCount - 1 {
-      let node = TailLoadingCellNode()
-      node.style.height = ASDimensionMake(44.0)
-      return node;
+      return {
+        let node = TailLoadingCellNode()
+        node.style.height = ASDimensionMake(44.0)
+        return node;
+      }
     }
-
-    let node = ASTextCellNode()
-    node.text = String(format: "[%ld.%ld] says hello!", indexPath.section, indexPath.row)
-
-    return node
+    
+    return {
+      let node = ASTextCellNode()
+      node.text = String(format: "[%ld.%ld] says hello!", indexPath.section, indexPath.row)
+      return node
+    }
   }
 
   func numberOfSections(in tableNode: ASTableNode) -> Int {

@@ -2,17 +2,9 @@
 //  ASTableViewTests.mm
 //  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 #import <XCTest/XCTest.h>
@@ -24,9 +16,10 @@
 #import <AsyncDisplayKit/ASCellNode.h>
 #import <AsyncDisplayKit/ASTableNode.h>
 #import <AsyncDisplayKit/ASTableView+Undeprecated.h>
-#import <JGMethodSwizzler/JGMethodSwizzler.h>
-#import "ASXCTExtensions.h"
 #import <AsyncDisplayKit/ASInternalHelpers.h>
+
+#import "ASTestCase.h"
+#import "ASXCTExtensions.h"
 
 #define NumberOfSections 10
 #define NumberOfReloadIterations 50
@@ -45,15 +38,8 @@
 
 @end
 
-@interface UITableView (Testing)
-// This will start recording all editing calls to UITableView
-// into the provided array.
-// Make sure to call [UITableView deswizzleInstanceMethods] to reset this.
-+ (void)as_recordEditingCallsIntoArray:(NSMutableArray<NSString *> *)selectors;
-@end
-
 @interface ASTestTableView : ASTableView
-@property (nonatomic, copy) void (^willDeallocBlock)(ASTableView *tableView);
+@property (nonatomic) void (^willDeallocBlock)(ASTableView *tableView);
 @end
 
 @implementation ASTestTableView
@@ -61,7 +47,7 @@
 - (instancetype)__initWithFrame:(CGRect)frame style:(UITableViewStyle)style
 {
   
-  return [super _initWithFrame:frame style:style dataControllerClass:[ASTestDataController class] owningNode:nil eventLog:nil];
+  return [super _initWithFrame:frame style:style dataControllerClass:[ASTestDataController class] owningNode:nil];
 }
 
 - (ASTestDataController *)testDataController
@@ -79,27 +65,36 @@
 @end
 
 @interface ASTableViewTestDelegate : NSObject <ASTableDataSource, ASTableDelegate>
-@property (nonatomic, copy) void (^willDeallocBlock)(ASTableViewTestDelegate *delegate);
+@property (nonatomic) void (^willDeallocBlock)(ASTableViewTestDelegate *delegate);
 @property (nonatomic) CGFloat headerHeight;
 @property (nonatomic) CGFloat footerHeight;
 @end
 
 @implementation ASTableViewTestDelegate
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
   return 0;
 }
+#pragma clang diagnostic pop
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (ASCellNode *)tableView:(ASTableView *)tableView nodeForRowAtIndexPath:(NSIndexPath *)indexPath
 {
   return nil;
 }
+#pragma clang diagnostic pop
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (ASCellNodeBlock)tableView:(ASTableView *)tableView nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath
 {
   return nil;
 }
+#pragma clang diagnostic pop
 
 - (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
 {
@@ -139,8 +134,9 @@
 
 @interface ASTableViewFilledDataSource : NSObject <ASTableDataSource, ASTableDelegate>
 @property (nonatomic) BOOL usesSectionIndex;
+@property (nonatomic) NSInteger numberOfSections;
 @property (nonatomic) NSInteger rowsPerSection;
-@property (nonatomic, nullable, copy) ASCellNodeBlock(^nodeBlockForItem)(NSIndexPath *);
+@property (nonatomic, nullable) ASCellNodeBlock(^nodeBlockForItem)(NSIndexPath *);
 @end
 
 @implementation ASTableViewFilledDataSource
@@ -149,6 +145,7 @@
 {
   self = [super init];
   if (self != nil) {
+    _numberOfSections = NumberOfSections;
     _rowsPerSection = 20;
   }
   return self;
@@ -163,16 +160,24 @@
   }
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-  return NumberOfSections;
+  return _numberOfSections;
 }
+#pragma clang diagnostic pop
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
   return _rowsPerSection;
 }
+#pragma clang diagnostic pop
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (ASCellNode *)tableView:(ASTableView *)tableView nodeForRowAtIndexPath:(NSIndexPath *)indexPath
 {
   ASTestTextCellNode *textCellNode = [ASTestTextCellNode new];
@@ -180,7 +185,10 @@
   
   return textCellNode;
 }
+#pragma clang diagnostic pop
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (ASCellNodeBlock)tableView:(ASTableView *)tableView nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath
 {
   if (_nodeBlockForItem) {
@@ -191,9 +199,11 @@
     ASTestTextCellNode *textCellNode = [ASTestTextCellNode new];
     textCellNode.text = [NSString stringWithFormat:@"{%d, %d}", (int)indexPath.section, (int)indexPath.row];
     textCellNode.backgroundColor = [UIColor whiteColor];
+    textCellNode.tintColor = [UIColor yellowColor];
     return textCellNode;
   };
 }
+#pragma clang diagnostic pop
 
 - (nullable NSArray<NSString *> *)sectionIndexTitlesForTableView:(UITableView *)tableView
 {
@@ -212,18 +222,29 @@
 
 @implementation ASTableViewFilledDelegate
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 - (ASSizeRange)tableView:(ASTableView *)tableView constrainedSizeForRowAtIndexPath:(NSIndexPath *)indexPath
 {
   return ASSizeRangeMake(CGSizeMake(10, 42));
 }
+#pragma clang diagnostic pop
 
 @end
 
-@interface ASTableViewTests : XCTestCase
+@interface ASTableViewTests : ASTestCase
 @property (nonatomic, retain) ASTableView *testTableView;
 @end
 
 @implementation ASTableViewTests
+
+- (void)setUp
+{
+  [super setUp];
+  ASConfiguration *config = [ASConfiguration new];
+  config.experimentalFeatures = ASExperimentalOptimizeDataControllerPipeline;
+  [ASConfigurationManager test_resetWithConfiguration:config];
+}
 
 - (void)testDataSourceImplementsNecessaryMethods
 {
@@ -600,7 +621,6 @@
 
 - (void)testThatInitialDataLoadHappensInOneShot
 {
-  NSMutableArray *selectors = [NSMutableArray array];
   ASTableNode *node = [[ASTableNode alloc] initWithStyle:UITableViewStylePlain];
 
   ASTableViewFilledDataSource *dataSource = [ASTableViewFilledDataSource new];
@@ -609,23 +629,25 @@
   node.dataSource = dataSource;
   node.delegate = dataSource;
 
-  [UITableView as_recordEditingCallsIntoArray:selectors];
+  __block NSUInteger reloadCallCount = 0;
+  __block IMP originalIMP = ASReplaceMethodWithBlock(UITableView.class, @selector(reloadData), ^(UITableView *_tableView) {
+    reloadCallCount += 1;
+    ((void (*)(id,SEL))originalIMP)(_tableView, @selector(reloadData));
+  });
+
   XCTAssertGreaterThan(node.numberOfSections, 0);
   [node waitUntilAllUpdatesAreProcessed];
   XCTAssertGreaterThan(node.view.numberOfSections, 0);
 
   // The first reloadData call helps prevent UITableView from calling it multiple times while ASDataController is working.
   // The second reloadData call is the real one.
-  NSArray *expectedSelectors = @[ NSStringFromSelector(@selector(reloadData)),
-                                  NSStringFromSelector(@selector(reloadData)) ];
-  XCTAssertEqualObjects(selectors, expectedSelectors);
+  XCTAssertEqual(reloadCallCount, 2);
 
-  [UITableView deswizzleAllInstanceMethods];
+  method_setImplementation(class_getInstanceMethod(UITableView.class, @selector(reloadData)), (IMP)originalIMP);
 }
 
 - (void)testThatReloadDataHappensInOneShot
 {
-  NSMutableArray *selectors = [NSMutableArray array];
   ASTableNode *node = [[ASTableNode alloc] initWithStyle:UITableViewStylePlain];
 
   ASTableViewFilledDataSource *dataSource = [ASTableViewFilledDataSource new];
@@ -640,16 +662,19 @@
   XCTAssertGreaterThan(node.view.numberOfSections, 0);
 
   // Reload data.
-  [UITableView as_recordEditingCallsIntoArray:selectors];
+  __block NSUInteger reloadCallCount = 0;
+  __block IMP originalIMP = ASReplaceMethodWithBlock(UITableView.class, @selector(reloadData), ^(UITableView *_tableView) {
+    reloadCallCount += 1;
+    ((void (*)(id,SEL))originalIMP)(_tableView, @selector(reloadData));
+  });
   [node reloadData];
   [node waitUntilAllUpdatesAreProcessed];
 
   // Assert that the beginning of the call pattern is correct.
   // There is currently noise that comes after that we will allow for this test.
-  NSArray *expectedSelectors = @[ NSStringFromSelector(@selector(reloadData)) ];
-  XCTAssertEqualObjects(selectors, expectedSelectors);
+  XCTAssertEqual(reloadCallCount, 1);
 
-  [UITableView deswizzleAllInstanceMethods];
+  method_setImplementation(class_getInstanceMethod(UITableView.class, @selector(reloadData)), (IMP)originalIMP);
 }
 
 /**
@@ -751,7 +776,7 @@
   ASTableViewFilledDataSource *ds = [[ASTableViewFilledDataSource alloc] init];
   ds.rowsPerSection = 1;
   node.dataSource = ds;
-  ASViewController *vc = [[ASViewController alloc] initWithNode:node];
+  ASDKViewController *vc = [[ASDKViewController alloc] initWithNode:node];
   UITabBarController *tabCtrl = [[UITabBarController alloc] init];
   tabCtrl.viewControllers = @[ vc ];
   tabCtrl.tabBar.translucent = NO;
@@ -807,7 +832,7 @@
 - (void)testAutomaticallyAdjustingContentOffset
 {
   ASTableNode *node = [[ASTableNode alloc] initWithStyle:UITableViewStylePlain];
-  node.view.automaticallyAdjustsContentOffset = YES;
+  node.automaticallyAdjustsContentOffset = YES;
   node.bounds = CGRectMake(0, 0, 100, 100);
   ASTableViewFilledDataSource *ds = [[ASTableViewFilledDataSource alloc] init];
   node.dataSource = ds;
@@ -833,54 +858,70 @@
   XCTAssertEqual(node.contentOffset.y, 10);
 }
 
-@end
-
-@implementation UITableView (Testing)
-
-+ (void)as_recordEditingCallsIntoArray:(NSMutableArray<NSString *> *)selectors
+- (void)testTableViewReloadDoesReloadIfEditableTextNodeIsFirstResponder
 {
-  [UITableView swizzleInstanceMethod:@selector(reloadData) withReplacement:JGMethodReplacementProviderBlock {
-    return JGMethodReplacement(void, UITableView *) {
-      JGOriginalImplementation(void);
-      [selectors addObject:NSStringFromSelector(_cmd)];
+  ASEditableTextNode *editableTextNode = [[ASEditableTextNode alloc] init];
+  
+  UIWindow *window = [[UIWindow alloc] initWithFrame:CGRectMake(0, 0, 375, 667)];
+  ASTableNode *node = [[ASTableNode alloc] initWithStyle:UITableViewStyleGrouped];
+  node.frame = window.bounds;
+  [window addSubnode:node];
+  
+  ASTableViewFilledDataSource *dataSource = [ASTableViewFilledDataSource new];
+  dataSource.rowsPerSection = 1;
+  dataSource.numberOfSections = 1;
+  // Currently this test requires that the text in the cell node fills the
+  // visible width, so we use the long description for the index path.
+  dataSource.nodeBlockForItem = ^(NSIndexPath *indexPath) {
+    return (ASCellNodeBlock)^{
+      ASCellNode *cellNode = [[ASCellNode alloc] init];
+      cellNode.automaticallyManagesSubnodes = YES;
+      cellNode.layoutSpecBlock = ^ASLayoutSpec * _Nonnull(__kindof ASDisplayNode * _Nonnull node, ASSizeRange constrainedSize) {
+        return [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(10, 10, 10, 10) child:editableTextNode];
+      };
+      return cellNode;
     };
-  }];
-  [UITableView swizzleInstanceMethod:@selector(beginUpdates) withReplacement:JGMethodReplacementProviderBlock {
-    return JGMethodReplacement(void, UITableView *) {
-      JGOriginalImplementation(void);
-      [selectors addObject:NSStringFromSelector(_cmd)];
-    };
-  }];
-  [UITableView swizzleInstanceMethod:@selector(endUpdates) withReplacement:JGMethodReplacementProviderBlock {
-    return JGMethodReplacement(void, UITableView *) {
-      JGOriginalImplementation(void);
-      [selectors addObject:NSStringFromSelector(_cmd)];
-    };
-  }];
-  [UITableView swizzleInstanceMethod:@selector(insertRowsAtIndexPaths:withRowAnimation:) withReplacement:JGMethodReplacementProviderBlock {
-    return JGMethodReplacement(void, UITableView *, NSArray *indexPaths, UITableViewRowAnimation anim) {
-      JGOriginalImplementation(void, indexPaths, anim);
-      [selectors addObject:NSStringFromSelector(_cmd)];
-    };
-  }];
-  [UITableView swizzleInstanceMethod:@selector(deleteRowsAtIndexPaths:withRowAnimation:) withReplacement:JGMethodReplacementProviderBlock {
-    return JGMethodReplacement(void, UITableView *, NSArray *indexPaths, UITableViewRowAnimation anim) {
-      JGOriginalImplementation(void, indexPaths, anim);
-      [selectors addObject:NSStringFromSelector(_cmd)];
-    };
-  }];
-  [UITableView swizzleInstanceMethod:@selector(insertSections:withRowAnimation:) withReplacement:JGMethodReplacementProviderBlock {
-    return JGMethodReplacement(void, UITableView *, NSIndexSet *indexes, UITableViewRowAnimation anim) {
-      JGOriginalImplementation(void, indexes, anim);
-      [selectors addObject:NSStringFromSelector(_cmd)];
-    };
-  }];
-  [UITableView swizzleInstanceMethod:@selector(deleteSections:withRowAnimation:) withReplacement:JGMethodReplacementProviderBlock {
-    return JGMethodReplacement(void, UITableView *, NSIndexSet *indexes, UITableViewRowAnimation anim) {
-      JGOriginalImplementation(void, indexes, anim);
-      [selectors addObject:NSStringFromSelector(_cmd)];
-    };
-  }];
+  };
+  node.delegate = dataSource;
+  node.dataSource = dataSource;
+  
+  // Reload the data for the initial load
+  [node reloadData];
+  [node waitUntilAllUpdatesAreProcessed];
+  [node setNeedsLayout];
+  [node layoutIfNeeded];
+ 
+  // Set the textView as first responder
+  [editableTextNode.textView becomeFirstResponder];
+  
+  // Change data source count and try to reload a second time
+  dataSource.rowsPerSection = 2;
+  [node reloadData];
+  [node waitUntilAllUpdatesAreProcessed];
+  
+  // Check that numberOfRows in section 0 is 2
+  XCTAssertEqual([node numberOfRowsInSection:0], 2);
+  XCTAssertEqual([node.view numberOfRowsInSection:0], 2);
+}
+
+
+- (void)testTintColorIsPropagatedToTableViewCell
+{
+  // If a tint color is explicitly defined on an ASCellNode, we should
+  CGSize tableViewSize = CGSizeMake(100, 500);
+  ASTestTableView *tableView = [[ASTestTableView alloc] initWithFrame:CGRectMake(0, 0, tableViewSize.width, tableViewSize.height)
+                                                                style:UITableViewStylePlain];
+  ASTableViewFilledDataSource *dataSource = [ASTableViewFilledDataSource new];
+
+  tableView.asyncDelegate = dataSource;
+  tableView.asyncDataSource = dataSource;
+
+  [tableView reloadData];
+  [tableView waitUntilAllUpdatesAreCommitted];
+  NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+  UITableViewCell *uikitCell = [tableView cellForRowAtIndexPath:indexPath];
+  BOOL areColorsEqual = CGColorEqualToColor(uikitCell.tintColor.CGColor, UIColor.yellowColor.CGColor);
+  XCTAssertTrue(areColorsEqual);
 }
 
 @end

@@ -2,24 +2,15 @@
 //  ASDataController.mm
 //  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 #import <AsyncDisplayKit/ASDataController.h>
 
 #import <AsyncDisplayKit/_ASHierarchyChangeSet.h>
 #import <AsyncDisplayKit/_ASScopeTimer.h>
-#import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASCellNode.h>
 #import <AsyncDisplayKit/ASCollectionElement.h>
 #import <AsyncDisplayKit/ASCollectionLayoutContext.h>
@@ -27,13 +18,11 @@
 #import <AsyncDisplayKit/ASDisplayNodeExtras.h>
 #import <AsyncDisplayKit/ASElementMap.h>
 #import <AsyncDisplayKit/ASLayout.h>
-#import <AsyncDisplayKit/ASLog.h>
 #import <AsyncDisplayKit/ASSignpost.h>
 #import <AsyncDisplayKit/ASMainSerialQueue.h>
 #import <AsyncDisplayKit/ASMutableElementMap.h>
 #import <AsyncDisplayKit/ASRangeManagingNode.h>
 #import <AsyncDisplayKit/ASThread.h>
-#import <AsyncDisplayKit/ASTwoDimensionalArrayUtils.h>
 #import <AsyncDisplayKit/ASSection.h>
 
 #import <AsyncDisplayKit/ASInternalHelpers.h>
@@ -44,8 +33,6 @@
 //#define LOG(...) NSLog(__VA_ARGS__)
 #define LOG(...)
 
-#define ASSERT_ON_EDITING_QUEUE ASDisplayNodeAssertNotNil(dispatch_get_specific(&kASDataControllerEditingQueueKey), @"%@ must be called on the editing transaction queue.", NSStringFromSelector(_cmd))
-
 const static char * kASDataControllerEditingQueueKey = "kASDataControllerEditingQueueKey";
 const static char * kASDataControllerEditingQueueContext = "kASDataControllerEditingQueueContext";
 
@@ -53,6 +40,8 @@ NSString * const ASDataControllerRowNodeKind = @"_ASDataControllerRowNodeKind";
 NSString * const ASCollectionInvalidUpdateException = @"ASCollectionInvalidUpdateException";
 
 typedef dispatch_block_t ASDataControllerCompletionBlock;
+
+typedef void (^ASDataControllerSynchronizationBlock)();
 
 @interface ASDataController () {
   id<ASDataControllerLayoutDelegate> _layoutDelegate;
@@ -65,9 +54,13 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
   ASMainSerialQueue *_mainSerialQueue;
 
   dispatch_queue_t _editingTransactionQueue;  // Serial background queue.  Dispatches concurrent layout and manages _editingNodes.
-  dispatch_group_t _editingTransactionGroup;     // Group of all edit transaction blocks. Useful for waiting.
+  dispatch_group_t _editingTransactionGroup;  // Group of all edit transaction blocks. Useful for waiting.
+  std::atomic<int> _editingTransactionGroupCount;
   
   BOOL _initialReloadDataHasBeenCalled;
+
+  BOOL _synchronized;
+  NSMutableSet<ASDataControllerSynchronizationBlock> *_onDidFinishSynchronizingBlocks;
 
   struct {
     unsigned int supplementaryNodeKindsInSections:1;
@@ -79,15 +72,15 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
   } _dataSourceFlags;
 }
 
-@property (atomic, copy, readwrite) ASElementMap *pendingMap;
-@property (atomic, copy, readwrite) ASElementMap *visibleMap;
+@property (copy) ASElementMap *pendingMap;
+@property (copy) ASElementMap *visibleMap;
 @end
 
 @implementation ASDataController
 
 #pragma mark - Lifecycle
 
-- (instancetype)initWithDataSource:(id<ASDataControllerSource>)dataSource node:(nullable id<ASRangeManagingNode>)node eventLog:(ASEventLog *)eventLog
+- (instancetype)initWithDataSource:(id<ASDataControllerSource>)dataSource node:(nullable id<ASRangeManagingNode>)node
 {
   if (!(self = [super init])) {
     return nil;
@@ -98,20 +91,19 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
   
   _dataSourceFlags.supplementaryNodeKindsInSections = [_dataSource respondsToSelector:@selector(dataController:supplementaryNodeKindsInSections:)];
   _dataSourceFlags.supplementaryNodesOfKindInSection = [_dataSource respondsToSelector:@selector(dataController:supplementaryNodesOfKind:inSection:)];
-  _dataSourceFlags.supplementaryNodeBlockOfKindAtIndexPath = [_dataSource respondsToSelector:@selector(dataController:supplementaryNodeBlockOfKind:atIndexPath:)];
+  _dataSourceFlags.supplementaryNodeBlockOfKindAtIndexPath = [_dataSource respondsToSelector:@selector(dataController:supplementaryNodeBlockOfKind:atIndexPath:shouldAsyncLayout:)];
   _dataSourceFlags.constrainedSizeForNodeAtIndexPath = [_dataSource respondsToSelector:@selector(dataController:constrainedSizeForNodeAtIndexPath:)];
   _dataSourceFlags.constrainedSizeForSupplementaryNodeOfKindAtIndexPath = [_dataSource respondsToSelector:@selector(dataController:constrainedSizeForSupplementaryNodeOfKind:atIndexPath:)];
   _dataSourceFlags.contextForSection = [_dataSource respondsToSelector:@selector(dataController:contextForSection:)];
-  
-#if ASEVENTLOG_ENABLE
-  _eventLog = eventLog;
-#endif
 
   self.visibleMap = self.pendingMap = [[ASElementMap alloc] init];
   
   _nextSectionID = 0;
   
   _mainSerialQueue = [[ASMainSerialQueue alloc] init];
+
+  _synchronized = YES;
+  _onDidFinishSynchronizingBlocks = [[NSMutableSet alloc] init];
   
   const char *queueName = [[NSString stringWithFormat:@"org.AsyncDisplayKit.ASDataController.editingTransactionQueue:%p", self] cStringUsingEncoding:NSASCIIStringEncoding];
   _editingTransactionQueue = dispatch_queue_create(queueName, DISPATCH_QUEUE_SERIAL);
@@ -137,47 +129,64 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
 
 #pragma mark - Cell Layout
 
-- (void)_allocateNodesFromElements:(NSArray<ASCollectionElement *> *)elements completion:(ASDataControllerCompletionBlock)completionHandler
+/**
+ * Allocates and layouts nodes from the given collection elements, and blocks the current thread while doing so.
+ *
+ * @param elements The elements from which nodes can be allocated and laid out.
+ * @param strictlyOnCurrentThread Whether or not all the work must be done strictly on the current thread.
+ * YES means all nodes will be allocated and laid out serially on the current thread.
+ * NO means the work can be offloaded to other thread(s), potentially reduce the blocking time on the calling thread.
+ */
+- (void)_allocateNodesFromElements:(NSArray<ASCollectionElement *> *)elements
+           strictlyOnCurrentThread:(BOOL)strictlyOnCurrentThread
 {
-  ASSERT_ON_EDITING_QUEUE;
-  
   NSUInteger nodeCount = elements.count;
   __weak id<ASDataControllerSource> weakDataSource = _dataSource;
   if (nodeCount == 0 || weakDataSource == nil) {
-    completionHandler();
     return;
   }
 
-  ASSignpostStart(ASSignpostDataControllerBatch);
+  ASSignpostStart(DataControllerBatch, self, "%@", ASObjectDescriptionMakeTiny(weakDataSource));
 
   {
     as_activity_create_for_scope("Data controller batch");
 
-    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-    ASDispatchApply(nodeCount, queue, 0, ^(size_t i) {
+    void(^work)(size_t) = ^(size_t i) {
       __strong id<ASDataControllerSource> strongDataSource = weakDataSource;
       if (strongDataSource == nil) {
         return;
       }
 
-      // Allocate the node.
-      ASCollectionElement *context = elements[i];
-      ASCellNode *node = context.node;
-      if (node == nil) {
-        ASDisplayNodeAssertNotNil(node, @"Node block created nil node; %@, %@", self, strongDataSource);
-        node = [[ASCellNode alloc] init]; // Fallback to avoid crash for production apps.
-      }
+      unowned ASCollectionElement *element = elements[i];
+
+      NSMutableDictionary *dict = [[NSThread currentThread] threadDictionary];
+      dict[ASThreadDictMaxConstraintSizeKey] =
+          [NSValue valueWithCGSize:element.constrainedSize.max];
+      unowned ASCellNode *node = element.node;
+      [dict removeObjectForKey:ASThreadDictMaxConstraintSizeKey];
 
       // Layout the node if the size range is valid.
-      ASSizeRange sizeRange = context.constrainedSize;
+      ASSizeRange sizeRange = element.constrainedSize;
       if (ASSizeRangeHasSignificantArea(sizeRange)) {
         [self _layoutNode:node withConstrainedSize:sizeRange];
       }
-    });
+    };
+    
+    if (strictlyOnCurrentThread) {
+      for (NSUInteger i = 0; i < nodeCount; i++) {
+        work(i);
+      }
+    } else {
+      dispatch_queue_t queue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0);
+      NSUInteger threadCount = 0;
+      if ([_dataSource dataControllerShouldSerializeNodeCreation:self]) {
+        threadCount = 1;
+      }
+      ASDispatchApply(nodeCount, queue, threadCount, work);
+    }
   }
 
-  completionHandler();
-  ASSignpostEndCustom(ASSignpostDataControllerBatch, self, 0, (weakDataSource != nil ? ASSignpostColorDefault : ASSignpostColorRed));
+  ASSignpostEnd(DataControllerBatch, self, "count: %lu", (unsigned long)nodeCount);
 }
 
 /**
@@ -185,6 +194,10 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
  */
 - (void)_layoutNode:(ASCellNode *)node withConstrainedSize:(ASSizeRange)constrainedSize
 {
+  if (![_dataSource dataController:self shouldEagerlyLayoutNode:node]) {
+    return;
+  }
+  
   ASDisplayNodeAssert(ASSizeRangeHasSignificantArea(constrainedSize), @"Attempt to layout cell node with invalid size range %@", NSStringFromASSizeRange(constrainedSize));
 
   CGRect frame = CGRectZero;
@@ -202,7 +215,7 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
     return @[];
   }
   
-  NSMutableArray<NSIndexPath *> *indexPaths = [NSMutableArray array];
+  const auto indexPaths = [[NSMutableArray<NSIndexPath *> alloc] init];
   if ([kind isEqualToString:ASDataControllerRowNodeKind]) {
     std::vector<NSInteger> counts = [self itemCountsFromDataSource];
     [sections enumerateRangesUsingBlock:^(NSRange range, BOOL * _Nonnull stop) {
@@ -271,6 +284,50 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
 }
 
 /**
+ * Update supplementary nodes of all kinds for sections.
+ *
+ * @param map The element map into which to apply the change.
+ * @param traitCollection The trait collection needed to initialize elements
+ * @param shouldFetchSizeRanges Whether constrained sizes should be fetched from data source
+ */
+- (void)_updateSupplementaryNodesIntoMap:(ASMutableElementMap *)map
+                         traitCollection:(ASPrimitiveTraitCollection)traitCollection
+                   shouldFetchSizeRanges:(BOOL)shouldFetchSizeRanges
+                             previousMap:(ASElementMap *)previousMap
+{
+  ASDisplayNodeAssertMainThread();
+  if (self.layoutDelegate != nil) {
+    // TODO: https://github.com/TextureGroup/Texture/issues/948
+    return;
+  }
+  NSUInteger sectionCount = [self itemCountsFromDataSource].size();
+  if (sectionCount > 0) {
+    NSIndexSet *sectionIndexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, sectionCount)];
+    ASSizeRange newSizeRange = ASSizeRangeZero;
+    for (NSString *kind in [self supplementaryKindsInSections:sectionIndexes]) {
+      NSArray<NSIndexPath *> *indexPaths = [self _allIndexPathsForItemsOfKind:kind inSections:sectionIndexes];
+      NSMutableArray<NSIndexPath *> *indexPathsToDeleteForKind = [[NSMutableArray alloc] init];
+      NSMutableArray<NSIndexPath *> *indexPathsToInsertForKind = [[NSMutableArray alloc] init];
+      // If supplementary node does exist and size is now zero, remove it.
+      // If supplementary node doesn't exist and size is now non-zero, insert one.
+      for (NSIndexPath *indexPath in indexPaths) {
+        ASCollectionElement *previousElement = [previousMap supplementaryElementOfKind:kind atIndexPath:indexPath];
+        newSizeRange = [self constrainedSizeForNodeOfKind:kind atIndexPath:indexPath];
+        BOOL sizeRangeIsZero = ASSizeRangeEqualToSizeRange(ASSizeRangeZero, newSizeRange);
+        if (previousElement != nil && sizeRangeIsZero) {
+          [indexPathsToDeleteForKind addObject:indexPath];
+        } else if (previousElement == nil && !sizeRangeIsZero) {
+          [indexPathsToInsertForKind addObject:indexPath];
+        }
+      }
+
+      [map removeSupplementaryElementsAtIndexPaths:indexPathsToDeleteForKind kind:kind];
+      [self _insertElementsIntoMap:map kind:kind atIndexPaths:indexPathsToInsertForKind traitCollection:traitCollection shouldFetchSizeRanges:shouldFetchSizeRanges changeSet:nil previousMap:previousMap];
+    }
+  }
+}
+
+/**
  * Inserts new elements of a certain kind for some sections
  *
  * @param kind The kind of the elements, e.g ASDataControllerRowNodeKind
@@ -328,6 +385,7 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
   LOG(@"Populating elements of kind: %@, for index paths: %@", kind, indexPaths);
   id<ASDataControllerSource> dataSource = self.dataSource;
   id<ASRangeManagingNode> node = self.node;
+  BOOL shouldAsyncLayout = YES;
   for (NSIndexPath *indexPath in indexPaths) {
     ASCellNodeBlock nodeBlock;
     id nodeModel;
@@ -349,12 +407,12 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
         }
       }
       if (nodeBlock == nil) {
-        nodeBlock = [dataSource dataController:self nodeBlockAtIndexPath:indexPath];
+        nodeBlock = [dataSource dataController:self nodeBlockAtIndexPath:indexPath shouldAsyncLayout:&shouldAsyncLayout];
       }
     } else {
-      nodeBlock = [dataSource dataController:self supplementaryNodeBlockOfKind:kind atIndexPath:indexPath];
+      nodeBlock = [dataSource dataController:self supplementaryNodeBlockOfKind:kind atIndexPath:indexPath shouldAsyncLayout:&shouldAsyncLayout];
     }
-    
+
     ASSizeRange constrainedSize = ASSizeRangeUnconstrained;
     if (shouldFetchSizeRanges) {
       constrainedSize = [self constrainedSizeForNodeOfKind:kind atIndexPath:indexPath];
@@ -367,6 +425,7 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
                                                                        owningNode:node
                                                                   traitCollection:traitCollection];
     [map insertElement:element atIndexPath:indexPath];
+    changeSet.countForAsyncLayout += (shouldAsyncLayout ? 1 : 0);
   }
 }
 
@@ -440,75 +499,93 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
 - (BOOL)isProcessingUpdates
 {
   ASDisplayNodeAssertMainThread();
-  if (_mainSerialQueue.numberOfScheduledBlocks > 0) {
-    return YES;
-  } else if (dispatch_group_wait(_editingTransactionGroup, DISPATCH_TIME_NOW) != 0) {
-    // After waiting for zero duration, a nonzero value is returned if blocks are still running.
-    return YES;
-  }
-  // Both the _mainSerialQueue and _editingTransactionQueue are drained; we are fully quiesced.
-  return NO;
+  return _mainSerialQueue.numberOfScheduledBlocks > 0 || _editingTransactionGroupCount > 0;
 }
 
-- (void)onDidFinishProcessingUpdates:(nullable void (^)())completion
+- (void)onDidFinishProcessingUpdates:(void (^)())completion
 {
   ASDisplayNodeAssertMainThread();
+  if (!completion) {
+    return;
+  }
   if ([self isProcessingUpdates] == NO) {
     ASPerformBlockOnMainThread(completion);
   } else {
     dispatch_async(_editingTransactionQueue, ^{
       // Retry the block. If we're done processing updates, it'll run immediately, otherwise
       // wait again for updates to quiesce completely.
-      [_mainSerialQueue performBlockOnMainThread:^{
+      // Don't use _mainSerialQueue so that we don't affect -isProcessingUpdates.
+      dispatch_async(dispatch_get_main_queue(), ^{
         [self onDidFinishProcessingUpdates:completion];
-      }];
+      });
     });
+  }
+}
+
+- (BOOL)isSynchronized {
+  return _synchronized;
+}
+
+- (void)onDidFinishSynchronizing:(void (^)())completion {
+  ASDisplayNodeAssertMainThread();
+  if (!completion) {
+    return;
+  }
+  if ([self isSynchronized]) {
+    ASPerformBlockOnMainThread(completion);
+  } else {
+    // Hang on to the completion block so that it gets called the next time view is synchronized to data.
+    [_onDidFinishSynchronizingBlocks addObject:[completion copy]];
   }
 }
 
 - (void)updateWithChangeSet:(_ASHierarchyChangeSet *)changeSet
 {
   ASDisplayNodeAssertMainThread();
+
+  _synchronized = NO;
+
+  [changeSet addCompletionHandler:^(BOOL finished) {
+    self->_synchronized = YES;
+    [self onDidFinishProcessingUpdates:^{
+      if (self->_synchronized) {
+        for (ASDataControllerSynchronizationBlock block in self->_onDidFinishSynchronizingBlocks) {
+          block();
+        }
+        [self->_onDidFinishSynchronizingBlocks removeAllObjects];
+      }
+    }];
+  }];
   
   if (changeSet.includesReloadData) {
     if (_initialReloadDataHasBeenCalled) {
-      as_log_debug(ASCollectionLog(), "reloadData %@", ASViewToDisplayNode(ASDynamicCast(self.dataSource, UIView)));
+      os_log_debug(ASCollectionLog(), "reloadData %@", ASViewToDisplayNode(ASDynamicCast(self.dataSource, UIView)));
     } else {
-      as_log_debug(ASCollectionLog(), "Initial reloadData %@", ASViewToDisplayNode(ASDynamicCast(self.dataSource, UIView)));
+      os_log_debug(ASCollectionLog(), "Initial reloadData %@", ASViewToDisplayNode(ASDynamicCast(self.dataSource, UIView)));
       _initialReloadDataHasBeenCalled = YES;
     }
   } else {
-    as_log_debug(ASCollectionLog(), "performBatchUpdates %@ %@", ASViewToDisplayNode(ASDynamicCast(self.dataSource, UIView)), changeSet);
+    os_log_debug(ASCollectionLog(), "performBatchUpdates %@ %@", ASViewToDisplayNode(ASDynamicCast(self.dataSource, UIView)), changeSet);
   }
-  
-  NSTimeInterval transactionQueueFlushDuration = 0.0f;
-  {
-    ASDN::ScopeTimer t(transactionQueueFlushDuration);
-    dispatch_group_wait(_editingTransactionGroup, DISPATCH_TIME_FOREVER);
+
+  if (!ASActivateExperimentalFeature(ASExperimentalOptimizeDataControllerPipeline)) {
+    NSTimeInterval transactionQueueFlushDuration = 0.0f;
+    {
+      AS::ScopeTimer t(transactionQueueFlushDuration);
+      dispatch_group_wait(_editingTransactionGroup, DISPATCH_TIME_FOREVER);
+    }
   }
-  
+
   // If the initial reloadData has not been called, just bail because we don't have our old data source counts.
   // See ASUICollectionViewTests.testThatIssuingAnUpdateBeforeInitialReloadIsUnacceptable
   // for the issue that UICollectionView has that we're choosing to workaround.
   if (!_initialReloadDataHasBeenCalled) {
-    as_log_debug(ASCollectionLog(), "%@ Skipped update because load hasn't happened.", ASObjectDescriptionMakeTiny(_dataSource));
+    os_log_debug(ASCollectionLog(), "%@ Skipped update because load hasn't happened.", ASObjectDescriptionMakeTiny(_dataSource));
     [changeSet executeCompletionHandlerWithFinished:YES];
     return;
   }
   
   [self invalidateDataSourceItemCounts];
-  
-  // Log events
-#if ASEVENTLOG_ENABLE
-  ASDataControllerLogEvent(self, @"updateWithChangeSet waited on previous update for %fms. changeSet: %@",
-                           transactionQueueFlushDuration * 1000.0f, changeSet);
-  NSTimeInterval changeSetStartTime = CACurrentMediaTime();
-  NSString *changeSetDescription = ASObjectDescriptionMakeTiny(changeSet);
-  [changeSet addCompletionHandler:^(BOOL finished) {
-    ASDataControllerLogEvent(self, @"finishedUpdate in %fms: %@",
-                             (CACurrentMediaTime() - changeSetStartTime) * 1000.0f, changeSetDescription);
-  }];
-#endif
   
   // Attempt to mark the update completed. This is when update validation will occur inside the changeset.
   // If an invalid update exception is thrown, we catch it and inject our "validationErrorSource" object,
@@ -526,7 +603,7 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
 
   BOOL canDelegate = (self.layoutDelegate != nil);
   ASElementMap *newMap;
-  id layoutContext;
+  ASCollectionLayoutContext *layoutContext;
   {
     as_activity_scope(as_activity_create("Latch new data for collection update", changeSet.rootActivity, OS_ACTIVITY_FLAG_DEFAULT));
 
@@ -555,43 +632,83 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
     }
   }
 
-  as_log_debug(ASCollectionLog(), "New content: %@", newMap.smallDescription);
+  os_log_debug(ASCollectionLog(), "New content: %@", newMap.smallDescription);
 
   Class<ASDataControllerLayoutDelegate> layoutDelegateClass = [self.layoutDelegate class];
+
+  // Step 3: Call the layout delegate if possible. Otherwise, allocate and layout all elements
+  void (^step3)(BOOL) = ^(BOOL strictlyOnCurrentThread){
+    if (canDelegate) {
+      // Don't pass strictlyOnCurrentThread to the layout delegate. Instead give it
+      // total control over its threading behavior, as long as it blocks the
+      // calling thread while preparing the layout (which is part of the API contract).
+      [layoutDelegateClass calculateLayoutWithContext:layoutContext];
+    } else {
+      const auto elementsToProcess = [[NSMutableArray<ASCollectionElement *> alloc] init];
+      for (ASCollectionElement *element in newMap) {
+        ASCellNode *nodeIfAllocated = element.nodeIfAllocated;
+        if (nodeIfAllocated.shouldUseUIKitCell) {
+          // If the node exists and we know it is a passthrough cell, we know it will never have a .calculatedLayout.
+          continue;
+        } else if (nodeIfAllocated.calculatedLayout == nil) {
+          // If the node hasn't been allocated, or it doesn't have a valid layout, let's process it.
+          [elementsToProcess addObject:element];
+        }
+      }
+      [self _allocateNodesFromElements:elementsToProcess
+               strictlyOnCurrentThread:strictlyOnCurrentThread];
+    }
+  };
+
+  // Step 3 can be done on the main thread or on _editingTransactionQueue
+  // depending on an experiment.
+  BOOL mainThreadOnly = ASActivateExperimentalFeature(ASExperimentalMainThreadOnlyDataController);
+  if (mainThreadOnly) {
+    // In main-thread-only mode allocate and layout all nodes serially on the main thread.
+    //
+    // After this step, we'll still dispatch to _editingTransactionQueue only to schedule a block
+    // to _mainSerialQueue to execute next steps. This is not optimized because
+    // in theory we can skip _editingTransactionQueue entirely, but it's much safer
+    // because change sets will still flow through the pipeline in pretty the same way
+    // (main thread -> _editingTransactionQueue -> _mainSerialQueue) and so
+    // any methods that block on _editingTransactionQueue will still work.
+    step3(YES);
+  }
+
+  ++_editingTransactionGroupCount;
   dispatch_group_async(_editingTransactionGroup, _editingTransactionQueue, ^{
     __block __unused os_activity_scope_state_s preparationScope = {}; // unused if deployment target < iOS10
     as_activity_scope_enter(as_activity_create("Prepare nodes for collection update", AS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT), &preparationScope);
 
-    dispatch_block_t completion = ^() {
-      [_mainSerialQueue performBlockOnMainThread:^{
-        as_activity_scope_leave(&preparationScope);
-        // Step 4: Inform the delegate
-        [_delegate dataController:self updateWithChangeSet:changeSet updates:^{
-          // Step 5: Deploy the new data as "completed"
-          //
-          // Note that since the backing collection view might be busy responding to user events (e.g scrolling),
-          // it will not consume the batch update blocks immediately.
-          // As a result, in a short intermidate time, the view will still be relying on the old data source state.
-          // Thus, we can't just swap the new map immediately before step 4, but until this update block is executed.
-          // (https://github.com/TextureGroup/Texture/issues/378)
-          self.visibleMap = newMap;
-        }];
-      }];
-    };
-
-    // Step 3: Call the layout delegate if possible. Otherwise, allocate and layout all elements
-    if (canDelegate) {
-      [layoutDelegateClass calculateLayoutWithContext:layoutContext];
-      completion();
-    } else {
-      NSArray<ASCollectionElement *> *elementsToProcess = ASArrayByFlatMapping(newMap,
-                                                                               ASCollectionElement *element,
-                                                                               (element.nodeIfAllocated.calculatedLayout == nil ? element : nil));
-      [self _allocateNodesFromElements:elementsToProcess completion:completion];
+    if (!mainThreadOnly) {
+      step3(NO);
     }
+
+    // Step 4: Inform the delegate on main thread
+    [self->_mainSerialQueue performBlockOnMainThread:^{
+      as_activity_scope_leave(&preparationScope);
+      [self->_delegate dataController:self updateWithChangeSet:changeSet updates:^{
+        // Step 5: Deploy the new data as "completed"
+        //
+        // Note that since the backing collection view might be busy responding to user events (e.g scrolling),
+        // it will not consume the batch update blocks immediately.
+        // As a result, in a short intermidate time, the view will still be relying on the old data source state.
+        // Thus, we can't just swap the new map immediately before step 4, but until this update block is executed.
+        // (https://github.com/TextureGroup/Texture/issues/378)
+        self.visibleMap = newMap;
+      }];
+    }];
+    --self->_editingTransactionGroupCount;
   });
-  
-  if (_usesSynchronousDataLoading) {
+
+  // We've now dispatched node allocation and layout to a concurrent background queue.
+  // In some cases, it's advantageous to prevent the main thread from returning, to ensure the next
+  // frame displayed to the user has the view updates in place. Doing this does slightly reduce
+  // total latency, by donating the main thread's priority to the background threads. As such, the
+  // two cases where it makes sense to block:
+  // 1. There is very little work to be performed in the background (UIKit passthrough)
+  // 2. There is a higher priority on display latency than smoothness, e.g. app startup.
+  if ([_dataSource dataController:self shouldSynchronouslyProcessChangeSet:changeSet]) {
     [self waitUntilAllUpdatesAreProcessed];
   }
 }
@@ -721,8 +838,9 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
 
 #pragma mark - Relayout
 
-- (void)relayoutNodes:(id<NSFastEnumeration>)nodes nodesSizeChanged:(NSMutableArray *)nodesSizesChanged
+- (void)relayoutNodes:(id<NSFastEnumeration>)nodes nodesSizeChanged:(NSMutableArray<ASCellNode *> *)nodesSizesChanged
 {
+  NSParameterAssert(nodes);
   NSParameterAssert(nodesSizesChanged);
   
   ASDisplayNodeAssertMainThread();
@@ -731,10 +849,10 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
   }
   
   id<ASDataControllerSource> dataSource = self.dataSource;
-  auto visibleMap = self.visibleMap;
-  auto pendingMap = self.pendingMap;
+  const auto visibleMap = self.visibleMap;
+  const auto pendingMap = self.pendingMap;
   for (ASCellNode *node in nodes) {
-    auto element = node.collectionElement;
+    const auto element = node.collectionElement;
     NSIndexPath *indexPathInPendingMap = [pendingMap indexPathForElement:element];
     // Ensure the element is present in both maps or skip it. If it's not in the visible map,
     // then we can't check the presented size. If it's not in the pending map, we can't get the constrained size.
@@ -779,6 +897,18 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
 - (void)_relayoutAllNodes
 {
   ASDisplayNodeAssertMainThread();
+  // Aggressively repopulate all supplemtary elements
+  // Assuming this method is run on the main serial queue, _pending and _visible maps are synced and can be manipulated directly.
+  ASDisplayNodeAssert(_visibleMap == _pendingMap, @"Expected visible and pending maps to be synchronized: %@", self);
+
+  ASMutableElementMap *newMap = [_pendingMap mutableCopy];
+  [self _updateSupplementaryNodesIntoMap:newMap
+                         traitCollection:[self.node primitiveTraitCollection]
+                   shouldFetchSizeRanges:YES
+                             previousMap:_pendingMap];
+  _pendingMap = [newMap copy];
+  _visibleMap = _pendingMap;
+
   for (ASCollectionElement *element in _visibleMap) {
     // Ignore this element if it is no longer in the latest data. It is still recognized in the UIKit world but will be deleted soon.
     NSIndexPath *indexPathInPendingMap = [_pendingMap indexPathForElement:element];
@@ -807,7 +937,7 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
 - (void)environmentDidChange
 {
   ASPerformBlockOnMainThread(^{
-    if (!_initialReloadDataHasBeenCalled) {
+    if (!self->_initialReloadDataHasBeenCalled) {
       return;
     }
 
@@ -815,11 +945,20 @@ typedef dispatch_block_t ASDataControllerCompletionBlock;
     // i.e there might be some elements that were allocated using the old trait collection but haven't been added to _visibleMap
     [self _scheduleBlockOnMainSerialQueue:^{
       ASPrimitiveTraitCollection newTraitCollection = [self.node primitiveTraitCollection];
-      for (ASCollectionElement *element in _visibleMap) {
+      for (ASCollectionElement *element in self->_visibleMap) {
         element.traitCollection = newTraitCollection;
       }
     }];
   });
+}
+
+- (void)clearData
+{
+  ASDisplayNodeAssertMainThread();
+  if (_initialReloadDataHasBeenCalled) {
+    [self waitUntilAllUpdatesAreProcessed];
+    self.visibleMap = self.pendingMap = [[ASElementMap alloc] init];
+  }
 }
 
 # pragma mark - Helper methods

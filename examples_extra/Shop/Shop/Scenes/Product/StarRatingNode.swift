@@ -1,9 +1,9 @@
 //
 //  StarRatingNode.swift
-//  Shop
+//  Texture
 //
-//  Created by Dimitri on 15/11/2016.
-//  Copyright © 2016 Dimitri. All rights reserved.
+//  Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 import UIKit
@@ -36,7 +36,7 @@ class StarRatingNode: ASDisplayNode {
         for i in 0..<5 {
             let imageNode = ASImageNode()
             imageNode.image = i <= self.rating ? UIImage(named: "filled_star") : UIImage(named: "unfilled_star")
-            imageNode.preferredFrameSize = self.starSize
+            imageNode.style.preferredSize = self.starSize
             self.starImageNodes.append(imageNode)
         }
     }

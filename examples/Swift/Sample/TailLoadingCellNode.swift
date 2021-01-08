@@ -1,20 +1,10 @@
 //
 //  TailLoadingCellNode.swift
-//  Sample
+//  Texture
 //
-//  Created by Adlai Holler on 2/1/16.
-//
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 import AsyncDisplayKit
@@ -30,11 +20,11 @@ final class TailLoadingCellNode: ASCellNode {
     addSubnode(text)
     text.attributedText = NSAttributedString(
       string: "Loading…",
-      attributes: [
-        NSFontAttributeName: UIFont.systemFont(ofSize: 12),
-        NSForegroundColorAttributeName: UIColor.lightGray,
-        NSKernAttributeName: -0.3
-      ])
+      attributes: convertToOptionalNSAttributedStringKeyDictionary([
+        convertFromNSAttributedStringKey(NSAttributedString.Key.font): UIFont.systemFont(ofSize: 12),
+        convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor): UIColor.lightGray,
+        convertFromNSAttributedStringKey(NSAttributedString.Key.kern): -0.3
+      ]))
     addSubnode(spinner)
   }
 
@@ -57,7 +47,7 @@ final class SpinnerNode: ASDisplayNode {
   override init() {
     super.init()
     setViewBlock {
-        UIActivityIndicatorView(activityIndicatorStyle: .gray)
+        UIActivityIndicatorView(style: .gray)
     }
     
     // Set spinner node to default size of the activitiy indicator view
@@ -69,4 +59,15 @@ final class SpinnerNode: ASDisplayNode {
     
     activityIndicatorView.startAnimating()
   }
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertToOptionalNSAttributedStringKeyDictionary(_ input: [String: Any]?) -> [NSAttributedString.Key: Any]? {
+	guard let input = input else { return nil }
+	return Dictionary(uniqueKeysWithValues: input.map { key, value in (NSAttributedString.Key(rawValue: key), value)})
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertFromNSAttributedStringKey(_ input: NSAttributedString.Key) -> String {
+	return input.rawValue
 }

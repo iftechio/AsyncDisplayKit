@@ -1,17 +1,17 @@
 //
 //  IGListCollectionContext+ASDK.swift
-//  RepoSearcher
+//  Texture
 //
-//  Created by Marvin Nazari on 2017-02-18.
-//  Copyright © 2017 Marvin Nazari. All rights reserved.
+//  Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 import Foundation
 import IGListKit
 import AsyncDisplayKit
 
-extension IGListCollectionContext {
-    func nodeForItem(at index: Int, sectionController: IGListSectionController) -> ASCellNode? {
+extension ListCollectionContext {
+    func nodeForItem(at index: Int, sectionController: ListSectionController) -> ASCellNode? {
         return (cellForItem(at: index, sectionController: sectionController) as? _ASCollectionViewCell)?.node
     }
 }

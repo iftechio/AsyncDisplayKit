@@ -8,7 +8,7 @@ nextPage: subclassing.html
 
 Texture offers the following nodes.  
 
-A key advantage of using nodes over UIKit components is that **all nodes preform layout and display off of the main thread**, so that the main thread is available to immediately respond to user interaction events.  
+A key advantage of using nodes over UIKit components is that **all nodes perform layout and display off of the main thread**, so that the main thread is available to immediately respond to user interaction events.  
 
 <table style="width:100%" class = "paddingBetweenCols">
   <tr>
@@ -40,7 +40,7 @@ A key advantage of using nodes over UIKit components is that **all nodes preform
     <td><a href = "image-node.html"><code>ASImageNode</code></a><br>
         <a href = "network-image-node.html"><code>ASNetworkImageNode</code></a><br>
         <a href = "multiplex-image-node.html"><code>ASMultiplexImageNode</code></a></td>
-    <td>in place of UIKit's <code>UIImage</code></td> 
+    <td>in place of UIKit's <code>UIImageView</code></td> 
   </tr>
   <tr>
     <td><a href = "video-node.html"><code>ASVideoNode</code></a><br>

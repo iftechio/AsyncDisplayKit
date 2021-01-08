@@ -1,9 +1,9 @@
 //
 //  SearchNode.swift
-//  RepoSearcher
+//  Texture
 //
-//  Created by Marvin Nazari on 2017-02-18.
-//  Copyright © 2017 Marvin Nazari. All rights reserved.
+//  Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 import Foundation
@@ -29,9 +29,11 @@ final class SearchBarNode: ASDisplayNode {
     
     init(delegate: UISearchBarDelegate?) {
         self.delegate = delegate
-        super.init(viewBlock: {
+        super.init()
+        setViewBlock {
             UISearchBar()
-        }, didLoad: nil)
+        }
+
         style.preferredSize = CGSize(width: UIScreen.main.bounds.width, height: 44)
     }
     

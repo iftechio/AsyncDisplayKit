@@ -2,17 +2,9 @@
 //  ASCollectionViewTests.mm
 //  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 #import <XCTest/XCTest.h>
@@ -23,11 +15,15 @@
 #import <vector>
 #import <OCMock/OCMock.h>
 #import <AsyncDisplayKit/ASCollectionView+Undeprecated.h>
+#import <AsyncDisplayKit/ASDisplayNode+FrameworkPrivate.h>
+
+#import "ASDisplayNodeTestsHelper.h"
+#import "ASTestCase.h"
 
 @interface ASTextCellNodeWithSetSelectedCounter : ASTextCellNode
 
-@property (nonatomic, assign) NSUInteger setSelectedCounter;
-@property (nonatomic, assign) NSUInteger applyLayoutAttributesCount;
+@property (nonatomic) NSUInteger setSelectedCounter;
+@property (nonatomic) NSUInteger applyLayoutAttributesCount;
 
 @end
 
@@ -48,8 +44,8 @@
 
 @interface ASTestSectionContext : NSObject <ASSectionContext>
 
-@property (nonatomic, assign) NSInteger sectionIndex;
-@property (nonatomic, assign) NSInteger sectionGeneration;
+@property (nonatomic) NSInteger sectionIndex;
+@property (nonatomic) NSInteger sectionGeneration;
 
 @end
 
@@ -61,8 +57,8 @@
 
 @interface ASCollectionViewTestDelegate : NSObject <ASCollectionDataSource, ASCollectionDelegate, UICollectionViewDelegateFlowLayout>
 
-@property (nonatomic, assign) NSInteger sectionGeneration;
-@property (nonatomic, copy) void(^willBeginBatchFetch)(ASBatchContext *);
+@property (nonatomic) NSInteger sectionGeneration;
+@property (nonatomic) void(^willBeginBatchFetch)(ASBatchContext *);
 
 @end
 
@@ -82,7 +78,7 @@
   return self;
 }
 
-- (ASCellNode *)collectionView:(ASCollectionView *)collectionView nodeForItemAtIndexPath:(NSIndexPath *)indexPath {
+- (ASCellNode *)collectionNode:(ASCollectionNode *)collectionNode nodeForItemAtIndexPath:(NSIndexPath *)indexPath {
   ASTextCellNodeWithSetSelectedCounter *textCellNode = [ASTextCellNodeWithSetSelectedCounter new];
   textCellNode.text = indexPath.description;
 
@@ -90,7 +86,7 @@
 }
 
 
-- (ASCellNodeBlock)collectionView:(ASCollectionView *)collectionView nodeBlockForItemAtIndexPath:(NSIndexPath *)indexPath {
+- (ASCellNodeBlock)collectionNode:(ASCollectionNode *)collectionNode nodeBlockForItemAtIndexPath:(NSIndexPath *)indexPath {
   return ^{
     ASTextCellNodeWithSetSelectedCounter *textCellNode = [ASTextCellNodeWithSetSelectedCounter new];
     textCellNode.text = indexPath.description;
@@ -98,11 +94,11 @@
   };
 }
 
-- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
+- (NSInteger)numberOfSectionsInCollectionNode:(ASCollectionNode *)collectionNode {
   return _itemCounts.size();
 }
 
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+- (NSInteger)collectionNode:(ASCollectionNode *)collectionNode numberOfItemsInSection:(NSInteger)section {
   return _itemCounts[section];
 }
 
@@ -119,7 +115,7 @@
   return CGSizeMake(100, 100);
 }
 
-- (ASCellNode *)collectionView:(ASCollectionView *)collectionView nodeForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
+- (ASCellNode *)collectionNode:(ASCollectionNode *)collectionNode nodeForSupplementaryElementOfKind:(nonnull NSString *)kind atIndexPath:(nonnull NSIndexPath *)indexPath
 {
   return [[ASTextCellNodeWithSetSelectedCounter alloc] init];
 }
@@ -137,9 +133,9 @@
 
 @interface ASCollectionViewTestController: UIViewController
 
-@property (nonatomic, strong) ASCollectionViewTestDelegate *asyncDelegate;
-@property (nonatomic, strong) ASCollectionView *collectionView;
-@property (nonatomic, strong) ASCollectionNode *collectionNode;
+@property (nonatomic) ASCollectionViewTestDelegate *asyncDelegate;
+@property (nonatomic) ASCollectionView *collectionView;
+@property (nonatomic) ASCollectionNode *collectionNode;
 
 @end
 
@@ -151,8 +147,7 @@
     // Populate these immediately so that they're not unexpectedly nil during tests.
     self.asyncDelegate = [[ASCollectionViewTestDelegate alloc] initWithNumberOfSections:10 numberOfItemsInSection:10];
     id realLayout = [UICollectionViewFlowLayout new];
-    id mockLayout = [OCMockObject partialMockForObject:realLayout];
-    self.collectionNode = [[ASCollectionNode alloc] initWithFrame:self.view.bounds collectionViewLayout:mockLayout];
+    self.collectionNode = [[ASCollectionNode alloc] initWithFrame:self.view.bounds collectionViewLayout:realLayout];
     self.collectionView = self.collectionNode.view;
     self.collectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.collectionNode.dataSource = self.asyncDelegate;
@@ -172,22 +167,18 @@
 
 @end
 
-@interface ASCollectionViewTests : XCTestCase
+@interface ASCollectionViewTests : ASTestCase
 
 @end
 
 @implementation ASCollectionViewTests
 
-- (void)tearDown
+- (void)setUp
 {
-  // We can't prevent the system from retaining windows, but we can at least clear them out to avoid
-  // pollution between test cases.
-  for (UIWindow *window in [UIApplication sharedApplication].windows) {
-    for (UIView *subview in window.subviews) {
-      [subview removeFromSuperview];
-    }
-  }
-  [super tearDown];
+  [super setUp];
+  ASConfiguration *config = [ASConfiguration new];
+  config.experimentalFeatures = ASExperimentalOptimizeDataControllerPipeline;
+  [ASConfigurationManager test_resetWithConfiguration:config];
 }
 
 - (void)testDataSourceImplementsNecessaryMethods
@@ -375,6 +366,17 @@
   XCTAssertTrue(ASRangeTuningParametersEqualToRangeTuningParameters(preloadParams, [collectionView tuningParametersForRangeType:ASLayoutRangeTypePreload]));
 }
 
+// Informations to test: https://github.com/TextureGroup/Texture/issues/1094
+- (void)testThatCollectionNodeCanHandleNilRangeController
+{
+  UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
+  ASCollectionNode *collectionNode = [[ASCollectionNode alloc] initWithCollectionViewLayout:layout];
+  [collectionNode recursivelySetInterfaceState:ASInterfaceStateDisplay];
+  [collectionNode setHierarchyState:ASHierarchyStateRangeManaged];
+  [collectionNode recursivelySetInterfaceState:ASInterfaceStateNone];
+  ASCATransactionQueueWait(nil);
+}
+
 /**
  * This may seem silly, but we had issues where the runtime sometimes wouldn't correctly report
  * conformances declared on categories.
@@ -383,6 +385,31 @@
 {
   ASCollectionNode *node = [[ASCollectionNode alloc] initWithFrame:CGRectZero collectionViewLayout:[[UICollectionViewFlowLayout alloc] init]];
   XCTAssert([node conformsToProtocol:@protocol(ASRangeControllerUpdateRangeProtocol)]);
+}
+
+/**
+ * Test that hit tests are correct when the collection node is inverted.
+ */
+- (void)testInvertedCollectionViewHitTest
+{
+  ASCollectionViewTestController *testController = [[ASCollectionViewTestController alloc] initWithNibName:nil bundle:nil];
+  UIWindow *window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+  [window setRootViewController:testController];
+  [window makeKeyAndVisible];
+  
+  testController.collectionNode.inverted = true;
+  [testController.collectionNode reloadData];
+  [testController.collectionNode waitUntilAllUpdatesAreProcessed];
+  [testController.collectionView layoutIfNeeded];
+  
+  NSIndexPath *indexPath = [NSIndexPath indexPathForItem:0 inSection:0];
+  UICollectionViewCell *cell = [testController.collectionView cellForItemAtIndexPath:indexPath];
+  ASDisplayNode *node = [testController.collectionNode nodeForItemAtIndexPath:indexPath];
+  
+  CGPoint testPointInCollectionView = CGPointMake(CGRectGetMidX(cell.frame), CGRectGetMidY(cell.frame));
+  UIView *hitTestView = [testController.collectionView hitTest:testPointInCollectionView withEvent:nil];
+  
+  XCTAssertEqualObjects(hitTestView, node.view, @"Expected node's view to be the result of the hit test.");
 }
 
 #pragma mark - Update Validations
@@ -633,14 +660,14 @@
 - (void)testThatNodeCalculatedSizesAreUpdatedBeforeFirstPrepareLayoutAfterRotation
 {
   updateValidationTestPrologue
-  id layout = cv.collectionViewLayout;
+  id collectionViewLayoutMock = OCMPartialMock(cv.collectionViewLayout);
   CGSize initialItemSize = [cv nodeForItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]].calculatedSize;
   CGSize initialCVSize = cv.bounds.size;
 
   // Capture the node size before first call to prepareLayout after frame change.
   __block CGSize itemSizeAtFirstLayout = CGSizeZero;
   __block CGSize boundsSizeAtFirstLayout = CGSizeZero;
-  [[[[layout expect] andDo:^(NSInvocation *) {
+  [[[[collectionViewLayoutMock expect] andDo:^(NSInvocation *) {
     itemSizeAtFirstLayout = [cv nodeForItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]].calculatedSize;
     boundsSizeAtFirstLayout = [cv bounds].size;
   }] andForwardToRealObject] prepareLayout];
@@ -655,10 +682,12 @@
   XCTAssertNotEqualObjects(NSStringFromCGSize(initialCVSize),  NSStringFromCGSize(boundsSizeAtFirstLayout));
   XCTAssertEqualObjects(NSStringFromCGSize(itemSizeAtFirstLayout), NSStringFromCGSize(finalItemSize));
   XCTAssertEqualObjects(NSStringFromCGSize(boundsSizeAtFirstLayout), NSStringFromCGSize(finalCVSize));
-  [layout verify];
+  [collectionViewLayoutMock verify];
 
   // Teardown
   [[UIDevice currentDevice] setValue:@(oldDeviceOrientation) forKey:@"orientation"];
+
+  [collectionViewLayoutMock stopMocking];
 }
 
 /**
@@ -860,6 +889,7 @@
   [cn waitUntilAllUpdatesAreProcessed];
   [cn.view layoutIfNeeded];
   ASCellNode *node = [cn nodeForItemAtIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]];
+  ASCATransactionQueueWait(nil);
   XCTAssertTrue(node.visible);
   testController.asyncDelegate->_itemCounts = {0};
   [cn deleteItemsAtIndexPaths: @[[NSIndexPath indexPathForItem:0 inSection:0]]];
@@ -1040,24 +1070,43 @@
 
 - (void)testInitialRangeBounds
 {
+  [self testInitialRangeBoundsWithCellLayoutMode:ASCellLayoutModeNone
+           shouldWaitUntilAllUpdatesAreProcessed:YES];
+}
+
+- (void)testInitialRangeBoundsCellLayoutModeAlwaysAsync
+{
+  [self testInitialRangeBoundsWithCellLayoutMode:ASCellLayoutModeAlwaysAsync
+           shouldWaitUntilAllUpdatesAreProcessed:YES];
+}
+
+- (void)testInitialRangeBoundsWithCellLayoutMode:(ASCellLayoutMode)cellLayoutMode
+           shouldWaitUntilAllUpdatesAreProcessed:(BOOL)shouldWait
+{
   UIWindow *window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   ASCollectionViewTestController *testController = [[ASCollectionViewTestController alloc] initWithNibName:nil bundle:nil];
   ASCollectionNode *cn = testController.collectionNode;
+  cn.cellLayoutMode = cellLayoutMode;
   [cn setTuningParameters:{ .leadingBufferScreenfuls = 2, .trailingBufferScreenfuls = 0 } forRangeMode:ASLayoutRangeModeMinimum rangeType:ASLayoutRangeTypePreload];
   window.rootViewController = testController;
 
+  [testController.collectionNode.collectionViewLayout invalidateLayout];
+  [testController.collectionNode.collectionViewLayout prepareLayout];
+
   [window makeKeyAndVisible];
-  // Trigger the initial reload to start
+  // Trigger the initial reload to start 
   [window layoutIfNeeded];
 
-  // Test the APIs that monitor ASCollectionNode update handling
-  XCTAssertTrue(cn.isProcessingUpdates, @"ASCollectionNode should still be processing updates after initial layoutIfNeeded call (reloadData)");
-  [cn onDidFinishProcessingUpdates:^{
-    XCTAssertTrue(!cn.isProcessingUpdates, @"ASCollectionNode should no longer be processing updates inside -onDidFinishProcessingUpdates: block");
-  }];
+  if (shouldWait) {
+    XCTAssertTrue(cn.isProcessingUpdates, @"ASCollectionNode should still be processing updates after initial layoutIfNeeded call (reloadData)");
 
-  // Wait for ASDK reload to finish
-  [cn waitUntilAllUpdatesAreProcessed];
+    [cn onDidFinishProcessingUpdates:^{
+      XCTAssertTrue(!cn.isProcessingUpdates, @"ASCollectionNode should no longer be processing updates inside -onDidFinishProcessingUpdates: block");
+    }];
+
+    // Wait for ASDK reload to finish
+    [cn waitUntilAllUpdatesAreProcessed];
+  }
 
   XCTAssertTrue(!cn.isProcessingUpdates, @"ASCollectionNode should no longer be processing updates after -wait call");
 
@@ -1071,6 +1120,7 @@
       for (NSInteger i = 0; i < c; i++) {
         NSIndexPath *ip = [NSIndexPath indexPathForItem:i inSection:s];
         ASCellNode *node = [cn nodeForItemAtIndexPath:ip];
+        ASCATransactionQueueWait(nil);
         if (node.inPreloadState) {
           CGRect frame = [cn.view layoutAttributesForItemAtIndexPath:ip].frame;
           r = CGRectUnion(r, frame);
@@ -1097,7 +1147,7 @@
   [window layoutIfNeeded];
   
   // The initial reload is async, changing the trait collection here should be "mid-update"
-  ASPrimitiveTraitCollection traitCollection;
+  ASPrimitiveTraitCollection traitCollection = ASPrimitiveTraitCollectionMakeDefault();
   traitCollection.displayScale = cn.primitiveTraitCollection.displayScale + 1; // Just a dummy change
   traitCollection.containerSize = screenBounds.size;
   cn.primitiveTraitCollection = traitCollection;
@@ -1115,6 +1165,31 @@
     }
   }
 }
+
+- (void)testASPrimitiveTraitCollectionToUITraitCollection {
+  ASPrimitiveTraitCollection collection = ASPrimitiveTraitCollectionMakeDefault();
+  collection.displayGamut = UIDisplayGamutSRGB;
+  collection.displayScale = 11;
+  collection.forceTouchCapability = UIForceTouchCapabilityAvailable;
+  collection.horizontalSizeClass = UIUserInterfaceSizeClassRegular;
+  collection.layoutDirection = UITraitEnvironmentLayoutDirectionRightToLeft;
+  collection.preferredContentSizeCategory = UIContentSizeCategoryMedium;
+  collection.userInterfaceIdiom = UIUserInterfaceIdiomTV;
+  if (@available(iOS 12.0, *)) {
+    collection.userInterfaceStyle = UIUserInterfaceStyleDark;
+  }
+  collection.verticalSizeClass = UIUserInterfaceSizeClassRegular;
+  
+  // create `UITraitCollection` from `ASPrimitiveTraitCollection`
+  UITraitCollection *uiCollection = ASPrimitiveTraitCollectionToUITraitCollection(collection);
+  
+  // now convert it back to `ASPrimitiveTraitCollection`
+  ASPrimitiveTraitCollection newCollection = ASPrimitiveTraitCollectionFromUITraitCollection(uiCollection);
+  
+  // compare
+  XCTAssert(ASPrimitiveTraitCollectionIsEqualToASPrimitiveTraitCollection(collection, newCollection));
+}
+
 
 /**
  * This tests an issue where, since subnode insertions aren't applied until the UIKit layout pass,

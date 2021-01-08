@@ -1,18 +1,18 @@
 //
 //  NSObject+IGListDiffable.swift
-//  RepoSearcher
+//  Texture
 //
-//  Created by Marvin Nazari on 2017-02-18.
-//  Copyright © 2017 Marvin Nazari. All rights reserved.
+//  Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 import IGListKit
 
-extension NSObject: IGListDiffable {
+extension NSObject: ListDiffable {
     public func diffIdentifier() -> NSObjectProtocol {
         return self
     }
-    public func isEqual(toDiffableObject object: IGListDiffable?) -> Bool {
+    public func isEqual(toDiffableObject object: ListDiffable?) -> Bool {
         return isEqual(object)
     }
 }

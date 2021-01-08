@@ -2,6 +2,7 @@
 title: Layout API Sizing
 layout: docs
 permalink: /docs/layout2-api-sizing.html
+prevPage: layout2-layout-element-properties.html
 nextPage: layout-transition-api.html
 ---
 
@@ -10,7 +11,7 @@ The easiest way to understand the compound dimension types in the Layout API is 
 <img src="/static/images/layout2-api-sizing.png">
 
 ## Values (`CGFloat`, `ASDimension`)
-<br>
+
 `ASDimension` is essentially a **normal CGFloat with support for representing either a point value, a relative percentage value, or an auto value**.  
 
 This unit allows the same API to take in both fixed values, as well as relative ones.
@@ -41,6 +42,8 @@ ASDimensionMake("70pt")
 ASDimensionMake(70)
 ASDimensionMakeWithPoints(70)
 </pre>
+</div>
+</div>
 
 ### Example using `ASDimension`
 
@@ -68,8 +71,10 @@ self.rightStack.style.flexBasis = ASDimensionMake(@"60%");
 self.leftStack.style.flexBasis = ASDimensionMake("40%")
 self.rightStack.style.flexBasis = ASDimensionMake("60%")
 
-horizontalStack.children = [self.leftStack, self.rightStack]]
+horizontalStack.children = [self.leftStack, self.rightStack]
 </pre>
+</div>
+</div>
 
 ## Sizes (`CGSize`, `ASLayoutSize`)
 
@@ -187,5 +192,4 @@ func layoutSpecThatFits(_ constrainedSize: ASSizeRange) -> ASLayoutSpec
 </div>
 </div>
 
-<br>
 The `constrainedSize` passed to an `ASDisplayNode` subclass' `layoutSpecThatFits:` method is the minimum and maximum sizes that the node should fit in. The minimum and maximum `CGSize`s contained in `constrainedSize` can be used to size the node's layout elements.

@@ -1,16 +1,16 @@
 //
 //  LabelSectionController.swift
-//  RepoSearcher
+//  Texture
 //
-//  Created by Marvin Nazari on 2017-02-18.
-//  Copyright © 2017 Marvin Nazari. All rights reserved.
+//  Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 import Foundation
 import AsyncDisplayKit
 import IGListKit
 
-final class LabelSectionController: IGListSectionController, IGListSectionType, ASSectionController {
+final class LabelSectionController: ListSectionController, ASSectionController {
     var object: String?
 
     func nodeBlockForItem(at index: Int) -> ASCellNodeBlock {
@@ -22,22 +22,22 @@ final class LabelSectionController: IGListSectionController, IGListSectionType, 
         }
     }
     
-    func numberOfItems() -> Int {
+    override func numberOfItems() -> Int {
         return 1
     }
     
-    func didUpdate(to object: Any) {
+    override func didUpdate(to object: Any) {
         self.object = String(describing: object)
     }
     
-    func didSelectItem(at index: Int) {}
+    override func didSelectItem(at index: Int) {}
     
     //ASDK Replacement
-    func sizeForItem(at index: Int) -> CGSize {
+    override func sizeForItem(at index: Int) -> CGSize {
         return ASIGListSectionControllerMethods.sizeForItem(at: index)
     }
     
-    func cellForItem(at index: Int) -> UICollectionViewCell {
+    override func cellForItem(at index: Int) -> UICollectionViewCell {
         return ASIGListSectionControllerMethods.cellForItem(at: index, sectionController: self)
     }
 }

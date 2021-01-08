@@ -1,23 +1,10 @@
 //
-//  MosaicCollectionViewLayout
-//  Sample
+//  MosaicCollectionViewLayout.swift
+//  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the root directory of this source tree. An additional grant
-//  of patent rights can be found in the PATENTS file in the same directory.
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 import Foundation
@@ -43,8 +30,8 @@ class MosaicCollectionViewLayout: UICollectionViewFlowLayout {
     self.numberOfColumns = 2
     self.columnSpacing = 10.0
     self.headerHeight = 44.0 //viewcontroller
-    self._sectionInset = UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0)
-    self.interItemSpacing = UIEdgeInsetsMake(10.0, 0, 10.0, 0)
+    self._sectionInset = UIEdgeInsets.init(top: 10.0, left: 10.0, bottom: 10.0, right: 10.0)
+    self.interItemSpacing = UIEdgeInsets.init(top: 10.0, left: 0, bottom: 10.0, right: 0)
     super.init()
     self.scrollDirection = .vertical
   }
@@ -75,7 +62,7 @@ class MosaicCollectionViewLayout: UICollectionViewFlowLayout {
       if (headerHeight > 0) {
         let headerSize: CGSize = self._headerSizeForSection(section: section)
         
-        let attributes = UICollectionViewLayoutAttributes(forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, with: NSIndexPath(row: 0, section: section) as IndexPath)
+        let attributes = UICollectionViewLayoutAttributes(forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, with: NSIndexPath(row: 0, section: section) as IndexPath)
         
         attributes.frame = CGRect(x: _sectionInset.left, y: top, width: headerSize.width, height: headerSize.height)
         _headerAttributes.append(attributes)
@@ -141,7 +128,7 @@ class MosaicCollectionViewLayout: UICollectionViewFlowLayout {
   
   override func layoutAttributesForSupplementaryView(ofKind elementKind: String, at indexPath: IndexPath) -> UICollectionViewLayoutAttributes?
   {
-    if (elementKind == UICollectionElementKindSectionHeader) {
+    if (elementKind == UICollectionView.elementKindSectionHeader) {
       return _headerAttributes[indexPath.section]
     }
     return nil
@@ -235,7 +222,7 @@ class MosaicCollectionViewLayoutInspector: NSObject, ASCollectionViewLayoutInspe
    * Asks the inspector for the number of supplementary sections in the collection view for the given kind.
    */
   func collectionView(_ collectionView: ASCollectionView, numberOfSectionsForSupplementaryNodeOfKind kind: String) -> UInt {
-    if (kind == UICollectionElementKindSectionHeader) {
+    if (kind == UICollectionView.elementKindSectionHeader) {
       return UInt((collectionView.dataSource?.numberOfSections!(in: collectionView))!)
     } else {
       return 0
@@ -246,7 +233,7 @@ class MosaicCollectionViewLayoutInspector: NSObject, ASCollectionViewLayoutInspe
    * Asks the inspector for the number of supplementary views for the given kind in the specified section.
    */
   func collectionView(_ collectionView: ASCollectionView, supplementaryNodesOfKind kind: String, inSection section: UInt) -> UInt {
-    if (kind == UICollectionElementKindSectionHeader) {
+    if (kind == UICollectionView.elementKindSectionHeader) {
       return 1
     } else {
       return 0

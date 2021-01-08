@@ -10,7 +10,6 @@
   - containers-overview
   - node-overview
   - subclassing
-  - node-lifecycle
   - faq
 - title: Layout
   items:
@@ -44,7 +43,6 @@
 - title: Advanced Technologies
   items:
   - asvisibility
-  - asenvironment
   - asrunloopqueue
 - title: Node Containers
   items:

@@ -2,25 +2,23 @@
 //  ASTextKitTests.mm
 //  Texture
 //
-//  Copyright (c) 2014-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under the BSD-style license found in the
-//  LICENSE file in the /ASDK-Licenses directory of this source tree. An additional
-//  grant of patent rights can be found in the PATENTS file in the same directory.
-//
-//  Modifications to this file made after 4/13/2017 are: Copyright (c) 2017-present,
-//  Pinterest, Inc.  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
+//  Copyright (c) Facebook, Inc. and its affiliates.  All rights reserved.
+//  Changes after 4/13/2017 are: Copyright (c) Pinterest, Inc.  All rights reserved.
+//  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdocumentation"
 #import <FBSnapshotTestCase/FBSnapshotTestController.h>
+#pragma clang diagnostic pop
 
 #import <AsyncDisplayKit/ASTextKitAttributes.h>
+
+#if AS_ENABLE_TEXTNODE
+
 #import <AsyncDisplayKit/ASTextKitComponents.h>
 #import <AsyncDisplayKit/ASTextKitEntityAttribute.h>
 #import <AsyncDisplayKit/ASTextKitRenderer.h>
@@ -93,7 +91,7 @@ static BOOL checkAttributes(const ASTextKitAttributes &attributes, const CGSize 
   FBSnapshotTestController *controller = [[FBSnapshotTestController alloc] init];
   UIImage *labelImage = UITextViewImageWithAttributes(attributes, constrainedSize, linkTextAttributes);
   UIImage *textKitImage = ASTextKitImageWithAttributes(attributes, constrainedSize);
-  return [controller compareReferenceImage:labelImage toImage:textKitImage tolerance:0.0 error:nil];
+  return [controller compareReferenceImage:labelImage toImage:textKitImage overallTolerance:0.0 error:nil];
 }
 
 @implementation ASTextKitTests
@@ -229,3 +227,5 @@ static BOOL checkAttributes(const ASTextKitAttributes &attributes, const CGSize 
 }
 
 @end
+
+#endif
