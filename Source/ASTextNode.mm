@@ -1148,7 +1148,7 @@ static CGRect ASTextNodeAdjustRenderRectForShadowPadding(CGRect rendererRect, UI
 
   if ([self _pendingTruncationTap]) {
     if ([_delegate respondsToSelector:@selector(textNodeTappedTruncationToken:)]) {
-          [_delegate textNodeTappedTruncationToken:self];
+      [_delegate textNodeTappedTruncationToken:self];
     }
   }
 
