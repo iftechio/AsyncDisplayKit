@@ -10,13 +10,9 @@
 #import <AsyncDisplayKit/ASImageNode.h>
 #import <AsyncDisplayKit/ASImageProtocols.h>
 
-#if AS_USE_PHOTOS
-#import <Photos/Photos.h>
-#else
 @class PHAsset;
 @class PHImageManager;
 @class PHImageRequestOptions;
-#endif
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -255,28 +251,5 @@ didFinishDownloadingImageWithIdentifier:(ASImageIdentifier)imageIdentifier
  */
 - (nullable PHAsset *)multiplexImageNode:(ASMultiplexImageNode *)imageNode assetForLocalIdentifier:(NSString *)assetLocalIdentifier API_AVAILABLE(ios(8.0), tvos(10.0));
 @end
-
-#pragma mark -
-
-#if AS_USE_PHOTOS
-
-@interface NSURL (ASPhotosFrameworkURLs)
-
-/**
- * @abstract Create an NSURL that specifies an image from the Photos framework.
- *
- * @discussion When implementing `-multiplexImageNode:URLForImageIdentifier:`, you can return a URL
- * created by this method and the image node will attempt to load the image from the Photos framework.
- * @note The `synchronous` flag in `options` is ignored.
- * @note The `Opportunistic` delivery mode is not supported and will be treated as `HighQualityFormat`.
- */
-+ (NSURL *)URLWithAssetLocalIdentifier:(NSString *)assetLocalIdentifier
-                            targetSize:(CGSize)targetSize
-                           contentMode:(PHImageContentMode)contentMode
-                               options:(PHImageRequestOptions *)options NS_RETURNS_RETAINED AS_WARN_UNUSED_RESULT API_AVAILABLE(ios(8.0), tvos(10.0));
-
-@end
-
-#endif
 
 NS_ASSUME_NONNULL_END

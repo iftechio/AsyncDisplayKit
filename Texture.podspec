@@ -58,12 +58,6 @@ Pod::Spec.new do |spec|
     yoga.dependency 'Texture/Core'
   end
 
-  spec.subspec 'Photos' do |photos|
-    photos.frameworks = 'Photos'
-    photos.xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) AS_USE_PHOTOS=1' }
-    photos.dependency 'Texture/Core'
-  end
-
   spec.subspec 'AssetsLibrary' do |assetslib|
     assetslib.frameworks = 'AssetsLibrary'
     assetslib.xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) AS_USE_ASSETS_LIBRARY=1' }

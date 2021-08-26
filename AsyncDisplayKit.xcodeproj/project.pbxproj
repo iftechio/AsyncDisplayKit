@@ -70,7 +70,6 @@
 		296A0A351A951ABF005ACEAA /* ASBatchFetchingTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 296A0A341A951ABF005ACEAA /* ASBatchFetchingTests.mm */; };
 		29CDC2E21AAE70D000833CA4 /* ASBasicImageDownloaderContextTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 29CDC2E11AAE70D000833CA4 /* ASBasicImageDownloaderContextTests.mm */; };
 		2C107F5B1BA9F54500F13DE5 /* AsyncDisplayKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 6BDC61F51978FEA400E50D21 /* AsyncDisplayKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		34566CB31BC1213700715E6B /* ASPhotosFrameworkImageRequest.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC7FD9DD1BB5E962005CCB2B /* ASPhotosFrameworkImageRequest.mm */; };
 		34EFC75B1B701BAF00AD841F /* ASDimension.h in Headers */ = {isa = PBXBuildFile; fileRef = ACF6ED071B17843500DA7C62 /* ASDimension.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		34EFC75C1B701BD200AD841F /* ASDimension.mm in Sources */ = {isa = PBXBuildFile; fileRef = ACF6ED081B17843500DA7C62 /* ASDimension.mm */; };
 		34EFC75D1B701BE900AD841F /* ASInternalHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = ACF6ED431B17847A00DA7C62 /* ASInternalHelpers.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -393,8 +392,6 @@
 		CC6AA2DB1E9F03B900978E87 /* ASDisplayNode+Ancestry.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC6AA2D91E9F03B900978E87 /* ASDisplayNode+Ancestry.mm */; };
 		CC7AF196200D9BD500A21BDE /* ASExperimentalFeatures.h in Headers */ = {isa = PBXBuildFile; fileRef = CC7AF195200D9BD500A21BDE /* ASExperimentalFeatures.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CC7AF198200DAB2200A21BDE /* ASExperimentalFeatures.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC7AF197200D9E8400A21BDE /* ASExperimentalFeatures.mm */; };
-		CC7FD9E11BB5F750005CCB2B /* ASPhotosFrameworkImageRequestTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC7FD9E01BB5F750005CCB2B /* ASPhotosFrameworkImageRequestTests.mm */; };
-		CC7FD9E21BB603FF005CCB2B /* ASPhotosFrameworkImageRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = CC7FD9DC1BB5E962005CCB2B /* ASPhotosFrameworkImageRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CC87BB951DA8193C0090E380 /* ASCellNode+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = CC87BB941DA8193C0090E380 /* ASCellNode+Internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		CC8B05D61D73836400F54286 /* ASPerformanceTestContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC8B05D51D73836400F54286 /* ASPerformanceTestContext.mm */; };
 		CC8B05D81D73979700F54286 /* ASTextNodePerformanceTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC8B05D71D73979700F54286 /* ASTextNodePerformanceTests.mm */; };
@@ -913,9 +910,6 @@
 		CC6AA2D91E9F03B900978E87 /* ASDisplayNode+Ancestry.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "ASDisplayNode+Ancestry.mm"; path = "Base/ASDisplayNode+Ancestry.mm"; sourceTree = "<group>"; };
 		CC7AF195200D9BD500A21BDE /* ASExperimentalFeatures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ASExperimentalFeatures.h; sourceTree = "<group>"; };
 		CC7AF197200D9E8400A21BDE /* ASExperimentalFeatures.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ASExperimentalFeatures.mm; sourceTree = "<group>"; };
-		CC7FD9DC1BB5E962005CCB2B /* ASPhotosFrameworkImageRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASPhotosFrameworkImageRequest.h; sourceTree = "<group>"; };
-		CC7FD9DD1BB5E962005CCB2B /* ASPhotosFrameworkImageRequest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ASPhotosFrameworkImageRequest.mm; sourceTree = "<group>"; };
-		CC7FD9E01BB5F750005CCB2B /* ASPhotosFrameworkImageRequestTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ASPhotosFrameworkImageRequestTests.mm; sourceTree = "<group>"; };
 		CC87BB941DA8193C0090E380 /* ASCellNode+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ASCellNode+Internal.h"; sourceTree = "<group>"; };
 		CC8B05D41D73836400F54286 /* ASPerformanceTestContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASPerformanceTestContext.h; sourceTree = "<group>"; };
 		CC8B05D51D73836400F54286 /* ASPerformanceTestContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ASPerformanceTestContext.mm; sourceTree = "<group>"; };
@@ -1328,7 +1322,6 @@
 				AE6987C01DD04E1000B9E458 /* ASPagerNodeTests.mm */,
 				CC8B05D41D73836400F54286 /* ASPerformanceTestContext.h */,
 				CC8B05D51D73836400F54286 /* ASPerformanceTestContext.mm */,
-				CC7FD9E01BB5F750005CCB2B /* ASPhotosFrameworkImageRequestTests.mm */,
 				ACF6ED5A1B178DC700DA7C62 /* ASRatioLayoutSpecSnapshotTests.mm */,
 				CCAA0B81206ADECB0057B336 /* ASRecursiveUnfairLockTests.mm */,
 				7AB338681C55B97B0055FDE8 /* ASRelativeLayoutSpecSnapshotTests.mm */,
@@ -1425,8 +1418,6 @@
 				058D09E9195D050800B7D73C /* ASMutableAttributedStringBuilder.mm */,
 				6907C2561DC4ECFE00374C66 /* ASObjectDescriptionHelpers.h */,
 				6907C2571DC4ECFE00374C66 /* ASObjectDescriptionHelpers.mm */,
-				CC7FD9DC1BB5E962005CCB2B /* ASPhotosFrameworkImageRequest.h */,
-				CC7FD9DD1BB5E962005CCB2B /* ASPhotosFrameworkImageRequest.mm */,
 				68355B391CB57A5A001D4E68 /* ASPINRemoteImageDownloader.h */,
 				68355B361CB57A5A001D4E68 /* ASPINRemoteImageDownloader.mm */,
 				055F1A3619ABD413004DAFF1 /* ASRangeController.h */,
@@ -2067,7 +2058,6 @@
 				34EFC7701B701CFA00AD841F /* ASStackLayoutDefines.h in Headers */,
 				CC0F885C1E42807F00576FED /* ASCollectionViewFlowLayoutInspector.h in Headers */,
 				764D83D51C8EA515009B4FB8 /* AsyncDisplayKit+Debug.h in Headers */,
-				CC7FD9E21BB603FF005CCB2B /* ASPhotosFrameworkImageRequest.h in Headers */,
 				254C6B761BF94DF4003EC431 /* ASTextNodeTypes.h in Headers */,
 				CCA282B41E9EA7310037E8B7 /* ASTipsController.h in Headers */,
 				34EFC7711B701CFF00AD841F /* ASStackLayoutSpec.h in Headers */,
@@ -2317,7 +2307,6 @@
 				AC026B581BD3F61800BBC17E /* ASAbsoluteLayoutSpecSnapshotTests.mm in Sources */,
 				ACF6ED5E1B178DC700DA7C62 /* ASInsetLayoutSpecSnapshotTests.mm in Sources */,
 				ACF6ED601B178DC700DA7C62 /* ASLayoutSpecSnapshotTestsHelper.mm in Sources */,
-				CC7FD9E11BB5F750005CCB2B /* ASPhotosFrameworkImageRequestTests.mm in Sources */,
 				052EE0661A159FEF002C6279 /* ASMultiplexImageNodeTests.mm in Sources */,
 				407B8BAE2310E2ED00CB979E /* ASLayoutSpecUtilitiesTests.mm in Sources */,
 				058D0A3C195D057000B7D73C /* ASMutableAttributedStringBuilderTests.mm in Sources */,
@@ -2515,7 +2504,6 @@
 				68355B3E1CB57A60001D4E68 /* ASPINRemoteImageDownloader.mm in Sources */,
 				CC034A141E649F1300626263 /* AsyncDisplayKit+IGListKitMethods.mm in Sources */,
 				254C6B871BF94F8A003EC431 /* ASTextKitEntityAttribute.mm in Sources */,
-				34566CB31BC1213700715E6B /* ASPhotosFrameworkImageRequest.mm in Sources */,
 				254C6B831BF94F8A003EC431 /* ASTextKitCoreTextAdditions.mm in Sources */,
 				CC55A70E1E529FA200594372 /* UIResponder+AsyncDisplayKit.mm in Sources */,
 				CC56013C1F06E9A700DC4FBE /* ASIntegerMap.mm in Sources */,
@@ -2628,7 +2616,6 @@
 					"DEBUG=1",
 					"$(inherited)",
 					"AS_USE_ASSETS_LIBRARY=1",
-					"AS_USE_PHOTOS=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
