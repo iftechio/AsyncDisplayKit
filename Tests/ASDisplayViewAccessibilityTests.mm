@@ -18,8 +18,6 @@
 #import <AsyncDisplayKit/ASDisplayNode.h>
 #import <AsyncDisplayKit/ASDisplayNode+Beta.h>
 #import <AsyncDisplayKit/ASTextNode.h>
-#import <AsyncDisplayKit/ASConfiguration.h>
-#import <AsyncDisplayKit/ASConfigurationInternal.h>
 #import <AsyncDisplayKit/ASScrollNode.h>
 #import <OCMock/OCMock.h>
 #import "ASDisplayNodeTestsHelper.h"

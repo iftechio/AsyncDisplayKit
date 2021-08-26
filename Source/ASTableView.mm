@@ -16,7 +16,6 @@
 #import <AsyncDisplayKit/ASCellNode+Internal.h>
 #import <AsyncDisplayKit/ASCollectionElement.h>
 #import <AsyncDisplayKit/ASCollections.h>
-#import <AsyncDisplayKit/ASConfigurationInternal.h>
 #import <AsyncDisplayKit/ASDelegateProxy.h>
 #import <AsyncDisplayKit/ASDisplayNodeExtras.h>
 #import <AsyncDisplayKit/ASDisplayNode+FrameworkPrivate.h>
@@ -370,10 +369,8 @@ static NSString * const kCellReuseIdentifier = @"_ASTableViewCell";
   
   // Sometimes the UIKit classes can call back to their delegate even during deallocation.
   _isDeallocating = YES;
-  if (!ASActivateExperimentalFeature(ASExperimentalCollectionTeardown)) {
-    [self setAsyncDelegate:nil];
-    [self setAsyncDataSource:nil];
-  }
+  [self setAsyncDelegate:nil];
+  [self setAsyncDataSource:nil];
 }
 
 #pragma mark -
@@ -516,7 +513,7 @@ static NSString * const kCellReuseIdentifier = @"_ASTableViewCell";
 {
   ASDisplayNodeAssertMainThread();
  
-  if (_asyncDataSource == nil && _asyncDelegate == nil && !ASActivateExperimentalFeature(ASExperimentalSkipClearData)) {
+  if (_asyncDataSource == nil && _asyncDelegate == nil) {
     [_dataController clearData];
   }
 }

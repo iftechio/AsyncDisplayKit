@@ -3156,7 +3156,7 @@ ASDISPLAYNODE_INLINE BOOL subtreeIsRasterized(ASDisplayNode *node) {
   // (see -__layout and -_u_measureNodeWithBoundsIfNecessary:). This scenario is uncommon,
   // and running a measurement pass here is a fine trade-off because preloading any time after this point would be late.
   
-  if (self.automaticallyManagesSubnodes && !ASActivateExperimentalFeature(ASExperimentalDidEnterPreloadSkipASMLayout)) {
+  if (self.automaticallyManagesSubnodes) {
     [self layoutIfNeeded];
   }
   [self enumerateInterfaceStateDelegates:^(id<ASInterfaceStateDelegate> del) {

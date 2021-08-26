@@ -101,10 +101,6 @@ static UIImage* makeImageWithColor(UIColor *color, CGSize size) {
 
 - (void)testTintColorOnGrayscaleNodePropertyAlwaysTemplate
 {
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalDrawingGlobal;
-  [ASConfigurationManager test_resetWithConfiguration:config];
-
   UIImage *test = [self testGrayscaleImage];
   ASImageNode *node = [[ASImageNode alloc] init];
   node.image = [test imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
@@ -227,11 +223,6 @@ static UIImage* makeImageWithColor(UIColor *color, CGSize size) {
 
 - (void)testUIGraphicsRendererDrawingExperiment
 {
-  // Test to ensure that rendering with UIGraphicsRenderer don't regress
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalDrawingGlobal;
-  [ASConfigurationManager test_resetWithConfiguration:config];
-
   ASImageNode *imageNode = [[ASImageNode alloc] init];
   imageNode.image = [self testImage];
   ASDisplayNodeSizeToFitSize(imageNode, CGSizeMake(100, 100));

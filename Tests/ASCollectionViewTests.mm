@@ -176,9 +176,6 @@
 - (void)setUp
 {
   [super setUp];
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalOptimizeDataControllerPipeline;
-  [ASConfigurationManager test_resetWithConfiguration:config];
 }
 
 - (void)testDataSourceImplementsNecessaryMethods

@@ -327,10 +327,8 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   
   // Sometimes the UIKit classes can call back to their delegate even during deallocation, due to animation completion blocks etc.
   _isDeallocating = YES;
-  if (!ASActivateExperimentalFeature(ASExperimentalCollectionTeardown)) {
-    [self setAsyncDelegate:nil];
-    [self setAsyncDataSource:nil];
-  }
+  [self setAsyncDelegate:nil];
+  [self setAsyncDataSource:nil];
 }
 
 #pragma mark -
@@ -583,7 +581,7 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 {
   ASDisplayNodeAssertMainThread();
 
-  if (_asyncDataSource == nil && _asyncDelegate == nil && !ASActivateExperimentalFeature(ASExperimentalSkipClearData)) {
+  if (_asyncDataSource == nil && _asyncDelegate == nil) {
     [_dataController clearData];
   }
 }
