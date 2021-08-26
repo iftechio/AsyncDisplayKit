@@ -63,27 +63,3 @@
 }
 
 @end
-
-/**
- * A category that makes _ASCollectionReusableView conform to IGListBindable.
- *
- * We don't need to do anything to bind the view model – the cell node
- * serves the same purpose.
- */
-#if __has_include(<IGListKit/IGListBindable.h>)
-
-#import <IGListKit/IGListBindable.h>
-
-@interface _ASCollectionReusableView (IGListBindable) <IGListBindable>
-@end
-
-@implementation _ASCollectionReusableView (IGListBindable)
-
-- (void)bindViewModel:(id)viewModel
-{
-  // nop
-}
-
-@end
-
-#endif

@@ -16,10 +16,6 @@
 
 #import <queue>
 
-#if AS_IG_LIST_DIFF_KIT
-#import <AsyncDisplayKit/ASLayout+IGListDiffKit.h>
-#endif
-
 using AS::MutexLocker;
 
 /**
@@ -159,21 +155,6 @@ static inline BOOL ASLayoutCanTransitionAsynchronous(ASLayout *layout) {
   ASLayout *pendingLayout = _pendingLayout.layout;
 
   if (previousLayout) {
-#if AS_IG_LIST_DIFF_KIT
-    // IGListDiff completes in linear time O(m+n), so use it if we have it:
-    IGListIndexSetResult *result = IGListDiff(previousLayout.sublayouts, pendingLayout.sublayouts, IGListDiffEquality);
-    _insertedSubnodePositions = findNodesInLayoutAtIndexes(pendingLayout, result.inserts, &_insertedSubnodes);
-    findNodesInLayoutAtIndexes(previousLayout, result.deletes, &_removedSubnodes);
-    for (IGListMoveIndex *move in result.moves) {
-      _subnodeMoves.emplace_back(previousLayout.sublayouts[move.from].layoutElement, move.to);
-    }
-
-    // Sort by ascending order of move destinations, this will allow easy loop of `insertSubnode:AtIndex` later.
-    std::sort(_subnodeMoves.begin(), _subnodeMoves.end(), [](std::pair<id<ASLayoutElement>, NSUInteger> a,
-            std::pair<ASDisplayNode *, NSUInteger> b) {
-      return a.second < b.second;
-    });
-#else
     NSIndexSet *insertions, *deletions;
     NSArray<NSIndexPath *> *moves;
     NSArray<ASDisplayNode *> *previousNodes = [previousLayout.sublayouts valueForKey:@"layoutElement"];
@@ -190,7 +171,6 @@ static inline BOOL ASLayoutCanTransitionAsynchronous(ASLayout *layout) {
       _subnodeMoves.emplace_back(previousLayout.sublayouts[([move indexAtPosition:0])].layoutElement,
               [move indexAtPosition:1]);
     }
-#endif
   } else {
     NSIndexSet *indexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, [pendingLayout.sublayouts count])];
     _insertedSubnodePositions = findNodesInLayoutAtIndexes(pendingLayout, indexes, &_insertedSubnodes);
