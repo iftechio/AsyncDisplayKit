@@ -183,8 +183,6 @@
 		9019FBC01ED8061D00C45F72 /* ASYogaUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9019FBBC1ED8061D00C45F72 /* ASYogaUtilities.mm */; };
 		90FC784F1E4BFE1B00383C5A /* ASDisplayNode+Yoga.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90FC784E1E4BFE1B00383C5A /* ASDisplayNode+Yoga.mm */; };
 		92DD2FE61BF4D05E0074C9DD /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 92DD2FE51BF4D05E0074C9DD /* MapKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		92DD2FE71BF4D0850074C9DD /* ASMapNode.mm in Sources */ = {isa = PBXBuildFile; fileRef = 92DD2FE21BF4B97E0074C9DD /* ASMapNode.mm */; };
-		92DD2FE81BF4D0A80074C9DD /* ASMapNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 92DD2FE11BF4B97E0074C9DD /* ASMapNode.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9644CFE02193777C00213478 /* ASThrashUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 9644CFDF2193777C00213478 /* ASThrashUtility.m */; };
 		9692B4FF219E12370060C2C3 /* ASCollectionViewThrashTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9692B4FE219E12370060C2C3 /* ASCollectionViewThrashTests.mm */; };
 		9C0BA49C2582CE35001C293B /* ASTextDebugOption.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C0BA4882582CE35001C293B /* ASTextDebugOption.mm */; };
@@ -752,8 +750,6 @@
 		9019FBBB1ED8061D00C45F72 /* ASYogaUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASYogaUtilities.h; sourceTree = "<group>"; };
 		9019FBBC1ED8061D00C45F72 /* ASYogaUtilities.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ASYogaUtilities.mm; sourceTree = "<group>"; };
 		90FC784E1E4BFE1B00383C5A /* ASDisplayNode+Yoga.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "ASDisplayNode+Yoga.mm"; sourceTree = "<group>"; };
-		92DD2FE11BF4B97E0074C9DD /* ASMapNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASMapNode.h; sourceTree = "<group>"; };
-		92DD2FE21BF4B97E0074C9DD /* ASMapNode.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ASMapNode.mm; sourceTree = "<group>"; };
 		92DD2FE51BF4D05E0074C9DD /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		9644CFDE2193777C00213478 /* ASThrashUtility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ASThrashUtility.h; sourceTree = "<group>"; };
 		9644CFDF2193777C00213478 /* ASThrashUtility.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ASThrashUtility.m; sourceTree = "<group>"; };
@@ -1218,8 +1214,6 @@
 				CCF1FF5D20C4785000AAD8FC /* ASLocking.h */,
 				CCBDDD0320C62A2D00CBA922 /* ASMainThreadDeallocation.h */,
 				CCBDDD0420C62A2D00CBA922 /* ASMainThreadDeallocation.mm */,
-				92DD2FE11BF4B97E0074C9DD /* ASMapNode.h */,
-				92DD2FE21BF4B97E0074C9DD /* ASMapNode.mm */,
 				0516FA3E1A1563D200B4EBED /* ASMultiplexImageNode.h */,
 				0516FA3F1A1563D200B4EBED /* ASMultiplexImageNode.mm */,
 				68FC85DC1CE29AB700EDD713 /* ASNavigationController.h */,
@@ -2079,7 +2073,6 @@
 				34EFC7711B701CFF00AD841F /* ASStackLayoutSpec.h in Headers */,
 				CCA282C01E9EAE010037E8B7 /* ASTip.h in Headers */,
 				2767E9411BB19BD600EA9B77 /* ASDKViewController.h in Headers */,
-				92DD2FE81BF4D0A80074C9DD /* ASMapNode.h in Headers */,
 				9C6BB3B31B8CC9C200F13F52 /* ASAbsoluteLayoutElement.h in Headers */,
 				34EFC7731B701D0700AD841F /* ASAbsoluteLayoutSpec.h in Headers */,
 				B350620A1B010EFD0018CF92 /* ASTableView.h in Headers */,
@@ -2378,7 +2371,6 @@
 				CCA282D11E9EBF6C0037E8B7 /* ASTipsWindow.mm in Sources */,
 				8BBBAB8D1CEBAF1E00107FC6 /* ASDefaultPlaybackButton.mm in Sources */,
 				B30BF6541C59D889004FCD53 /* ASLayoutManager.mm in Sources */,
-				92DD2FE71BF4D0850074C9DD /* ASMapNode.mm in Sources */,
 				CCA282B91E9EA8E40037E8B7 /* AsyncDisplayKit+Tips.mm in Sources */,
 				636EA1A51C7FF4EF00EE152F /* ASDefaultPlayButton.mm in Sources */,
 				B350623D1B010EFD0018CF92 /* _ASAsyncTransaction.mm in Sources */,
@@ -2636,7 +2628,6 @@
 					"DEBUG=1",
 					"$(inherited)",
 					"AS_USE_ASSETS_LIBRARY=1",
-					"AS_USE_MAPKIT=1",
 					"AS_USE_PHOTOS=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
