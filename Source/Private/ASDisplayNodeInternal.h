@@ -27,7 +27,6 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol _ASDisplayLayerDelegate;
 @class _ASDisplayLayer;
 @class _ASPendingState;
-@class ASNodeController;
 struct ASDisplayNodeFlags;
 
 BOOL ASDisplayNodeSubclassOverridesSelector(Class subclass, SEL selector);
@@ -154,9 +153,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
   ASDisplayNode * __weak _supernode;
   NSMutableArray<ASDisplayNode *> *_subnodes;
 
-  ASNodeController *_strongNodeController;
-  __weak ASNodeController *_weakNodeController;
-
   // Set this to nil whenever you modify _subnodes
   NSArray<ASDisplayNode *> *_cachedSubnodes;
 
@@ -280,16 +276,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
  * Invoked after a call to setNeedsDisplay to the underlying view
  */
 - (void)__setNeedsDisplay;
-
-/**
- * Setup the node -> controller reference. Strong or weak is based on
- * the "shouldInvertStrongReference" property of the controller.
- *
- * Note: To prevent lock-ordering deadlocks, this method does not take the node's lock.
- * In practice, changing the node controller of a node multiple times is not
- * supported behavior.
- */
-- (void)__setNodeController:(ASNodeController *)controller;
 
 /**
  * Called whenever the node needs to layout its subnodes and, if it's already loaded, its subviews. Executes the layout pass for the node

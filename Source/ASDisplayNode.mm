@@ -29,7 +29,6 @@
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 #import <AsyncDisplayKit/ASLayoutElementStylePrivate.h>
 #import <AsyncDisplayKit/ASMainThreadDeallocation.h>
-#import <AsyncDisplayKit/ASNodeController+Beta.h>
 #import <AsyncDisplayKit/ASRunLoopQueue.h>
 #import <AsyncDisplayKit/ASSignpost.h>
 #import <AsyncDisplayKit/ASWeakProxy.h>
@@ -912,18 +911,6 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
 {
   MutexLocker l(__instanceLock__);
   _flags.placeholderEnabled = flag;
-}
-
-- (void)__setNodeController:(ASNodeController *)controller
-{
-  // See docs for why we don't lock.
-  if (controller.shouldInvertStrongReference) {
-    _strongNodeController = controller;
-    _weakNodeController = nil;
-  } else {
-    _weakNodeController = controller;
-    _strongNodeController = nil;
-  }
 }
 
 - (void)checkResponderCompatibility

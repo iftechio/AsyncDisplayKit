@@ -51,7 +51,6 @@
 
 #import <AsyncDisplayKit/ASScrollNode.h>
 
-#import <AsyncDisplayKit/ASNodeController+Beta.h>
 #import <AsyncDisplayKit/ASDKViewController.h>
 #import <AsyncDisplayKit/ASRangeControllerUpdateRangeProtocol+Beta.h>
 
