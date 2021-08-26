@@ -21,9 +21,8 @@ NS_ASSUME_NONNULL_BEGIN
  * The userInfo provided by this downloader is `nil`.
  *
  * This is a very basic image downloader. It does not support caching, progressive downloading and likely
- * isn't something you should use in production. If you'd like something production ready, see @c ASPINRemoteImageDownloader
+ * isn't something you should use in production.
  *
- * @note It is strongly recommended you include PINRemoteImage and use @c ASPINRemoteImageDownloader instead.
  */
 @property (class, readonly) ASBasicImageDownloader *sharedImageDownloader;
 + (ASBasicImageDownloader *)sharedImageDownloader NS_RETURNS_RETAINED;

@@ -39,16 +39,10 @@ Pod::Spec.new do |spec|
       'Source/TextKit/*.h',
     ]
   end
-  
-  spec.subspec 'PINRemoteImage' do |pin|
-    pin.dependency 'PINRemoteImage/iOS', '~> 3.0.0'
-    pin.dependency 'PINRemoteImage/PINCache'
-    pin.dependency 'Texture/Core'
-  end
 
   # Include these by default for backwards compatibility.
   # This will change in 3.0.
-  spec.default_subspecs = 'Core', 'PINRemoteImage'
+  spec.default_subspecs = 'Core'
 
   spec.social_media_url = 'https://twitter.com/TextureiOS'
   spec.library = 'c++'

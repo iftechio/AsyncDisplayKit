@@ -20,10 +20,6 @@
 #import <AsyncDisplayKit/ASImageContainerProtocolCategories.h>
 #import <AsyncDisplayKit/ASNetworkImageLoadInfo+Private.h>
 
-#if AS_PIN_REMOTE_IMAGE
-#import <AsyncDisplayKit/ASPINRemoteImageDownloader.h>
-#endif
-
 @interface ASNetworkImageNode ()
 {
   // Only access any of these while locked.
@@ -110,11 +106,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
 
 - (instancetype)init
 {
-#if AS_PIN_REMOTE_IMAGE
-  return [self initWithCache:[ASPINRemoteImageDownloader sharedDownloader] downloader:[ASPINRemoteImageDownloader sharedDownloader]];
-#else
   return [self initWithCache:nil downloader:[ASBasicImageDownloader sharedImageDownloader]];
-#endif
 }
 
 - (void)dealloc
@@ -665,7 +657,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
       /*
         Kick off a download with default priority.
         The actual "default" value is decided by the downloader.
-        ASBasicImageDownloader and ASPINRemoteImageDownloader both use ASImageDownloaderPriorityImminent
+        ASBasicImageDownloader use ASImageDownloaderPriorityImminent
         which is mapped to NSURLSessionTaskPriorityDefault.
 
         This means that preload and display nodes use the same priority
