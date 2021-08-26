@@ -15,7 +15,6 @@
 #import <AsyncDisplayKit/ASDisplayNode+Convenience.h>
 #import <AsyncDisplayKit/ASDisplayNode+Subclasses.h>
 #import <AsyncDisplayKit/ASLayout.h>
-#import <AsyncDisplayKit/ASDKViewController.h>
 
 #pragma mark - _ASDisplayView
 
@@ -174,9 +173,7 @@
   // This is only to help detect issues when a root-of-view-controller node is reused separately from its view controller.
   // Avoid overhead in release.
   if (superview && node.viewControllerRoot) {
-    UIViewController *vc = [node closestViewController];
-
-    ASDisplayNodeAssert(vc != nil && [vc isKindOfClass:[ASDKViewController class]] && ((ASDKViewController*)vc).node == node, @"This node was once used as a view controller's node. You should not reuse it without its view controller.");
+    ASDisplayNodeAssert(false, @"This node was once used as a view controller's node. You should not reuse it without its view controller.");
   }
 #endif
 

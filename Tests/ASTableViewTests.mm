@@ -776,7 +776,8 @@
   ASTableViewFilledDataSource *ds = [[ASTableViewFilledDataSource alloc] init];
   ds.rowsPerSection = 1;
   node.dataSource = ds;
-  ASDKViewController *vc = [[ASDKViewController alloc] initWithNode:node];
+  UIViewController *vc = [[UIViewController alloc] init];
+  [vc.view addSubnode:node];
   UITabBarController *tabCtrl = [[UITabBarController alloc] init];
   tabCtrl.viewControllers = @[ vc ];
   tabCtrl.tabBar.translucent = NO;
