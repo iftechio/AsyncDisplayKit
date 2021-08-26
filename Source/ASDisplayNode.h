@@ -842,17 +842,7 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 
 @end
 
-typedef NS_ENUM(NSInteger, ASLayoutEngineType) {
-  ASLayoutEngineTypeLayoutSpec,
-  ASLayoutEngineTypeYoga
-};
-
 @interface ASDisplayNode (ASLayout)
-
-/**
- * @abstract Returns the current layout type the node uses for layout the subtree.
- */
-@property (readonly) ASLayoutEngineType layoutEngineType;
 
 /**
  * @abstract Return the calculated size.

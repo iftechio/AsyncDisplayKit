@@ -8,7 +8,6 @@
 //
 
 #import <AsyncDisplayKit/ASButtonNode+Private.h>
-#import <AsyncDisplayKit/ASButtonNode+Yoga.h>
 #import <AsyncDisplayKit/ASStackLayoutSpec.h>
 #import <AsyncDisplayKit/ASThread.h>
 #import <AsyncDisplayKit/ASDisplayNode+Subclasses.h>
@@ -41,8 +40,6 @@
     _contentEdgeInsets = UIEdgeInsetsZero;
     _imageAlignment = ASButtonNodeImageAlignmentBeginning;
     self.accessibilityTraits = self.defaultAccessibilityTraits;
-    
-    [self updateYogaLayoutIfNeeded];
   }
   return self;
 }
@@ -169,7 +166,6 @@
     _imageNode.image = newImage;
     [self unlock];
 
-    [self updateYogaLayoutIfNeeded];
     [self setNeedsLayout];
     return;
   }
@@ -201,7 +197,6 @@
     [self unlock];
     
     self.accessibilityLabel = self.defaultAccessibilityLabel;
-    [self updateYogaLayoutIfNeeded];
     [self setNeedsLayout];
     return;
   }
@@ -230,7 +225,6 @@
     _backgroundImageNode.image = newImage;
     [self unlock];
 
-    [self updateYogaLayoutIfNeeded];
     [self setNeedsLayout];
     return;
   }
@@ -247,7 +241,6 @@
 - (void)setContentSpacing:(CGFloat)contentSpacing
 {
   if (ASLockedSelfCompareAssign(_contentSpacing, contentSpacing)) {
-    [self updateYogaLayoutIfNeeded];
     [self setNeedsLayout];
   }
 }
@@ -261,7 +254,6 @@
 - (void)setLaysOutHorizontally:(BOOL)laysOutHorizontally
 {
   if (ASLockedSelfCompareAssign(_laysOutHorizontally, laysOutHorizontally)) {
-    [self updateYogaLayoutIfNeeded];
     [self setNeedsLayout];
   }
 }
@@ -515,8 +507,6 @@
 }
 
 #pragma mark - Layout
-
-#if !YOGA
 - (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize
 {
     UIEdgeInsets contentEdgeInsets;
@@ -561,7 +551,6 @@
     
     return spec;
 }
-#endif
 
 - (void)layout
 {

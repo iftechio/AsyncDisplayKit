@@ -952,9 +952,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
 {
   _bridge_prologue_write;
   _setToViewOnly(semanticContentAttribute, semanticContentAttribute);
-#if YOGA
-  [self semanticContentAttributeDidChange:semanticContentAttribute];
-#endif
 }
 
 - (UIEdgeInsets)layoutMargins

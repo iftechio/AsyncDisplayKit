@@ -15,7 +15,6 @@
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 #import <AsyncDisplayKit/ASLayout.h>
 #import <AsyncDisplayKit/ASLayoutElementStylePrivate.h>
-#import <AsyncDisplayKit/ASDisplayNode+Yoga.h>
 #import <AsyncDisplayKit/NSArray+Diffing.h>
 
 using AS::MutexLocker;
@@ -58,12 +57,7 @@ using AS::MutexLocker;
 {
   DISABLED_ASAssertLocked(__instanceLock__);
   if (_style == nil) {
-#if YOGA
-    // In Yoga mode we use the delegate to inform the tree if properties changes
-    _style = [[ASLayoutElementStyle alloc] initWithDelegate:self];
-#else
     _style = [[ASLayoutElementStyle alloc] init];
-#endif
   }
   return _style;
 }
@@ -87,7 +81,7 @@ using AS::MutexLocker;
 
 - (ASLayout *)layoutThatFits:(ASSizeRange)constrainedSize parentSize:(CGSize)parentSize
 {
-  ASScopedLockSelfOrToRoot();
+  ASLockScopeSelf();
 
   // If one or multiple layout transitions are in flight it still can happen that layout information is requested
   // on other threads. As the pending and calculated layout to be updated in the layout transition in here just a
@@ -168,21 +162,6 @@ ASLayoutElementStyleExtensibilityForwarding
 #pragma mark - ASDisplayNode (ASLayout)
 
 @implementation ASDisplayNode (ASLayout)
-
-- (ASLayoutEngineType)layoutEngineType
-{
-#if YOGA
-  MutexLocker l(__instanceLock__);
-  YGNodeRef yogaNode = _style.yogaNode;
-  BOOL hasYogaParent = (_yogaParent != nil);
-  BOOL hasYogaChildren = (_yogaChildren.count > 0);
-  if (yogaNode != NULL && (hasYogaParent || hasYogaChildren)) {
-    return ASLayoutEngineTypeYoga;
-  }
-#endif
-
-  return ASLayoutEngineTypeLayoutSpec;
-}
 
 - (ASLayout *)calculatedLayout
 {
@@ -331,7 +310,7 @@ ASLayoutElementStyleExtensibilityForwarding
 - (void)_u_measureNodeWithBoundsIfNecessary:(CGRect)bounds
 {
   DISABLED_ASAssertUnlocked(__instanceLock__);
-  ASScopedLockSelfOrToRoot();
+  ASLockScopeSelf();
 
   // Check if we are a subnode in a layout transition.
   // In this case no measurement is needed as it's part of the layout transition
@@ -402,19 +381,9 @@ ASLayoutElementStyleExtensibilityForwarding
     // Use the last known constrainedSize passed from a parent during layout (if never, use bounds).
     NSUInteger version = _layoutVersion;
     ASSizeRange constrainedSize = [self _locked_constrainedSizeForLayoutPass];
-#if YOGA
-    // This flag indicates to the Texture+Yoga code that this next layout is intended to be
-    // displayed (vs. just for measurement). This will cause it to call setNeedsLayout on any nodes
-    // whose layout changes as a result of the Yoga recalculation. This is necessary because a
-    // change in one Yoga node can change the layout for any other node in the tree.
-    self.willApplyNextYogaCalculatedLayout = YES;
-#endif
     ASLayout *layout = [self calculateLayoutThatFits:constrainedSize
                                     restrictedToSize:self.style.size
                                 relativeToParentSize:boundsSizeForLayout];
-#if YOGA
-    self.willApplyNextYogaCalculatedLayout = NO;
-#endif
     nextLayout = ASDisplayNodeLayout(layout, constrainedSize, boundsSizeForLayout, version);
     // Now that the constrained size of pending layout might have been reused, the layout is useless
     // Release it and any orphaned subnodes it retains
@@ -675,7 +644,7 @@ ASLayoutElementStyleExtensibilityForwarding
     NSUInteger newLayoutVersion = self->_layoutVersion;
     ASLayout *newLayout;
     {
-      ASScopedLockSelfOrToRoot();
+      ASLockScopeSelf();
 
       ASLayoutElementContext *ctx = [[ASLayoutElementContext alloc] init];
       ctx.transitionID = transitionID;
@@ -1008,12 +977,6 @@ ASLayoutElementStyleExtensibilityForwarding
 
 - (void)_pendingLayoutTransitionDidComplete
 {
-  // This assertion introduces a breaking behavior for nodes that has ASM enabled but also manually manage some subnodes.
-  // Let's gate it behind YOGA flag.
-#if YOGA
-  [self _assertSubnodeState];
-#endif
-
   // Subclass hook
   // TODO: Disabled due to PR: https://github.com/TextureGroup/Texture/pull/1204
   DISABLED_ASAssertUnlocked(__instanceLock__);
@@ -1066,33 +1029,6 @@ ASLayoutElementStyleExtensibilityForwarding
   ASDisplayNodeAssertTrue(displayNodeLayout.layout.size.height >= 0.0);
   
   _calculatedDisplayNodeLayout = displayNodeLayout;
-}
-
-@end
-
-#pragma mark -
-#pragma mark - ASDisplayNode (YogaLayout)
-
-@implementation ASDisplayNode (YogaLayout)
-
-- (BOOL)locked_shouldLayoutFromYogaRoot {
-#if YOGA
-  YGNodeRef yogaNode = _style.yogaNode;
-  BOOL hasYogaParent = (_yogaParent != nil);
-  BOOL hasYogaChildren = (_yogaChildren.count > 0);
-  BOOL usesYoga = (yogaNode != NULL && (hasYogaParent || hasYogaChildren));
-  if (usesYoga) {
-    if ([self shouldHaveYogaMeasureFunc] == NO) {
-      return YES;
-    } else {
-      return NO;
-    }
-  } else {
-    return NO;
-  }
-#else
-  return NO;
-#endif
 }
 
 @end

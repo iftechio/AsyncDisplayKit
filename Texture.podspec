@@ -46,12 +46,6 @@ Pod::Spec.new do |spec|
     pin.dependency 'Texture/Core'
   end
 
-  spec.subspec 'Yoga' do |yoga|
-    yoga.xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) YOGA=1' }
-    yoga.dependency 'Yoga', '1.6.0'
-    yoga.dependency 'Texture/Core'
-  end
-
   # Include these by default for backwards compatibility.
   # This will change in 3.0.
   spec.default_subspecs = 'Core', 'PINRemoteImage'

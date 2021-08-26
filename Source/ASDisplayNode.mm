@@ -243,9 +243,6 @@ static ASDisplayNodeMethodOverrides GetASDisplayNodeMethodOverrides(Class c)
     class_addMethod(self, @selector(hierarchyDisplayDidFinish), noArgsImp, "v@:");
     class_addMethod(self, @selector(calculatedLayoutDidChange), noArgsImp, "v@:");
     
-    auto type0 = "v@:" + std::string(@encode(ASSizeRange));
-    class_addMethod(self, @selector(willCalculateLayout:), (IMP)StubImplementationWithSizeRange, type0.c_str());
-    
     auto interfaceStateType = std::string(@encode(ASInterfaceState));
     auto type1 = "v@:" + interfaceStateType + interfaceStateType;
     class_addMethod(self, @selector(interfaceStateDidChange:fromState:), (IMP)StubImplementationWithTwoInterfaceStates, type1.c_str());
@@ -985,10 +982,6 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
   _layoutVersion++;
   
   _unflattenedLayout = nil;
-
-#if YOGA
-  [self invalidateCalculatedYogaLayout];
-#endif
 }
 
 - (void)__layout
@@ -1085,23 +1078,7 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
 {
   __ASDisplayNodeCheckForLayoutMethodOverrides;
 
-  switch (self.layoutEngineType) {
-    case ASLayoutEngineTypeLayoutSpec:
-      return [self calculateLayoutLayoutSpec:constrainedSize];
-#if YOGA
-    case ASLayoutEngineTypeYoga:
-      return [self calculateLayoutYoga:constrainedSize];
-#endif
-      // If YOGA is not defined but for some reason the layout type engine is Yoga
-      // we explicitly fallthrough here
-    default:
-      break;
-  }
-
-  // If this case is reached a layout type engine was defined for a node that is currently
-  // not supported.
-  ASDisplayNodeAssert(NO, @"No layout type determined");
-  return nil;
+  return [self calculateLayoutLayoutSpec:constrainedSize];
 }
 
 - (CGSize)calculateSizeThatFits:(CGSize)constrainedSize

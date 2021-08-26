@@ -121,9 +121,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
     unsigned visibilityNotificationsDisabled:VISIBILITY_NOTIFICATIONS_DISABLED_BITS;
     unsigned isDeallocating:1;
 
-#if YOGA
-      unsigned willApplyNextYogaCalculatedLayout:1;
-#endif
       // Automatically manages subnodes
       unsigned automaticallyManagesSubnodes:1; // Main thread only
       unsigned placeholderEnabled:1;
@@ -177,15 +174,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
   // Layout Spec
   ASLayoutSpecBlock _layoutSpecBlock;
   NSString *_debugName;
-
-#if YOGA
-  // Only ASDisplayNodes are supported in _yogaChildren currently. This means that it is necessary to
-  // create ASDisplayNodes to make a stack layout when using Yoga.
-  // However, the implementation is mostly ready for id <ASLayoutElement>, with a few areas requiring updates.
-  NSMutableArray<ASDisplayNode *> *_yogaChildren;
-  __weak ASDisplayNode *_yogaParent;
-  ASLayout *_yogaCalculatedLayout;
-#endif
 
   // Layout Transition
   _ASTransitionContext *_pendingLayoutTransitionContext;
