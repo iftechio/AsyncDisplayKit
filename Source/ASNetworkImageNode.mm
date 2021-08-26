@@ -16,7 +16,6 @@
 #import <AsyncDisplayKit/ASEqualityHelpers.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 #import <AsyncDisplayKit/ASImageNode+Private.h>
-#import <AsyncDisplayKit/ASImageNode+AnimatedImagePrivate.h>
 #import <AsyncDisplayKit/ASImageContainerProtocolCategories.h>
 #import <AsyncDisplayKit/ASNetworkImageLoadInfo+Private.h>
 
@@ -58,7 +57,6 @@
 
       unsigned int downloaderImplementsSetProgress:1;
       unsigned int downloaderImplementsSetPriority:1;
-      unsigned int downloaderImplementsAnimatedImage:1;
       unsigned int downloaderImplementsCancelWithResume:1;
       unsigned int downloaderImplementsDownloadWithPriority:1;
 
@@ -90,7 +88,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   
   _networkImageNodeFlags.downloaderImplementsSetProgress = [downloader respondsToSelector:@selector(setProgressImageBlock:callbackQueue:withDownloadIdentifier:)];
   _networkImageNodeFlags.downloaderImplementsSetPriority = [downloader respondsToSelector:@selector(setPriority:withDownloadIdentifier:)];
-  _networkImageNodeFlags.downloaderImplementsAnimatedImage = [downloader respondsToSelector:@selector(animatedImageWithData:)];
   _networkImageNodeFlags.downloaderImplementsCancelWithResume = [downloader respondsToSelector:@selector(cancelImageDownloadWithResumePossibilityForIdentifier:)];
   _networkImageNodeFlags.downloaderImplementsDownloadWithPriority = [downloader respondsToSelector:@selector(downloadImageWithURL:priority:callbackQueue:downloadProgress:completion:)];
 
@@ -208,7 +205,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
     if (reset || hadURL) {
       [self _setCurrentImageQuality:(hadURL ? 0.0 : 1.0)];
       [self _locked__setImage:_defaultImage];
-      [self _locked_setAnimatedImage:nil];
     }
   }
 
@@ -356,7 +352,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
 - (BOOL)placeholderShouldPersist
 {
   ASLockScopeSelf();
-  return (self.image == nil && self.animatedImage == nil && _URL != nil);
+  return (self.image == nil && _URL != nil);
 }
 
 /* displayWillStartAsynchronously: in ASMultiplexImageNode has a very similar implementation. Changes here are likely necessary
@@ -565,7 +561,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   
   [self _locked_cancelImageDownloadWithResumePossibility:storeResume];
   
-  [self _locked_setAnimatedImage:nil];
   [self _setCurrentImageQuality:0.0];
   [self _setDownloadProgress:0.0];
   [self _locked__setImage:_defaultImage];
@@ -742,24 +737,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
             }
           }
 
-          // If the file may be an animated gif and then created an animated image.
-          id<ASAnimatedImageProtocol> animatedImage = nil;
-          if (self->_networkImageNodeFlags.downloaderImplementsAnimatedImage) {
-            const auto data = [[NSData alloc] initWithContentsOfURL:URL];
-            if (data != nil) {
-              animatedImage = [self->_downloader animatedImageWithData:data];
-
-              if ([animatedImage respondsToSelector:@selector(isDataSupported:)] && [animatedImage isDataSupported:data] == NO) {
-                animatedImage = nil;
-              }
-            }
-          }
-
-          if (animatedImage != nil) {
-            [self _locked_setAnimatedImage:animatedImage];
-          } else {
-            [self _locked__setImage:nonAnimatedImage];
-          }
+          [self _locked__setImage:nonAnimatedImage];
         }
 
         self->_networkImageNodeFlags.imageLoaded = YES;
@@ -806,14 +784,8 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
           if (imageContainer != nil) {
             [strongSelf _setCurrentImageQuality:1.0];
             [strongSelf _setDownloadProgress:1.0];
-            NSData *animatedImageData = [imageContainer asdk_animatedImageData];
-            if (animatedImageData && strongSelf->_networkImageNodeFlags.downloaderImplementsAnimatedImage) {
-              id animatedImage = [strongSelf->_downloader animatedImageWithData:animatedImageData];
-              [strongSelf _locked_setAnimatedImage:animatedImage];
-            } else {
-              newImage = [imageContainer asdk_image];
-              [strongSelf _locked__setImage:newImage];
-            }
+            newImage = [imageContainer asdk_image];
+            [strongSelf _locked__setImage:newImage];
             strongSelf->_networkImageNodeFlags.imageLoaded = YES;
           }
           
@@ -866,7 +838,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
             return;
           }
           
-          if ([imageContainer asdk_image] == nil && [imageContainer asdk_animatedImageData] == nil && self->_downloader != nil) {
+          if ([imageContainer asdk_image] == nil && self->_downloader != nil) {
             if (delegateDidFailToLoadImageFromCache) {
               [delegate imageNodeDidFailToLoadImageFromCache:self];
             }
