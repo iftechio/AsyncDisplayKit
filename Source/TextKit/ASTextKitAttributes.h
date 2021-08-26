@@ -13,8 +13,6 @@
 
 #import <AsyncDisplayKit/ASAvailability.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <AsyncDisplayKit/ASEqualityHelpers.h>
 
 ASDK_EXTERN NSString *const ASTextKitTruncationAttributeName;
@@ -130,5 +128,3 @@ struct ASTextKitAttributes {
 
   size_t hash() const;
 };
-
-#endif

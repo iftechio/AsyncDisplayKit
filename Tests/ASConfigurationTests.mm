@@ -16,9 +16,6 @@
 #import "ASTestCase.h"
 
 static ASExperimentalFeatures features[] = {
-#if AS_ENABLE_TEXTNODE
-  ASExperimentalTextNode,
-#endif
   ASExperimentalInterfaceStateCoalescing,
   ASExperimentalLayerDefaults,
   ASExperimentalCollectionTeardown,
@@ -66,8 +63,6 @@ static ASExperimentalFeatures features[] = {
   return allFeatures;
 }
 
-#if AS_ENABLE_TEXTNODE
-
 - (void)testExperimentalFeatureConfig
 {
   // Set the config
@@ -88,12 +83,10 @@ static ASExperimentalFeatures features[] = {
   XCTAssertTrue(ASActivateExperimentalFeature(ASExperimentalLayerDefaults));
   // We should get a callback here
   // Now activate text node and expect it fails.
-  XCTAssertFalse(ASActivateExperimentalFeature(ASExperimentalTextNode));
+  XCTAssertFalse(ASActivateExperimentalFeature(ASExperimentalInterfaceStateCoalescing));
   // But we should get another callback.
   [self waitForExpectationsWithTimeout:3 handler:nil];
 }
-
-#endif
 
 - (void)textureDidActivateExperimentalFeatures:(ASExperimentalFeatures)feature
 {

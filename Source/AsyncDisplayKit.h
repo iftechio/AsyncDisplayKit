@@ -20,7 +20,6 @@
 #import <AsyncDisplayKit/ASControlNode.h>
 #import <AsyncDisplayKit/ASImageNode.h>
 #import <AsyncDisplayKit/ASTextNode.h>
-#import <AsyncDisplayKit/ASTextNode2.h>
 #import <AsyncDisplayKit/ASEditableTextNode.h>
 #import <AsyncDisplayKit/ASButtonNode.h>
 #import <AsyncDisplayKit/ASMapNode.h>

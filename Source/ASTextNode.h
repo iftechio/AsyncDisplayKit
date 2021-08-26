@@ -13,13 +13,6 @@
 #import <AsyncDisplayKit/ASDisplayNode+Beta.h>
 #import <AsyncDisplayKit/ASTextNodeCommon.h>
 
-#if (!AS_ENABLE_TEXTNODE)
-
-// Pull in ASTextNode2 to replace ASTextNode with ASTextNode2
-#import <AsyncDisplayKit/ASTextNode2.h>
-
-#else
-
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -274,5 +267,3 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
-
-#endif

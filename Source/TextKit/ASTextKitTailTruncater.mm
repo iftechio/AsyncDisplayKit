@@ -9,8 +9,6 @@
 
 #import <AsyncDisplayKit/ASTextKitTailTruncater.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <AsyncDisplayKit/ASTextKitContext.h>
 
 @implementation ASTextKitTailTruncater
@@ -192,5 +190,3 @@
 }
 
 @end
-
-#endif

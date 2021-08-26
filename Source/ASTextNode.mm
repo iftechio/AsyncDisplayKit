@@ -8,11 +8,6 @@
 //
 
 #import <AsyncDisplayKit/ASTextNode.h>
-
-#if AS_ENABLE_TEXTNODE
-
-#import <AsyncDisplayKit/ASTextNode2.h>
-
 #import <AsyncDisplayKit/ASTextNode+Beta.h>
 
 #import <mutex>
@@ -1495,31 +1490,6 @@ static NSAttributedString *DefaultTruncationAttributedString()
 }
 #endif
 
-// All direct descendants of ASTextNode get their superclass replaced by ASTextNode2.
-+ (void)initialize
-{
-  // Texture requires that node subclasses call [super initialize]
-  [super initialize];
-
-  if (class_getSuperclass(self) == [ASTextNode class]
-      && ASActivateExperimentalFeature(ASExperimentalTextNode)) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    class_setSuperclass(self, [ASTextNode2 class]);
-#pragma clang diagnostic pop
-  }
-}
-
-// For direct allocations of ASTextNode itself, we override allocWithZone:
-+ (id)allocWithZone:(struct _NSZone *)zone
-{
-  if (ASActivateExperimentalFeature(ASExperimentalTextNode)) {
-    return (ASTextNode *)[ASTextNode2 allocWithZone:zone];
-  } else {
-    return [super allocWithZone:zone];
-  }
-}
-
 @end
 
 @implementation ASTextNode (Unsupported)
@@ -1560,5 +1530,3 @@ static NSAttributedString *DefaultTruncationAttributedString()
 }
 
 @end
-
-#endif

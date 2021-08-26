@@ -11,8 +11,6 @@
 
 #import <AsyncDisplayKit/ASAvailability.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <AsyncDisplayKit/ASTextKitAttributes.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -54,5 +52,3 @@ AS_SUBCLASSING_RESTRICTED
 @end
 
 NS_ASSUME_NONNULL_END
-
-#endif

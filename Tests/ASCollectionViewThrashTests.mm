@@ -44,13 +44,6 @@
   _update = nil;
 }
 
-// NOTE: Despite the documentation, this is not always called if an exception is caught.
-- (void)recordFailureWithDescription:(NSString *)description inFile:(NSString *)filePath atLine:(NSUInteger)lineNumber expected:(BOOL)expected
-{
-  _failed = YES;
-  [super recordFailureWithDescription:description inFile:filePath atLine:lineNumber expected:expected];
-}
-
 - (void)verifyDataSource:(ASThrashDataSource *)ds
 {
   CollectionView *collectionView = ds.collectionView;

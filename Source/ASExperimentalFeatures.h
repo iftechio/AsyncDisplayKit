@@ -18,7 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_OPTIONS(NSUInteger, ASExperimentalFeatures) {
   // If AS_ENABLE_TEXTNODE=0 or TextNode2 subspec is used this setting is a no op and ASTextNode2
   // will be used in all cases
-  ASExperimentalTextNode = 1 << 0,                                          // exp_text_node
   ASExperimentalInterfaceStateCoalescing = 1 << 1,                          // exp_interface_state_coalesce
   ASExperimentalLayerDefaults = 1 << 2,                                     // exp_infer_layer_defaults
   ASExperimentalCollectionTeardown = 1 << 3,                                // exp_collection_teardown
