@@ -128,8 +128,6 @@
 		690C35621E055C5D00069B91 /* ASDimensionInternal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 690C35601E055C5D00069B91 /* ASDimensionInternal.mm */; };
 		690C35641E055C7B00069B91 /* ASDimensionInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 690C35631E055C7B00069B91 /* ASDimensionInternal.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		690ED58E1E36BCA6000627C0 /* ASLayoutElementStylePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 690ED58D1E36BCA6000627C0 /* ASLayoutElementStylePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		690ED5981E36D118000627C0 /* ASControlNode+tvOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = 690ED5931E36D118000627C0 /* ASControlNode+tvOS.mm */; };
-		690ED59B1E36D118000627C0 /* ASImageNode+tvOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = 690ED5951E36D118000627C0 /* ASImageNode+tvOS.mm */; };
 		692510141E74FB44003F2DD0 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 692510131E74FB44003F2DD0 /* Default-568h@2x.png */; };
 		692BE8D71E36B65B00C86D87 /* ASLayoutSpecPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 692BE8D61E36B65B00C86D87 /* ASLayoutSpecPrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		6947B0BE1E36B4E30007C478 /* ASStackUnpositionedLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 6947B0BC1E36B4E30007C478 /* ASStackUnpositionedLayout.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -656,8 +654,6 @@
 		690C35601E055C5D00069B91 /* ASDimensionInternal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ASDimensionInternal.mm; sourceTree = "<group>"; };
 		690C35631E055C7B00069B91 /* ASDimensionInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASDimensionInternal.h; sourceTree = "<group>"; };
 		690ED58D1E36BCA6000627C0 /* ASLayoutElementStylePrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASLayoutElementStylePrivate.h; sourceTree = "<group>"; };
-		690ED5931E36D118000627C0 /* ASControlNode+tvOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "ASControlNode+tvOS.mm"; sourceTree = "<group>"; };
-		690ED5951E36D118000627C0 /* ASImageNode+tvOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "ASImageNode+tvOS.mm"; sourceTree = "<group>"; };
 		692510131E74FB44003F2DD0 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		692BE8D61E36B65B00C86D87 /* ASLayoutSpecPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASLayoutSpecPrivate.h; sourceTree = "<group>"; };
 		6947B0BC1E36B4E30007C478 /* ASStackUnpositionedLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASStackUnpositionedLayout.h; sourceTree = "<group>"; };
@@ -1088,7 +1084,6 @@
 				058D09B2195D04C000B7D73C /* Supporting Files */,
 				257754661BED245B00737CA5 /* TextKit */,
 				9C0BA4862582CE35001C293B /* TextExperiment */,
-				690ED5911E36D118000627C0 /* tvOS */,
 				CC58AA4A1E398E1D002C8CB4 /* ASBlockTypes.h */,
 				DECBD6E51BE56E1900CF4905 /* ASButtonNode.h */,
 				DECBD6E61BE56E1900CF4905 /* ASButtonNode.mm */,
@@ -1517,15 +1512,6 @@
 				AC6145421D8AFD4F003D62A2 /* ASSection.mm */,
 			);
 			name = "Data Controller";
-			sourceTree = "<group>";
-		};
-		690ED5911E36D118000627C0 /* tvOS */ = {
-			isa = PBXGroup;
-			children = (
-				690ED5931E36D118000627C0 /* ASControlNode+tvOS.mm */,
-				690ED5951E36D118000627C0 /* ASImageNode+tvOS.mm */,
-			);
-			path = tvOS;
 			sourceTree = "<group>";
 		};
 		6947B0BB1E36B4E30007C478 /* Layout */ = {
@@ -2247,7 +2233,6 @@
 				254C6B861BF94F8A003EC431 /* ASTextKitContext.mm in Sources */,
 				E5B078001E69F4EB00C24B5B /* ASElementMap.mm in Sources */,
 				9C8898BC1C738BA800D6B02E /* ASTextKitFontSizeAdjuster.mm in Sources */,
-				690ED59B1E36D118000627C0 /* ASImageNode+tvOS.mm in Sources */,
 				CCDC9B4E200991D10063C1F8 /* ASGraphicsContext.mm in Sources */,
 				34EFC7621B701CA400AD841F /* ASBackgroundLayoutSpec.mm in Sources */,
 				9D9AA56921E23EE200172C09 /* ASDisplayNode+LayoutSpec.mm in Sources */,
@@ -2366,7 +2351,6 @@
 				CCA282CD1E9EB73E0037E8B7 /* ASTipNode.mm in Sources */,
 				044284FD1BAA365100D16268 /* UICollectionViewLayout+ASConvenience.mm in Sources */,
 				CC0F885B1E42807F00576FED /* ASCollectionViewFlowLayoutInspector.mm in Sources */,
-				690ED5981E36D118000627C0 /* ASControlNode+tvOS.mm in Sources */,
 				254C6B8A1BF94F8A003EC431 /* ASTextKitRenderer+TextChecking.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
