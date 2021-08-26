@@ -180,7 +180,6 @@
 		9019FBBF1ED8061D00C45F72 /* ASYogaUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 9019FBBB1ED8061D00C45F72 /* ASYogaUtilities.h */; };
 		9019FBC01ED8061D00C45F72 /* ASYogaUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9019FBBC1ED8061D00C45F72 /* ASYogaUtilities.mm */; };
 		90FC784F1E4BFE1B00383C5A /* ASDisplayNode+Yoga.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90FC784E1E4BFE1B00383C5A /* ASDisplayNode+Yoga.mm */; };
-		92DD2FE61BF4D05E0074C9DD /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 92DD2FE51BF4D05E0074C9DD /* MapKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		9644CFE02193777C00213478 /* ASThrashUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 9644CFDF2193777C00213478 /* ASThrashUtility.m */; };
 		9692B4FF219E12370060C2C3 /* ASCollectionViewThrashTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9692B4FE219E12370060C2C3 /* ASCollectionViewThrashTests.mm */; };
 		9C0BA49C2582CE35001C293B /* ASTextDebugOption.mm in Sources */ = {isa = PBXBuildFile; fileRef = 9C0BA4882582CE35001C293B /* ASTextDebugOption.mm */; };
@@ -323,7 +322,6 @@
 		B35062581B010F070018CF92 /* ASAvailability.h in Headers */ = {isa = PBXBuildFile; fileRef = 0516FA3A1A15563400B4EBED /* ASAvailability.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B35062591B010F070018CF92 /* ASBaseDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 058D0A44195D058D00B7D73C /* ASBaseDefines.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B350625C1B010F070018CF92 /* ASLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 0516FA3B1A15563400B4EBED /* ASLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		B350625D1B0111740018CF92 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 051943141A1575670030A7D0 /* Photos.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		BB5FC3CE1F9BA689007F191E /* ASNavigationControllerTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = BB5FC3CD1F9BA688007F191E /* ASNavigationControllerTests.mm */; };
 		BB5FC3D11F9C9389007F191E /* ASTabBarControllerTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = BB5FC3D01F9C9389007F191E /* ASTabBarControllerTests.mm */; };
 		C018DF21216BF26700181FDA /* ASAbstractLayoutController+FrameworkPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = C018DF20216BF26600181FDA /* ASAbstractLayoutController+FrameworkPrivate.h */; };
@@ -353,10 +351,7 @@
 		CC36C191218B841A00232F23 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36C190218B841A00232F23 /* CoreText.framework */; };
 		CC36C193218B842E00232F23 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36C192218B842E00232F23 /* CoreGraphics.framework */; };
 		CC36C194218B844800232F23 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 058D09AF195D04C000B7D73C /* Foundation.framework */; };
-		CC36C196218B845B00232F23 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36C195218B845B00232F23 /* AVFoundation.framework */; };
 		CC36C198218B846300232F23 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36C197218B846300232F23 /* QuartzCore.framework */; };
-		CC36C19A218B846F00232F23 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36C199218B846F00232F23 /* CoreLocation.framework */; };
-		CC36C19C218B847400232F23 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36C19B218B847400232F23 /* CoreMedia.framework */; };
 		CC36C19D218B849C00232F23 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36C18E218B841600232F23 /* UIKit.framework */; };
 		CC36C19E218B894400232F23 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36C195218B845B00232F23 /* AVFoundation.framework */; };
 		CC36C19F218B894800232F23 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC36C19B218B847400232F23 /* CoreMedia.framework */; };
@@ -1047,16 +1042,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC36C19C218B847400232F23 /* CoreMedia.framework in Frameworks */,
-				CC36C19A218B846F00232F23 /* CoreLocation.framework in Frameworks */,
 				CC36C198218B846300232F23 /* QuartzCore.framework in Frameworks */,
-				CC36C196218B845B00232F23 /* AVFoundation.framework in Frameworks */,
 				CC36C194218B844800232F23 /* Foundation.framework in Frameworks */,
 				CC36C193218B842E00232F23 /* CoreGraphics.framework in Frameworks */,
 				CC36C191218B841A00232F23 /* CoreText.framework in Frameworks */,
 				CC36C18F218B841600232F23 /* UIKit.framework in Frameworks */,
-				92DD2FE61BF4D05E0074C9DD /* MapKit.framework in Frameworks */,
-				B350625D1B0111740018CF92 /* Photos.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
