@@ -9,10 +9,6 @@
 
 #import <AsyncDisplayKit/ASMultiplexImageNode.h>
 
-#if TARGET_OS_IOS && AS_USE_ASSETS_LIBRARY
-#import <AssetsLibrary/AssetsLibrary.h>
-#endif
-
 #import <AsyncDisplayKit/ASDisplayNodeExtras.h>
 #import <AsyncDisplayKit/ASDisplayNode+Subclasses.h>
 #import <AsyncDisplayKit/ASDisplayNode+FrameworkPrivate.h>
@@ -30,10 +26,6 @@
 using AS::MutexLocker;
 
 NSString *const ASMultiplexImageNodeErrorDomain = @"ASMultiplexImageNodeErrorDomain";
-
-#if AS_USE_ASSETS_LIBRARY
-static NSString *const kAssetsLibraryURLScheme = @"assets-library";
-#endif
 
 /**
   @abstract Signature for the block to be performed after an image has loaded.
@@ -128,16 +120,6 @@ typedef void(^ASMultiplexImageLoadCompletionBlock)(UIImage *image, id imageIdent
   @discussion This method queries both the session's in-memory and on-disk caches (with preference for the in-memory cache).
  */
 - (void)_fetchImageWithIdentifierFromCache:(id)imageIdentifier URL:(NSURL *)imageURL completion:(void (^)(UIImage *image))completionBlock;
-
-#if TARGET_OS_IOS && AS_USE_ASSETS_LIBRARY
-/**
-  @abstract Loads the image corresponding to the given assetURL from the device's Assets Library.
-  @param imageIdentifier The identifier for the image to be loaded. May not be nil.
-  @param assetURL The assets-library URL (e.g., "assets-library://identifier") of the image to load, from ALAsset. May not be nil.
-  @param completionBlock The block to be performed when the image has been loaded, if possible. May not be nil.
- */
-- (void)_loadALAssetWithIdentifier:(id)imageIdentifier URL:(NSURL *)assetURL completion:(void (^)(UIImage *image, NSError *error))completionBlock;
-#endif
 
 /**
  @abstract Downloads the image corresponding to the given imageIdentifier from the given URL.
@@ -597,19 +579,6 @@ typedef void(^ASMultiplexImageLoadCompletionBlock)(UIImage *image, id imageIdent
     finishedLoadingBlock(nil, nil, [NSError errorWithDomain:ASMultiplexImageNodeErrorDomain code:ASMultiplexImageNodeErrorCodeNoSourceForImage userInfo:nil]);
     return;
   }
-
-#if TARGET_OS_IOS && AS_USE_ASSETS_LIBRARY
-  // If it's an assets-library URL, we need to fetch it from the assets library.
-  if ([[nextImageURL scheme] isEqualToString:kAssetsLibraryURLScheme]) {
-    // Load the asset.
-    [self _loadALAssetWithIdentifier:nextImageIdentifier URL:nextImageURL completion:^(UIImage *downloadedImage, NSError *error) {
-      as_log_verbose(ASImageLoadingLog(), "Acquired image from assets library for %@ %@", weakSelf, nextImageIdentifier);
-      finishedLoadingBlock(downloadedImage, nextImageIdentifier, error);
-    }];
-    
-    return;
-  }
-#endif
   
   // Otherwise, it's a web URL that we can download.
   // First, check the cache.
@@ -643,31 +612,6 @@ typedef void(^ASMultiplexImageLoadCompletionBlock)(UIImage *image, id imageIdent
     }];
   }];
 }
-#if TARGET_OS_IOS && AS_USE_ASSETS_LIBRARY
-- (void)_loadALAssetWithIdentifier:(id)imageIdentifier URL:(NSURL *)assetURL completion:(void (^)(UIImage *image, NSError *error))completionBlock
-{
-  ASDisplayNodeAssertNotNil(imageIdentifier, @"imageIdentifier is required");
-  ASDisplayNodeAssertNotNil(assetURL, @"assetURL is required");
-  ASDisplayNodeAssertNotNil(completionBlock, @"completionBlock is required");
-  
-  // ALAssetsLibrary was replaced in iOS 8 and deprecated in iOS 9.
-  // We'll drop support very soon.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  ALAssetsLibrary *assetLibrary = [[ALAssetsLibrary alloc] init];
-
-  [assetLibrary assetForURL:assetURL resultBlock:^(ALAsset *asset) {
-    ALAssetRepresentation *representation = [asset defaultRepresentation];
-    CGImageRef coreGraphicsImage = [representation fullScreenImage];
-
-    UIImage *downloadedImage = (coreGraphicsImage ? [UIImage imageWithCGImage:coreGraphicsImage] : nil);
-    completionBlock(downloadedImage, nil);
-  } failureBlock:^(NSError *error) {
-    completionBlock(nil, error);
-  }];
-#pragma clang diagnostic pop
-}
-#endif
 
 - (void)_fetchImageWithIdentifierFromCache:(id)imageIdentifier URL:(NSURL *)imageURL completion:(void (^)(UIImage *image))completionBlock
 {

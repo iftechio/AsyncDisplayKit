@@ -17,10 +17,6 @@
   #define AS_TLS_AVAILABLE 1
 #endif
 
-#ifndef AS_USE_ASSETS_LIBRARY
-  #define AS_USE_ASSETS_LIBRARY 0
-#endif
-
 #ifndef kCFCoreFoundationVersionNumber_iOS_10_0
   #define kCFCoreFoundationVersionNumber_iOS_10_0 1348.00
 #endif
