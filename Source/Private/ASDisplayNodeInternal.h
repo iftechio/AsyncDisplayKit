@@ -129,8 +129,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
       unsigned accessibilityViewIsModal:1;
       unsigned shouldGroupAccessibilityChildren:1;
       unsigned isAccessibilityContainer:1;
-      unsigned fallbackInsetsLayoutMarginsFromSafeArea:1;
-      unsigned automaticallyRelayoutOnSafeAreaChanges:1;
       unsigned automaticallyRelayoutOnLayoutMarginsChanges:1;
       unsigned isViewControllerRoot:1;
       unsigned hasHadInterfaceStateDelegates:1;
@@ -238,11 +236,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
   UIBezierPath *_accessibilityPath;
 
 
-  // Safe Area support
-  // These properties are used on iOS 10 and lower, where safe area is not supported by UIKit.
-  UIEdgeInsets _fallbackSafeAreaInsets;
-
-
 
 #pragma mark - ASDisplayNode (Debugging)
   ASLayout *_unflattenedLayout;
@@ -341,9 +334,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
  */
 - (void)nodeViewDidAddGestureRecognizer;
 
-// Recalculates fallbackSafeAreaInsets for the subnodes
-- (void)_fallbackUpdateSafeAreaOnChildren;
-
 @end
 
 @interface ASDisplayNode (InternalPropertyBridge)
@@ -352,8 +342,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
 
 /// NOTE: Changing this to non-default under iOS < 11 will make an assertion (for the end user to see.)
 @property (nonatomic) CACornerMask layerMaskedCorners;
-
-- (BOOL)_locked_insetsLayoutMarginsFromSafeArea;
 
 @end
 

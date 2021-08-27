@@ -960,11 +960,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
   ASDisplayNodeAssert(!_flags.layerBacked, @"Danger: this property is undefined on layer-backed nodes.");
   UIEdgeInsets margins = _getFromViewOnly(layoutMargins);
 
-  if (!AS_AT_LEAST_IOS11 && self.insetsLayoutMarginsFromSafeArea) {
-    UIEdgeInsets safeArea = self.safeAreaInsets;
-    margins = ASConcatInsets(margins, safeArea);
-  }
-
   return margins;
 }
 
@@ -998,48 +993,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
   }
 }
 
-- (UIEdgeInsets)safeAreaInsets
-{
-  _bridge_prologue_read;
-
-  if (AS_AVAILABLE_IOS_TVOS(11.0, 11.0)) {
-    if (!_flags.layerBacked && _loaded(self)) {
-      return self.view.safeAreaInsets;
-    }
-  }
-  return _fallbackSafeAreaInsets;
-}
-
-- (BOOL)insetsLayoutMarginsFromSafeArea
-{
-  _bridge_prologue_read;
-
-  return [self _locked_insetsLayoutMarginsFromSafeArea];
-}
-
-- (void)setInsetsLayoutMarginsFromSafeArea:(BOOL)insetsLayoutMarginsFromSafeArea
-{
-  ASDisplayNodeAssertThreadAffinity(self);
-  BOOL shouldNotifyAboutUpdate;
-  {
-    _bridge_prologue_write;
-
-    _flags.fallbackInsetsLayoutMarginsFromSafeArea = insetsLayoutMarginsFromSafeArea;
-
-    if (AS_AVAILABLE_IOS_TVOS(11.0, 11.0)) {
-      if (!_flags.layerBacked) {
-        _setToViewOnly(insetsLayoutMarginsFromSafeArea, insetsLayoutMarginsFromSafeArea);
-      }
-    }
-
-    shouldNotifyAboutUpdate = _loaded(self) && (!AS_AT_LEAST_IOS11 || _flags.layerBacked);
-  }
-
-  if (shouldNotifyAboutUpdate) {
-    [self layoutMarginsDidChange];
-  }
-}
-
 - (NSDictionary<NSString *,id<CAAction>> *)actions
 {
   _bridge_prologue_read;
@@ -1050,17 +1003,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
 {
   _bridge_prologue_write;
   _setToLayer(actions, actions);
-}
-
-- (void)safeAreaInsetsDidChange
-{
-  ASDisplayNodeAssertMainThread();
-
-  if (self.automaticallyRelayoutOnSafeAreaChanges) {
-    [self setNeedsLayout];
-  }
-
-  [self _fallbackUpdateSafeAreaOnChildren];
 }
 
 @end
@@ -1098,17 +1040,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
     ASDisplayNodeAssert(newLayerMaskedCorners == kASCACornerAllCorners,
                         @"Cannot change maskedCorners property in iOS < 11 while using DefaultSlowCALayer rounding.");
   }
-}
-
-- (BOOL)_locked_insetsLayoutMarginsFromSafeArea
-{
-  DISABLED_ASAssertLocked(__instanceLock__);
-  if (AS_AVAILABLE_IOS_TVOS(11.0, 11.0)) {
-    if (!_flags.layerBacked) {
-      return _getFromViewOnly(insetsLayoutMarginsFromSafeArea);
-    }
-  }
-  return _flags.fallbackInsetsLayoutMarginsFromSafeArea;
 }
 
 @end

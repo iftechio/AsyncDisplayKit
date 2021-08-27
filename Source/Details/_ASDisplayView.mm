@@ -471,14 +471,6 @@
   [node layoutMarginsDidChange];
 }
 
-- (void)safeAreaInsetsDidChange
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  [super safeAreaInsetsDidChange];
-
-  [node safeAreaInsetsDidChange];
-}
-
 - (id)forwardingTargetForSelector:(SEL)aSelector
 {
   // Ideally, we would implement -targetForAction:withSender: and simply return the node where we don't respond personally.

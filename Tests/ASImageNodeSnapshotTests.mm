@@ -60,30 +60,6 @@ static UIImage* makeImageWithColor(UIColor *color, CGSize size) {
   ASSnapshotVerifyNode(imageNode, nil);
 }
 
-- (void)testForcedScaling
-{
-  CGSize forcedImageSize = CGSizeMake(100, 100);
-  
-  ASImageNode *imageNode = [[ASImageNode alloc] init];
-  imageNode.forcedSize = forcedImageSize;
-  imageNode.image = [self testImage];
-  
-  // Snapshot testing requires that node is formally laid out.
-  imageNode.style.width = ASDimensionMake(forcedImageSize.width);
-  imageNode.style.height = ASDimensionMake(forcedImageSize.height);
-  ASDisplayNodeSizeToFitSize(imageNode, forcedImageSize);
-  ASSnapshotVerifyNode(imageNode, @"first");
-  
-  imageNode.style.width = ASDimensionMake(200);
-  imageNode.style.height = ASDimensionMake(200);
-  ASDisplayNodeSizeToFitSize(imageNode, CGSizeMake(200, 200));
-  ASSnapshotVerifyNode(imageNode, @"second");
-  
-  XCTAssert(CGImageGetWidth((CGImageRef)imageNode.contents) == forcedImageSize.width * imageNode.contentsScale &&
-            CGImageGetHeight((CGImageRef)imageNode.contents) == forcedImageSize.height * imageNode.contentsScale,
-            @"Contents should be 100 x 100 by contents scale.");
-}
-
 - (void)testTintColorOnNodePropertyAlwaysTemplate
 {
   UIImage *test = [self testImage];
@@ -180,44 +156,6 @@ static UIImage* makeImageWithColor(UIColor *color, CGSize size) {
   [container addSubnode:node];
   container.style.preferredSize = test.size;
   ASDisplayNodeSizeToFitSize(node, test.size);
-  ASSnapshotVerifyNode(node, nil);
-}
-
-- (void)testRoundedCornerBlock
-{
-  UIGraphicsBeginImageContext(CGSizeMake(100, 100));
-  [[UIColor blueColor] setFill];
-  UIRectFill(CGRectMake(0, 0, 100, 100));
-  UIImage *result = UIGraphicsGetImageFromCurrentImageContext();
-  UIGraphicsEndImageContext();
-  
-  ASPrimitiveTraitCollection traitCollection;
-  
-  if (@available(iOS 13.0, *)) {
-    traitCollection = ASPrimitiveTraitCollectionFromUITraitCollection(UITraitCollection.currentTraitCollection);
-  } else {
-    traitCollection = ASPrimitiveTraitCollectionMakeDefault();
-  }
-  
-  UIImage *rounded = ASImageNodeRoundBorderModificationBlock(2, [UIColor redColor])(result, traitCollection);
-  ASImageNode *node = [[ASImageNode alloc] init];
-  node.image = rounded;
-  ASDisplayNodeSizeToFitSize(node, rounded.size);
-  ASSnapshotVerifyNode(node, nil);
-}
-
-- (void)testTintColorBlock
-{
-  UIGraphicsBeginImageContext(CGSizeMake(100, 100));
-  [[UIColor blueColor] setFill];
-  UIRectFill(CGRectMake(0, 0, 100, 100));
-  UIImage *result = UIGraphicsGetImageFromCurrentImageContext();
-  UIGraphicsEndImageContext();
-  
-  UIImage *rounded = ASImageNodeTintColorModificationBlock([UIColor redColor])(result, ASPrimitiveTraitCollectionMakeDefault());
-  ASImageNode *node = [[ASImageNode alloc] init];
-  node.image = rounded;
-  ASDisplayNodeSizeToFitSize(node, rounded.size);
   ASSnapshotVerifyNode(node, nil);
 }
 

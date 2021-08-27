@@ -547,13 +547,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 @property (readonly) BOOL supportsLayerBacking;
 
 /**
- * Whether or not the node layout should be automatically updated when it receives safeAreaInsetsDidChange.
- *
- * Defaults to NO.
- */
-@property BOOL automaticallyRelayoutOnSafeAreaChanges;
-
-/**
  * Whether or not the node layout should be automatically updated when it receives layoutMarginsDidChange.
  *
  * Defaults to NO.
@@ -752,19 +745,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 @property           UIEdgeInsets layoutMargins;
 @property           BOOL preservesSuperviewLayoutMargins;  // default is NO - set to enable pass-through or cascading behavior of margins from this view’s parent to its children
 - (void)layoutMarginsDidChange;
-
-/**
- * @abstract Safe area insets
- *
- * @discussion This property is bridged to its UIVIew counterpart.
- *
- * If your layout depends on this property, you should probably enable automaticallyRelayoutOnSafeAreaChanges to ensure
- * that the layout gets automatically updated when the value of this property changes. Or you can override safeAreaInsetsDidChange
- * and make all the necessary updates manually.
- */
-@property (readonly)         UIEdgeInsets safeAreaInsets;
-@property           BOOL insetsLayoutMarginsFromSafeArea;  // Default: YES
-- (void)safeAreaInsetsDidChange;
 
 
 // UIResponder methods

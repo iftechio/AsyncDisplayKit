@@ -55,7 +55,7 @@ static CGSize _FillSizeWithAspectRatio(CGFloat imageRatio, CGSize backingSize)
   CGSize backingSize   = CGSizeZero;
   CGRect imageDrawRect = CGRectZero;
   
-  ASCroppedImageBackingSizeAndDrawRectInBounds(imageSize, boundsSize, UIViewContentModeScaleAspectFit, CGRectZero, false, CGSizeZero, &backingSize, &imageDrawRect);
+  ASCroppedImageBackingSizeAndDrawRectInBounds(imageSize, boundsSize, UIViewContentModeScaleAspectFit, CGRectZero, &backingSize, &imageDrawRect);
   CGSize backingSizeShouldBe = _FillSizeWithAspectRatio(boundsSize.width / boundsSize.height, imageSize);
   CGSize drawRectSizeShouldBe = _FitSizeWithAspectRatio(imageSize.width / imageSize.height, backingSizeShouldBe);
   XCTAssertTrue(CGSizeEqualToSize(backingSizeShouldBe, backingSize));
@@ -70,7 +70,7 @@ static CGSize _FillSizeWithAspectRatio(CGFloat imageRatio, CGSize backingSize)
   CGSize backingSize   = CGSizeZero;
   CGRect imageDrawRect = CGRectZero;
   
-  ASCroppedImageBackingSizeAndDrawRectInBounds(imageSize, boundsSize, UIViewContentModeScaleAspectFill, CGRectZero, false, CGSizeZero, &backingSize, &imageDrawRect);
+  ASCroppedImageBackingSizeAndDrawRectInBounds(imageSize, boundsSize, UIViewContentModeScaleAspectFill, CGRectZero, &backingSize, &imageDrawRect);
   CGSize backingSizeShouldBe = _FitSizeWithAspectRatio(boundsSize.width / boundsSize.height, imageSize);
   CGSize drawRectSizeShouldBe = _FillSizeWithAspectRatio(imageSize.width / imageSize.height, backingSizeShouldBe);
   XCTAssertTrue(CGSizeEqualToSize(backingSizeShouldBe, backingSize));

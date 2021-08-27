@@ -506,8 +506,6 @@ for (ASDisplayNode *n in @[ nodes ]) {\
     XCTAssertEqual(UIViewAutoresizingNone, node.autoresizingMask, @"default autoresizingMask broken %@", hasLoadedView);
     XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsetsMake(8, 8, 8, 8), node.layoutMargins), @"default layoutMargins broken %@", hasLoadedView);
     XCTAssertEqual(NO, node.preservesSuperviewLayoutMargins, @"default preservesSuperviewLayoutMargins broken %@", hasLoadedView);
-    XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsetsZero, node.safeAreaInsets), @"default safeAreaInsets broken %@", hasLoadedView);
-    XCTAssertEqual(YES, node.insetsLayoutMarginsFromSafeArea, @"default insetsLayoutMarginsFromSafeArea broken %@", hasLoadedView);
     if (node.nodeLoaded) {
       XCTAssertNotNil(node.tintColor, @"default tintColor broken %@", hasLoadedView); // It has been populated by the UIView.
     } else {
@@ -635,7 +633,6 @@ for (ASDisplayNode *n in @[ nodes ]) {\
     XCTAssertEqual(NO, node.autoresizesSubviews, @"autoresizesSubviews broken %@", hasLoadedView);
     XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsetsMake(3, 5, 8, 11), node.layoutMargins), @"layoutMargins broken %@", hasLoadedView);
     XCTAssertEqual(YES, node.preservesSuperviewLayoutMargins, @"preservesSuperviewLayoutMargins broken %@", hasLoadedView);
-    XCTAssertEqual(NO, node.insetsLayoutMarginsFromSafeArea, @"insetsLayoutMarginsFromSafeArea broken %@", hasLoadedView);
   }
 }
 
@@ -708,7 +705,6 @@ for (ASDisplayNode *n in @[ nodes ]) {\
       node.exclusiveTouch = YES;
       node.autoresizesSubviews = NO;
       node.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
-      node.insetsLayoutMarginsFromSafeArea = NO;
       node.layoutMargins = UIEdgeInsetsMake(3, 5, 8, 11);
       node.preservesSuperviewLayoutMargins = YES;
     }
