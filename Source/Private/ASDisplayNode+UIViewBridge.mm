@@ -85,46 +85,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
  */
 @implementation ASDisplayNode (UIViewBridge)
 
-#if TARGET_OS_TV
-// Focus Engine
-- (BOOL)canBecomeFocused
-{
-  return NO;
-}
-
-- (void)setNeedsFocusUpdate
-{
-  ASDisplayNodeAssertMainThread();
-  [_view setNeedsFocusUpdate];
-}
-
-- (void)updateFocusIfNeeded
-{
-  ASDisplayNodeAssertMainThread();
-  [_view updateFocusIfNeeded];
-}
-
-- (BOOL)shouldUpdateFocusInContext:(UIFocusUpdateContext *)context
-{
-  return NO;
-}
-
-- (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator
-{
-  
-}
-
-- (UIView *)preferredFocusedView
-{
-  if (self.nodeLoaded) {
-    return _view;
-  }
-  else {
-    return nil;
-  }
-}
-#endif
-
 - (BOOL)canBecomeFirstResponder
 {
   if (_view == nil) {
@@ -1284,20 +1244,6 @@ nodeProperty = nodeValueExpr; _setToViewOnly(viewAndPendingViewStateProperty, vi
   _bridge_prologue_read;
   return _getAccessibilityFromViewOrProperty(_accessibilityCustomActions, accessibilityCustomActions);
 }
-
-#if TARGET_OS_TV
-- (void)setAccessibilityHeaderElements:(NSArray *)accessibilityHeaderElements
-{
-  _bridge_prologue_write;
-  _setAccessibilityToViewAndProperty(_accessibilityHeaderElements, accessibilityHeaderElements, accessibilityHeaderElements, accessibilityHeaderElements);
-}
-
-- (NSArray *)accessibilityHeaderElements
-{
-  _bridge_prologue_read;
-  return _getAccessibilityFromViewOrProperty(_accessibilityHeaderElements, accessibilityHeaderElements);
-}
-#endif
 
 - (void)setAccessibilityActivationPoint:(CGPoint)accessibilityActivationPoint
 {

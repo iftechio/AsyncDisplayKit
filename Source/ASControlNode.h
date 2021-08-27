@@ -135,15 +135,4 @@ static UIControlState const ASControlStateSelected ASDISPLAYNODE_DEPRECATED_MSG(
 - (void)sendActionsForControlEvents:(ASControlNodeEvent)controlEvents withEvent:(nullable UIEvent *)event;
 @end
 
-#if TARGET_OS_TV
-@interface ASControlNode (tvOS)
-
-/**
- @abstract How the node looks when it isn't focused. Exposed here so that subclasses can override.
- */
-- (void)setDefaultFocusAppearance;
-
-@end
-#endif
-
 NS_ASSUME_NONNULL_END

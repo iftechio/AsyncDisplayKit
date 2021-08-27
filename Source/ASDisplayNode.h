@@ -756,16 +756,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 - (BOOL)isFirstResponder;
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender;
 
-#if TARGET_OS_TV
-//Focus Engine
-- (void)setNeedsFocusUpdate;
-- (BOOL)canBecomeFocused;
-- (void)updateFocusIfNeeded;
-- (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator;
-- (BOOL)shouldUpdateFocusInContext:(UIFocusUpdateContext *)context;
-- (nullable UIView *)preferredFocusedView;
-#endif
-
 @end
 
 @interface ASDisplayNode (UIViewBridgeAccessibility)
@@ -788,9 +778,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 @property           BOOL shouldGroupAccessibilityChildren;
 @property           UIAccessibilityNavigationStyle accessibilityNavigationStyle;
 @property (nullable, copy)   NSArray *accessibilityCustomActions API_AVAILABLE(ios(8.0),tvos(9.0));
-#if TARGET_OS_TV
-@property (nullable, copy) 	NSArray *accessibilityHeaderElements;
-#endif
 
 // Accessibility identification support
 @property (nullable, copy)   NSString *accessibilityIdentifier;

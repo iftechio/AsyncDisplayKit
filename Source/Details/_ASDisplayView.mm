@@ -480,42 +480,4 @@
   return node;
 }
 
-#if TARGET_OS_TV
-#pragma mark - tvOS
-- (BOOL)canBecomeFocused
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node canBecomeFocused];
-}
-
-- (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node didUpdateFocusInContext:context withAnimationCoordinator:coordinator];
-}
-
-- (void)setNeedsFocusUpdate
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node setNeedsFocusUpdate];
-}
-
-- (void)updateFocusIfNeeded
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node updateFocusIfNeeded];
-}
-
-- (BOOL)shouldUpdateFocusInContext:(UIFocusUpdateContext *)context
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node shouldUpdateFocusInContext:context];
-}
-
-- (UIView *)preferredFocusedView
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node preferredFocusedView];
-}
-#endif
 @end

@@ -82,7 +82,6 @@ typedef struct {
   int setAccessibilityIdentifier:1;
   int setAccessibilityNavigationStyle:1;
   int setAccessibilityCustomActions:1;
-  int setAccessibilityHeaderElements:1;
   int setAccessibilityActivationPoint:1;
   int setAccessibilityPath:1;
   int setSemanticContentAttribute:1;
@@ -869,22 +868,6 @@ static CGColorRef blackColorRef = NULL;
   }
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (NSArray *)accessibilityHeaderElements
-{
-  return accessibilityHeaderElements;
-}
-
-- (void)setAccessibilityHeaderElements:(NSArray *)newAccessibilityHeaderElements
-{
-  _stateToApplyFlags.setAccessibilityHeaderElements = YES;
-  if (accessibilityHeaderElements != newAccessibilityHeaderElements) {
-    accessibilityHeaderElements = [newAccessibilityHeaderElements copy];
-  }
-}
-#pragma clang diagnostic pop
-
 - (CGPoint)accessibilityActivationPoint
 {
   if (_stateToApplyFlags.setAccessibilityActivationPoint) {
@@ -1222,11 +1205,6 @@ static CGColorRef blackColorRef = NULL;
   if (flags.setAccessibilityCustomActions) {
     view.accessibilityCustomActions = accessibilityCustomActions;
   }
-
-#if TARGET_OS_TV
-  if (flags.setAccessibilityHeaderElements)
-    view.accessibilityHeaderElements = accessibilityHeaderElements;
-#endif
   
   if (flags.setAccessibilityActivationPoint)
     view.accessibilityActivationPoint = accessibilityActivationPoint;
@@ -1357,9 +1335,6 @@ static CGColorRef blackColorRef = NULL;
   pendingState.accessibilityIdentifier = view.accessibilityIdentifier;
   pendingState.accessibilityNavigationStyle = view.accessibilityNavigationStyle;
   pendingState.accessibilityCustomActions = view.accessibilityCustomActions;
-#if TARGET_OS_TV
-  pendingState.accessibilityHeaderElements = view.accessibilityHeaderElements;
-#endif
   pendingState.accessibilityActivationPoint = view.accessibilityActivationPoint;
   pendingState.accessibilityPath = view.accessibilityPath;
   return pendingState;

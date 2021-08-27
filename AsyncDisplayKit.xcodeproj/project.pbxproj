@@ -429,7 +429,6 @@
 		F325E48C21745F9E00AC93A4 /* ASButtonNodeTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = F325E48B21745F9E00AC93A4 /* ASButtonNodeTests.mm */; };
 		F3F698D2211CAD4600800CB1 /* ASDisplayViewAccessibilityTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = F3F698D1211CAD4600800CB1 /* ASDisplayViewAccessibilityTests.mm */; };
 		F711994E1D20C21100568860 /* ASDisplayNodeExtrasTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = F711994D1D20C21100568860 /* ASDisplayNodeExtrasTests.mm */; };
-		FA4FAF15200A850200E735BD /* ASControlNode+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = FA4FAF14200A850200E735BD /* ASControlNode+Private.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -889,7 +888,6 @@
 		F325E48B21745F9E00AC93A4 /* ASButtonNodeTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ASButtonNodeTests.mm; sourceTree = "<group>"; };
 		F3F698D1211CAD4600800CB1 /* ASDisplayViewAccessibilityTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ASDisplayViewAccessibilityTests.mm; sourceTree = "<group>"; };
 		F711994D1D20C21100568860 /* ASDisplayNodeExtrasTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ASDisplayNodeExtrasTests.mm; sourceTree = "<group>"; };
-		FA4FAF14200A850200E735BD /* ASControlNode+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "ASControlNode+Private.h"; sourceTree = "<group>"; };
 		FB07EABBCF28656C6297BC2D /* Pods-AsyncDisplayKitTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AsyncDisplayKitTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-AsyncDisplayKitTests/Pods-AsyncDisplayKitTests.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1301,7 +1299,6 @@
 				CC2E317F1DAC353700EEE891 /* ASCollectionView+Undeprecated.h */,
 				CC0F885A1E42807F00576FED /* ASCollectionViewFlowLayoutInspector.h */,
 				CC0F88591E42807F00576FED /* ASCollectionViewFlowLayoutInspector.mm */,
-				FA4FAF14200A850200E735BD /* ASControlNode+Private.h */,
 				9F98C0231DBDF2A300476D92 /* ASControlTargetAction.h */,
 				9F98C0241DBDF2A300476D92 /* ASControlTargetAction.mm */,
 				8B0768B11CE752EC002E1453 /* ASDefaultPlaybackButton.h */,
@@ -1685,7 +1682,6 @@
 				9C70F20F1CDBE9FF007D6C76 /* ASLayoutManager.h in Headers */,
 				6947B0C31E36B5040007C478 /* ASStackPositionedLayout.h in Headers */,
 				DBABFAFC1C6A8D2F0039EA4A /* _ASTransitionContext.h in Headers */,
-				FA4FAF15200A850200E735BD /* ASControlNode+Private.h in Headers */,
 				B350624F1B010EFD0018CF92 /* ASDisplayNode+DebugTiming.h in Headers */,
 				CC57EAF71E3939350034C595 /* ASCollectionView+Undeprecated.h in Headers */,
 				B35062521B010EFD0018CF92 /* ASDisplayNodeInternal.h in Headers */,

@@ -49,13 +49,7 @@
   ASLockScopeSelf();
   if (!_titleNode) {
     _titleNode = [[ASTextNode alloc] init];
-    #if TARGET_OS_TV
-      // tvOS needs access to the underlying view
-      // of the button node to add a touch handler.
-      [_titleNode setLayerBacked:NO];
-    #else
-      [_titleNode setLayerBacked:YES];
-    #endif
+    [_titleNode setLayerBacked:YES];
     _titleNode.style.flexShrink = 1.0;
     _titleNode.textColorFollowsTintColor = YES;
   }
