@@ -43,9 +43,6 @@
 #import <AsyncDisplayKit/ASCollectionFlowLayoutDelegate.h>
 #import <AsyncDisplayKit/ASCollectionGalleryLayoutDelegate.h>
 
-#import <AsyncDisplayKit/ASSectionController.h>
-#import <AsyncDisplayKit/ASSupplementaryNodeSource.h>
-
 #import <AsyncDisplayKit/ASScrollNode.h>
 
 #import <AsyncDisplayKit/ASRangeControllerUpdateRangeProtocol+Beta.h>
