@@ -9,7 +9,7 @@
 
 #import <AsyncDisplayKit/ASCollectionNode.h>
 
-@protocol ASCollectionLayoutDelegate, ASBatchFetchingDelegate;
+@protocol ASBatchFetchingDelegate;
 @class ASElementMap;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -44,8 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)onDidFinishSynchronizing:(void (^)(void))didFinishSynchronizing;
 
 - (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout;
-
-- (instancetype)initWithLayoutDelegate:(id<ASCollectionLayoutDelegate>)layoutDelegate;
 
 @end
 
