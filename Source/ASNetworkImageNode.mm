@@ -68,8 +68,6 @@
 
 @implementation ASNetworkImageNode
 
-static std::atomic_bool _useMainThreadDelegateCallbacks(true);
-
 @dynamic image;
 
 - (instancetype)initWithCache:(id<ASImageCacheProtocol>)cache downloader:(id<ASImageDownloaderProtocol>)downloader

@@ -343,6 +343,7 @@ static constexpr CACornerMask kASCACornerAllCorners =
 /// NOTE: Changing this to non-default under iOS < 11 will make an assertion (for the end user to see.)
 @property (nonatomic) CACornerMask layerMaskedCorners;
 
+
 @end
 
 @interface ASDisplayNode (ASLayoutElementPrivate)

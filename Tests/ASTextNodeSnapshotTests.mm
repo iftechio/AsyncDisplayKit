@@ -89,16 +89,6 @@
   ASSnapshotVerifyNode(textNode, nil);
 }
 
-- (void)testThatSlowPathTruncationWorks
-{
-  ASTextNode *textNode = [[ASTextNode alloc] init];
-  textNode.attributedText = [[NSAttributedString alloc] initWithString:@"Quality is Important" attributes:@{ NSForegroundColorAttributeName: [UIColor blueColor], NSFontAttributeName: [UIFont italicSystemFontOfSize:24] }];
-  // Set exclusion paths to trigger slow path
-  textNode.exclusionPaths = @[ [UIBezierPath bezierPath] ];
-  ASDisplayNodeSizeToFitSizeRange(textNode, ASSizeRangeMake(CGSizeZero, CGSizeMake(100, 50)));
-  ASSnapshotVerifyNode(textNode, nil);
-}
-
 - (void)testShadowing
 {
   ASTextNode *textNode = [[ASTextNode alloc] init];
