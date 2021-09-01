@@ -13,7 +13,6 @@
 #import <AsyncDisplayKit/ASCollectionElement.h>
 #import <AsyncDisplayKit/ASElementMap.h>
 #import <AsyncDisplayKit/ASCollectionInternal.h>
-#import <AsyncDisplayKit/ASCollectionViewLayoutFacilitatorProtocol.h>
 #import <AsyncDisplayKit/ASDisplayNode+Beta.h>
 #import <AsyncDisplayKit/ASDisplayNode+Subclasses.h>
 #import <AsyncDisplayKit/ASDisplayNode+FrameworkPrivate.h>
@@ -33,7 +32,6 @@
 
   // Keep these enums by the bitfield struct to save memory.
   ASLayoutRangeMode _rangeMode;
-  ASCellLayoutMode _cellLayoutMode;
   struct {
     unsigned int allowsSelection:1; // default is YES
     unsigned int allowsMultipleSelection:1; // default is NO
@@ -53,7 +51,6 @@
 @property (nonatomic) BOOL allowsSelection; // default is YES
 @property (nonatomic) BOOL allowsMultipleSelection; // default is NO
 @property (nonatomic) BOOL inverted; //default is NO
-@property (nonatomic) ASCellLayoutMode cellLayoutMode;
 @property (nonatomic) CGFloat leadingScreensForBatching;
 @property (nonatomic, weak) id <ASCollectionViewLayoutInspecting> layoutInspector;
 @property (nonatomic) BOOL alwaysBounceVertical;
@@ -99,16 +96,6 @@
 - (void)setRangeMode:(ASLayoutRangeMode)rangeMode
 {
   _rangeMode = rangeMode;
-}
-
-- (ASCellLayoutMode)cellLayoutMode
-{
-  return _cellLayoutMode;
-}
-
-- (void)setCellLayoutMode:(ASCellLayoutMode)cellLayoutMode
-{
-  _cellLayoutMode = cellLayoutMode;
 }
 
 - (BOOL)allowsSelection
@@ -259,15 +246,10 @@
 
 - (instancetype)initWithCollectionViewLayout:(UICollectionViewLayout *)layout
 {
-  return [self initWithFrame:CGRectZero collectionViewLayout:layout layoutFacilitator:nil];
+  return [self initWithFrame:CGRectZero collectionViewLayout:layout];
 }
 
 - (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout
-{
-  return [self initWithFrame:frame collectionViewLayout:layout layoutFacilitator:nil];
-}
-
-- (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout layoutFacilitator:(id<ASCollectionViewLayoutFacilitatorProtocol>)layoutFacilitator
 {
   if (self = [super init]) {
     // Must call the setter here to make sure pendingState is created and the layout is configured.
@@ -276,7 +258,7 @@
     __weak __typeof__(self) weakSelf = self;
     [self setViewBlock:^{
       __typeof__(self) strongSelf = weakSelf;
-      return [[[strongSelf collectionViewClass] alloc] _initWithFrame:frame collectionViewLayout:strongSelf->_pendingState.collectionViewLayout layoutFacilitator:layoutFacilitator owningNode:strongSelf];
+      return [[[strongSelf collectionViewClass] alloc] _initWithFrame:frame collectionViewLayout:strongSelf->_pendingState.collectionViewLayout owningNode:strongSelf];
     }];
   }
   return self;
@@ -313,7 +295,6 @@
     view.inverted                       = pendingState.inverted;
     view.allowsSelection                = pendingState.allowsSelection;
     view.allowsMultipleSelection        = pendingState.allowsMultipleSelection;
-    view.cellLayoutMode                 = pendingState.cellLayoutMode;
     view.layoutInspector                = pendingState.layoutInspector;
     view.showsVerticalScrollIndicator   = pendingState.showsVerticalScrollIndicator;
     view.showsHorizontalScrollIndicator = pendingState.showsHorizontalScrollIndicator;
@@ -762,24 +743,6 @@
   return _batchFetchingDelegate;
 }
 
-- (ASCellLayoutMode)cellLayoutMode
-{
-  if ([self pendingState]) {
-    return _pendingState.cellLayoutMode;
-  } else {
-    return self.view.cellLayoutMode;
-  }
-}
-
-- (void)setCellLayoutMode:(ASCellLayoutMode)cellLayoutMode
-{
-  if ([self pendingState]) {
-    _pendingState.cellLayoutMode = cellLayoutMode;
-  } else {
-    self.view.cellLayoutMode = cellLayoutMode;
-  }
-}
-
 #pragma mark - Range Tuning
 
 - (ASRangeTuningParameters)tuningParametersForRangeType:(ASLayoutRangeType)rangeType
@@ -1053,30 +1016,6 @@
   	[self.view relayoutItems];
   }
 }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (void)beginUpdates
-{
-  ASDisplayNodeAssertMainThread();
-  if (self.nodeLoaded) {
-    [self.view beginUpdates];
-  }
-}
-
-- (void)endUpdatesAnimated:(BOOL)animated
-{
-  [self endUpdatesAnimated:animated completion:nil];
-}
-
-- (void)endUpdatesAnimated:(BOOL)animated completion:(void (^)(BOOL))completion
-{
-  ASDisplayNodeAssertMainThread();
-  if (self.nodeLoaded) {
-    [self.view endUpdatesAnimated:animated completion:completion];
-  }
-}
-#pragma clang diagnostic pop
 
 - (void)invalidateFlowLayoutDelegateMetrics {
   ASDisplayNodeAssertMainThread();

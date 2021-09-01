@@ -16,7 +16,6 @@
 #import <AsyncDisplayKit/ASCollectionNode+Beta.h>
 #import <AsyncDisplayKit/ASCollections.h>
 #import <AsyncDisplayKit/ASCollectionViewLayoutController.h>
-#import <AsyncDisplayKit/ASCollectionViewLayoutFacilitatorProtocol.h>
 #import <AsyncDisplayKit/ASCollectionViewFlowLayoutInspector.h>
 #import <AsyncDisplayKit/ASDisplayNodeExtras.h>
 #import <AsyncDisplayKit/ASDisplayNode+FrameworkPrivate.h>
@@ -60,10 +59,6 @@
   flowLayout ? flowLayout.property : default;                                                 \
 })
 
-// ASCellLayoutMode is an NSUInteger-based NS_OPTIONS field. Be careful with BOOL handling on the
-// 32-bit Objective-C runtime, and pattern after ASInterfaceStateIncludesVisible() & friends.
-#define ASCellLayoutModeIncludes(layoutMode) ((self->_cellLayoutMode & layoutMode) == layoutMode)
-
 /// What, if any, invalidation should we perform during the next -layoutSubviews.
 typedef NS_ENUM(NSUInteger, ASCollectionViewInvalidationStyle) {
   /// Perform no invalidation.
@@ -93,7 +88,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   __weak id<ASCollectionViewLayoutInspecting> _layoutInspector;
   NSHashTable<_ASCollectionViewCell *> *_cellsForVisibilityUpdates;
   NSHashTable<ASCellNode *> *_cellsForLayoutUpdates;
-  id<ASCollectionViewLayoutFacilitatorProtocol> _layoutFacilitator;
   CGFloat _leadingScreensForBatching;
   
   // When we update our data controller in response to an interactive move,
@@ -264,10 +258,10 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 
 - (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout
 {
-  return [self _initWithFrame:frame collectionViewLayout:layout layoutFacilitator:nil owningNode:nil];
+  return [self _initWithFrame:frame collectionViewLayout:layout owningNode:nil];
 }
 
-- (instancetype)_initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout layoutFacilitator:(id<ASCollectionViewLayoutFacilitatorProtocol>)layoutFacilitator owningNode:(ASCollectionNode *)owningNode
+- (instancetype)_initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout owningNode:(ASCollectionNode *)owningNode
 {
   if (!(self = [super initWithFrame:frame collectionViewLayout:layout]))
     return nil;
@@ -295,8 +289,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   _leadingScreensForBatching = 2.0;
   
   _lastBoundsSizeUsedForMeasuringNodes = self.bounds.size;
-  
-  _layoutFacilitator = layoutFacilitator;
   
   _proxyDelegate = [[ASCollectionViewProxy alloc] initWithTarget:nil interceptor:self];
   super.delegate = (id<UICollectionViewDelegate>)_proxyDelegate;
@@ -1754,11 +1746,7 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   switch (invalidationStyle) {
     case ASCollectionViewInvalidationStyleWithAnimation:
       if (0 == _superBatchUpdateCount) {
-        if (ASCellLayoutModeIncludes(ASCellLayoutModeAlwaysReloadData)) {
-          [self _superReloadData:nil completion:nil];
-        } else {
-          [self _superPerformBatchUpdates:nil completion:nil];
-        }
+        [self _superPerformBatchUpdates:nil completion:nil];
       }
       break;
     case ASCollectionViewInvalidationStyleWithoutAnimation:
@@ -1867,21 +1855,11 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 
 - (BOOL)dataController:(ASDataController *)dataController shouldEagerlyLayoutNode:(ASCellNode *)node
 {
-  NSAssert(!ASCellLayoutModeIncludes(ASCellLayoutModeAlwaysLazy),
-           @"ASCellLayoutModeAlwaysLazy flag is no longer supported");
   return !node.shouldUseUIKitCell;
 }
 
 - (BOOL)dataController:(ASDataController *)dataController shouldSynchronouslyProcessChangeSet:(_ASHierarchyChangeSet *)changeSet
 {
-  // If we have AlwaysSync set, block and donate main priority.
-  if (ASCellLayoutModeIncludes(ASCellLayoutModeAlwaysSync)) {
-    return YES;
-  }
-  // Prioritize AlwaysAsync over the remaining heuristics for the Default mode.
-  if (ASCellLayoutModeIncludes(ASCellLayoutModeAlwaysAsync)) {
-    return NO;
-  }
   // Reload data is expensive, don't block main while doing so.
   if (changeSet.includesReloadData) {
     return NO;
@@ -1900,7 +1878,7 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 
 - (BOOL)dataControllerShouldSerializeNodeCreation:(ASDataController *)dataController
 {
-  return ASCellLayoutModeIncludes(ASCellLayoutModeSerializeNodeCreation);
+  return NO;
 }
 
 - (id)dataController:(ASDataController *)dataController nodeModelForItemAtIndexPath:(NSIndexPath *)indexPath
@@ -1956,16 +1934,13 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   }
 
   // Wrap the node block
-  BOOL disableRangeController = ASCellLayoutModeIncludes(ASCellLayoutModeDisableRangeController);
   __weak __typeof__(self) weakSelf = self;
   return ^{
     __typeof__(self) strongSelf = weakSelf;
     ASCellNode *node = (block ? block() : cell);
     ASDisplayNodeAssert([node isKindOfClass:[ASCellNode class]], @"ASCollectionNode provided a non-ASCellNode! %@, %@", node, strongSelf);
 
-    if (!disableRangeController) {
-      [node enterHierarchyState:ASHierarchyStateRangeManaged];
-    }
+    [node enterHierarchyState:ASHierarchyStateRangeManaged];
     if (node.interactionDelegate == nil) {
       node.interactionDelegate = strongSelf;
     }
@@ -2191,7 +2166,7 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 
 - (BOOL)rangeControllerShouldUpdateRanges:(ASRangeController *)rangeController
 {
-  return !ASCellLayoutModeIncludes(ASCellLayoutModeDisableRangeController);
+  return YES;
 }
 
 - (void)rangeController:(ASRangeController *)rangeController updateWithChangeSet:(_ASHierarchyChangeSet *)changeSet updates:(dispatch_block_t)updates
@@ -2203,23 +2178,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     return; // if the asyncDataSource has become invalid while we are processing, ignore this request to avoid crashes
   }
 
-  //TODO Do we need to notify _layoutFacilitator before reloadData?
-  for (_ASHierarchyItemChange *change in [changeSet itemChangesOfType:_ASHierarchyChangeTypeDelete]) {
-    [_layoutFacilitator collectionViewWillEditCellsAtIndexPaths:change.indexPaths batched:YES];
-  }
-
-  for (_ASHierarchySectionChange *change in [changeSet sectionChangesOfType:_ASHierarchyChangeTypeDelete]) {
-    [_layoutFacilitator collectionViewWillEditSectionsAtIndexSet:change.indexSet batched:YES];
-  }
-
-  for (_ASHierarchySectionChange *change in [changeSet sectionChangesOfType:_ASHierarchyChangeTypeInsert]) {
-    [_layoutFacilitator collectionViewWillEditSectionsAtIndexSet:change.indexSet batched:YES];
-  }
-
-  for (_ASHierarchyItemChange *change in [changeSet itemChangesOfType:_ASHierarchyChangeTypeInsert]) {
-    [_layoutFacilitator collectionViewWillEditCellsAtIndexPaths:change.indexPaths batched:YES];
-  }
-
   ASPerformBlockWithoutAnimation(!changeSet.animated, ^{
     as_activity_scope(as_activity_create("Commit collection update", changeSet.rootActivity, OS_ACTIVITY_FLAG_DEFAULT));
     if (changeSet.includesReloadData) {
@@ -2229,7 +2187,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
       os_log_debug(ASCollectionLog(), "Did reloadData %@", self.collectionNode);
       [changeSet executeCompletionHandlerWithFinished:YES];
     } else {
-      [self->_layoutFacilitator collectionViewWillPerformBatchUpdates];
       
       __block NSUInteger numberOfUpdates = 0;
       const auto completion = ^(BOOL finished) {
@@ -2241,52 +2198,39 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
         [changeSet executeCompletionHandlerWithFinished:finished];
       };
 
-      BOOL shouldReloadData = ASCellLayoutModeIncludes(ASCellLayoutModeAlwaysReloadData);
-      // TODO: Consider adding !changeSet.isEmpty as a check to also disable shouldReloadData.
-      if (ASCellLayoutModeIncludes(ASCellLayoutModeAlwaysBatchUpdateSectionReload) &&
-          [changeSet sectionChangesOfType:_ASHierarchyChangeTypeReload].count > 0) {
-        shouldReloadData = NO;
-      }
+      [self _superPerformBatchUpdates:^{
+        updates();
 
-      if (shouldReloadData) {
-        // When doing a reloadData, the insert / delete calls are not necessary.
-        // Calling updates() is enough, as it commits .pendingMap to .visibleMap.
-        [self _superReloadData:updates completion:completion];
-      } else {
-        [self _superPerformBatchUpdates:^{
-          updates();
+        for (_ASHierarchyItemChange *change in [changeSet itemChangesOfType:_ASHierarchyChangeTypeReload]) {
+          [super reloadItemsAtIndexPaths:change.indexPaths];
+          numberOfUpdates++;
+        }
 
-          for (_ASHierarchyItemChange *change in [changeSet itemChangesOfType:_ASHierarchyChangeTypeReload]) {
-            [super reloadItemsAtIndexPaths:change.indexPaths];
-            numberOfUpdates++;
-          }
+        for (_ASHierarchySectionChange *change in [changeSet sectionChangesOfType:_ASHierarchyChangeTypeReload]) {
+          [super reloadSections:change.indexSet];
+          numberOfUpdates++;
+        }
 
-          for (_ASHierarchySectionChange *change in [changeSet sectionChangesOfType:_ASHierarchyChangeTypeReload]) {
-            [super reloadSections:change.indexSet];
-            numberOfUpdates++;
-          }
+        for (_ASHierarchyItemChange *change in [changeSet itemChangesOfType:_ASHierarchyChangeTypeOriginalDelete]) {
+          [super deleteItemsAtIndexPaths:change.indexPaths];
+          numberOfUpdates++;
+        }
 
-          for (_ASHierarchyItemChange *change in [changeSet itemChangesOfType:_ASHierarchyChangeTypeOriginalDelete]) {
-            [super deleteItemsAtIndexPaths:change.indexPaths];
-            numberOfUpdates++;
-          }
+        for (_ASHierarchySectionChange *change in [changeSet sectionChangesOfType:_ASHierarchyChangeTypeOriginalDelete]) {
+          [super deleteSections:change.indexSet];
+          numberOfUpdates++;
+        }
 
-          for (_ASHierarchySectionChange *change in [changeSet sectionChangesOfType:_ASHierarchyChangeTypeOriginalDelete]) {
-            [super deleteSections:change.indexSet];
-            numberOfUpdates++;
-          }
+        for (_ASHierarchySectionChange *change in [changeSet sectionChangesOfType:_ASHierarchyChangeTypeOriginalInsert]) {
+          [super insertSections:change.indexSet];
+          numberOfUpdates++;
+        }
 
-          for (_ASHierarchySectionChange *change in [changeSet sectionChangesOfType:_ASHierarchyChangeTypeOriginalInsert]) {
-            [super insertSections:change.indexSet];
-            numberOfUpdates++;
-          }
-
-          for (_ASHierarchyItemChange *change in [changeSet itemChangesOfType:_ASHierarchyChangeTypeOriginalInsert]) {
-            [super insertItemsAtIndexPaths:change.indexPaths];
-            numberOfUpdates++;
-          }
-        } completion:completion];
-      }
+        for (_ASHierarchyItemChange *change in [changeSet itemChangesOfType:_ASHierarchyChangeTypeOriginalInsert]) {
+          [super insertItemsAtIndexPaths:change.indexPaths];
+          numberOfUpdates++;
+        }
+      } completion:completion];
 
       os_log_debug(ASCollectionLog(), "Completed batch update %{public}@", self.collectionNode);
       
@@ -2332,10 +2276,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   if (nodes.count == 0) {
     return;
   }
-
-  const auto uikitIndexPaths = ASArrayByFlatMapping(nodes, ASCellNode *node, [self indexPathForNode:node]);
-  
-  [_layoutFacilitator collectionViewWillEditCellsAtIndexPaths:uikitIndexPaths batched:NO];
   
   ASCollectionViewInvalidationStyle invalidationStyle = _nextLayoutInvalidationStyle;
   for (ASCellNode *node in nodes) {

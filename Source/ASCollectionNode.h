@@ -14,7 +14,6 @@
 #import <AsyncDisplayKit/ASBlockTypes.h>
 #import <AsyncDisplayKit/ASRangeManagingNode.h>
 
-@protocol ASCollectionViewLayoutFacilitatorProtocol;
 @protocol ASCollectionDelegate;
 @protocol ASCollectionDataSource;
 @class ASCollectionView;
