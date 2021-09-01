@@ -13,7 +13,6 @@
 #import <AsyncDisplayKit/ASCellNode+Internal.h>
 #import <AsyncDisplayKit/ASCollectionElement.h>
 #import <AsyncDisplayKit/ASCollectionInternal.h>
-#import <AsyncDisplayKit/ASCollectionLayout.h>
 #import <AsyncDisplayKit/ASCollectionNode+Beta.h>
 #import <AsyncDisplayKit/ASCollections.h>
 #import <AsyncDisplayKit/ASCollectionViewLayoutController.h>
@@ -1562,22 +1561,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   // Mimic UIKit's gating logic.
   // If the data source doesn't support moving, then all bets are off.
   if (!_asyncDataSourceFlags.collectionNodeMoveItem) {
-    return NO;
-  }
-  
-  // Currently we do not support interactive moves when using async layout. The reason is, we do not have a mechanism
-  // to propagate the "presentation data" element map (containing the speculative in-progress moves) to the layout delegate,
-  // and this can cause exceptions to be thrown from UICV. For example, if you drag an item out of a section,
-  // the element map will still contain N items in that section, even though there's only N-1 shown, and UICV will
-  // throw an exception that you specified an element that doesn't exist.
-  //
-  // In iOS >= 11, this is made much easier by the UIDataSourceTranslating API. In previous versions of iOS our best bet
-  // would be to capture the invalidation contexts that are sent during interactive moves and make our own data source translator.
-  if ([self.collectionViewLayout isKindOfClass:[ASCollectionLayout class]]) {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-      os_log_debug(ASCollectionLog(), "Collection node item interactive movement is not supported when using a layout delegate. This message will only be logged once. Node: %@", ASObjectDescriptionMakeTiny(self));
-    });
     return NO;
   }
 

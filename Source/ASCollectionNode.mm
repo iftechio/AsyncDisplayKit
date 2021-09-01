@@ -13,7 +13,6 @@
 #import <AsyncDisplayKit/ASCollectionElement.h>
 #import <AsyncDisplayKit/ASElementMap.h>
 #import <AsyncDisplayKit/ASCollectionInternal.h>
-#import <AsyncDisplayKit/ASCollectionLayout.h>
 #import <AsyncDisplayKit/ASCollectionViewLayoutFacilitatorProtocol.h>
 #import <AsyncDisplayKit/ASDisplayNode+Beta.h>
 #import <AsyncDisplayKit/ASDisplayNode+Subclasses.h>
@@ -266,11 +265,6 @@
 - (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout
 {
   return [self initWithFrame:frame collectionViewLayout:layout layoutFacilitator:nil];
-}
-
-- (instancetype)initWithLayoutDelegate:(id<ASCollectionLayoutDelegate>)layoutDelegate layoutFacilitator:(id<ASCollectionViewLayoutFacilitatorProtocol>)layoutFacilitator
-{
-  return [self initWithFrame:CGRectZero collectionViewLayout:[[ASCollectionLayout alloc] initWithLayoutDelegate:layoutDelegate] layoutFacilitator:layoutFacilitator];
 }
 
 - (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout layoutFacilitator:(id<ASCollectionViewLayoutFacilitatorProtocol>)layoutFacilitator
@@ -682,10 +676,8 @@
 - (void)setCollectionViewLayout:(UICollectionViewLayout *)layout
 {
   if ([self pendingState]) {
-    [self _configureCollectionViewLayout:layout];
     _pendingState.collectionViewLayout = layout;
   } else {
-    [self _configureCollectionViewLayout:layout];
     self.view.collectionViewLayout = layout;
   }
 }
@@ -758,15 +750,6 @@
   ASDisplayNodeAssertMainThread();
   // TODO Own the data controller when view is not yet loaded
   return self.dataController.visibleMap;
-}
-
-- (id<ASCollectionLayoutDelegate>)layoutDelegate
-{
-  UICollectionViewLayout *layout = self.collectionViewLayout;
-  if ([layout isKindOfClass:[ASCollectionLayout class]]) {
-    return ((ASCollectionLayout *)layout).layoutDelegate;
-  }
-  return nil;
 }
 
 - (void)setBatchFetchingDelegate:(id<ASBatchFetchingDelegate>)batchFetchingDelegate
@@ -1221,16 +1204,6 @@ ASLayoutElementCollectionTableSetTraitCollection(_environmentStateLock)
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldBeRequiredToFailByGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
 {
     return NO;
-}
-
-#pragma mark - Private methods
-
-- (void)_configureCollectionViewLayout:(UICollectionViewLayout *)layout
-{
-  if ([layout isKindOfClass:[ASCollectionLayout class]]) {
-    ASCollectionLayout *collectionLayout = (ASCollectionLayout *)layout;
-    collectionLayout.collectionNode = self;
-  }
 }
 
 @end

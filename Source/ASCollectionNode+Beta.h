@@ -28,8 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly) ASElementMap *visibleElements;
 
-@property (nullable, readonly) id<ASCollectionLayoutDelegate> layoutDelegate;
-
 @property (nullable, nonatomic, weak) id<ASBatchFetchingDelegate> batchFetchingDelegate;
 
 /**
