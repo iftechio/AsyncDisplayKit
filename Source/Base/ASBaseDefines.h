@@ -37,26 +37,6 @@
 # endif
 #endif
 
-#ifndef ASDISPLAYNODE_WARN_DEPRECATED
-# define ASDISPLAYNODE_WARN_DEPRECATED 1
-#endif
-
-#ifndef ASDISPLAYNODE_DEPRECATED
-# if ASDISPLAYNODE_GNUC (3, 0) && ASDISPLAYNODE_WARN_DEPRECATED
-#  define ASDISPLAYNODE_DEPRECATED __attribute__ ((deprecated))
-# else
-#  define ASDISPLAYNODE_DEPRECATED
-# endif
-#endif
-
-#ifndef ASDISPLAYNODE_DEPRECATED_MSG
-# if ASDISPLAYNODE_GNUC (3, 0) && ASDISPLAYNODE_WARN_DEPRECATED
-#   define  ASDISPLAYNODE_DEPRECATED_MSG(msg) __deprecated_msg(msg)
-# else
-#   define  ASDISPLAYNODE_DEPRECATED_MSG(msg)
-# endif
-#endif
-
 #ifndef AS_ENABLE_TIPS
 #define AS_ENABLE_TIPS 0
 #endif

@@ -139,16 +139,6 @@ ASDK_EXTERN void ASDisplayNodePerformBlockOnEveryNodeBFS(ASDisplayNode *node, vo
 ASDK_EXTERN void ASDisplayNodePerformBlockOnEverySubnode(ASDisplayNode *node, BOOL traverseSublayers, void(^block)(ASDisplayNode *node));
 
 /**
- Given a display node, traverses up the layer tree hierarchy, returning the first display node that passes block.
- */
-ASDK_EXTERN ASDisplayNode * _Nullable ASDisplayNodeFindFirstSupernode(ASDisplayNode * _Nullable node, BOOL (^block)(ASDisplayNode *node)) AS_WARN_UNUSED_RESULT ASDISPLAYNODE_DEPRECATED_MSG("Use the `supernodes` property instead.");
-
-/**
- Given a display node, traverses up the layer tree hierarchy, returning the first display node of kind class.
- */
-ASDK_EXTERN __kindof ASDisplayNode * _Nullable ASDisplayNodeFindFirstSupernodeOfClass(ASDisplayNode *start, Class c) AS_WARN_UNUSED_RESULT  ASDISPLAYNODE_DEPRECATED_MSG("Use the `supernodeOfClass:includingSelf:` method instead.");
-
-/**
  * Given a layer, find the window it lives in, if any.
  */
 ASDK_EXTERN UIWindow * _Nullable ASFindWindowOfLayer(CALayer *layer) AS_WARN_UNUSED_RESULT;

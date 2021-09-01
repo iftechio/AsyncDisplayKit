@@ -72,30 +72,6 @@
 
 @implementation ASTableViewTestDelegate
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
-  return 0;
-}
-#pragma clang diagnostic pop
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (ASCellNode *)tableView:(ASTableView *)tableView nodeForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-  return nil;
-}
-#pragma clang diagnostic pop
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (ASCellNodeBlock)tableView:(ASTableView *)tableView nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-  return nil;
-}
-#pragma clang diagnostic pop
-
 - (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
 {
   return _footerHeight;
@@ -160,51 +136,6 @@
   }
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
-  return _numberOfSections;
-}
-#pragma clang diagnostic pop
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
-  return _rowsPerSection;
-}
-#pragma clang diagnostic pop
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (ASCellNode *)tableView:(ASTableView *)tableView nodeForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-  ASTestTextCellNode *textCellNode = [ASTestTextCellNode new];
-  textCellNode.text = indexPath.description;
-  
-  return textCellNode;
-}
-#pragma clang diagnostic pop
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (ASCellNodeBlock)tableView:(ASTableView *)tableView nodeBlockForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-  if (_nodeBlockForItem) {
-    return _nodeBlockForItem(indexPath);
-  }
-
-  return ^{
-    ASTestTextCellNode *textCellNode = [ASTestTextCellNode new];
-    textCellNode.text = [NSString stringWithFormat:@"{%d, %d}", (int)indexPath.section, (int)indexPath.row];
-    textCellNode.backgroundColor = [UIColor whiteColor];
-    textCellNode.tintColor = [UIColor yellowColor];
-    return textCellNode;
-  };
-}
-#pragma clang diagnostic pop
-
 - (nullable NSArray<NSString *> *)sectionIndexTitlesForTableView:(UITableView *)tableView
 {
   return @[ @"A", @"B", @"C" ];
@@ -214,21 +145,6 @@
 {
   return 0;
 }
-
-@end
-
-@interface ASTableViewFilledDelegate : NSObject <ASTableDelegate>
-@end
-
-@implementation ASTableViewFilledDelegate
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (ASSizeRange)tableView:(ASTableView *)tableView constrainedSizeForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-  return ASSizeRangeMake(CGSizeMake(10, 42));
-}
-#pragma clang diagnostic pop
 
 @end
 
