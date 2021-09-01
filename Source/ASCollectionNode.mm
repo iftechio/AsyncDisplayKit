@@ -980,14 +980,6 @@
   }
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (void)waitUntilAllUpdatesAreCommitted
-{
-  [self waitUntilAllUpdatesAreProcessed];
-}
-#pragma clang diagnostic pop
-
 - (void)reloadDataWithCompletion:(void (^)())completion
 {
   ASDisplayNodeAssertMainThread();

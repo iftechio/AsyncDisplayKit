@@ -157,21 +157,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     unsigned int scrollViewDidEndDragging:1;
     unsigned int scrollViewWillEndDragging:1;
     unsigned int scrollViewDidEndDecelerating:1;
-    unsigned int collectionViewWillDisplayNodeForItem:1;
-    unsigned int collectionViewWillDisplayNodeForItemDeprecated:1;
-    unsigned int collectionViewDidEndDisplayingNodeForItem:1;
-    unsigned int collectionViewShouldSelectItem:1;
-    unsigned int collectionViewDidSelectItem:1;
-    unsigned int collectionViewShouldDeselectItem:1;
-    unsigned int collectionViewDidDeselectItem:1;
-    unsigned int collectionViewShouldHighlightItem:1;
-    unsigned int collectionViewDidHighlightItem:1;
-    unsigned int collectionViewDidUnhighlightItem:1;
-    unsigned int collectionViewShouldShowMenuForItem:1;
-    unsigned int collectionViewCanPerformActionForItem:1;
-    unsigned int collectionViewPerformActionForItem:1;
-    unsigned int collectionViewWillBeginBatchFetch:1;
-    unsigned int shouldBatchFetchForCollectionView:1;
     unsigned int collectionNodeWillDisplayItem:1;
     unsigned int collectionNodeDidEndDisplayingItem:1;
     unsigned int collectionNodeShouldSelectItem:1;
@@ -198,11 +183,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   } _asyncDelegateFlags;
   
   struct {
-    unsigned int collectionViewNodeForItem:1;
-    unsigned int collectionViewNodeBlockForItem:1;
-    unsigned int collectionViewNodeForSupplementaryElement:1;
-    unsigned int numberOfSectionsInCollectionView:1;
-    unsigned int collectionViewNumberOfItemsInSection:1;
     unsigned int collectionNodeNodeForItem:1;
     unsigned int collectionNodeNodeBlockForItem:1;
     unsigned int nodeModelForItem:1;
@@ -325,28 +305,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 #pragma mark -
 #pragma mark Overrides.
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-/**
- * This method is not available to be called by the public i.e.
- * it should only be called by UICollectionView itself. UICollectionView
- * does this e.g. during the first layout pass, or if you call -numberOfSections
- * before its content is loaded.
- */
-- (void)reloadData
-{
-  [self _superReloadData:nil completion:nil];
-
-  // UICollectionView calls -reloadData during first layoutSubviews and when the data source changes.
-  // This fires off the first load of cell nodes.
-  if (_asyncDataSource != nil && !self.dataController.initialReloadDataHasBeenCalled) {
-    [self performBatchUpdates:^{
-      [_changeSet reloadData];
-    } completion:nil];
-  }
-}
-#pragma clang diagnostic pop
-
 - (void)scrollToItemAtIndexPath:(NSIndexPath *)indexPath atScrollPosition:(UICollectionViewScrollPosition)scrollPosition animated:(BOOL)animated
 {
   if ([self validateIndexPath:indexPath]) {
@@ -439,12 +397,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   } else {
     _asyncDataSource = asyncDataSource;
     _proxyDataSource = [[ASCollectionViewProxy alloc] initWithTarget:_asyncDataSource interceptor:self];
-    
-    _asyncDataSourceFlags.collectionViewNodeForItem = [_asyncDataSource respondsToSelector:@selector(collectionView:nodeForItemAtIndexPath:)];
-    _asyncDataSourceFlags.collectionViewNodeBlockForItem = [_asyncDataSource respondsToSelector:@selector(collectionView:nodeBlockForItemAtIndexPath:)];
-    _asyncDataSourceFlags.numberOfSectionsInCollectionView = [_asyncDataSource respondsToSelector:@selector(numberOfSectionsInCollectionView:)];
-    _asyncDataSourceFlags.collectionViewNumberOfItemsInSection = [_asyncDataSource respondsToSelector:@selector(collectionView:numberOfItemsInSection:)];
-    _asyncDataSourceFlags.collectionViewNodeForSupplementaryElement = [_asyncDataSource respondsToSelector:@selector(collectionView:nodeForSupplementaryElementOfKind:atIndexPath:)];
 
     _asyncDataSourceFlags.collectionNodeNodeForItem = [_asyncDataSource respondsToSelector:@selector(collectionNode:nodeForItemAtIndexPath:)];
     _asyncDataSourceFlags.collectionNodeNodeBlockForItem = [_asyncDataSource respondsToSelector:@selector(collectionNode:nodeBlockForItemAtIndexPath:)];
@@ -468,11 +420,9 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     _asyncDataSourceFlags.modelIdentifierMethods = [_asyncDataSource respondsToSelector:@selector(modelIdentifierForElementAtIndexPath:inNode:)] && [_asyncDataSource respondsToSelector:@selector(indexPathForElementWithModelIdentifier:inNode:)];
 
 
-    ASDisplayNodeAssert(_asyncDataSourceFlags.collectionNodeNumberOfItemsInSection || _asyncDataSourceFlags.collectionViewNumberOfItemsInSection, @"Data source must implement collectionNode:numberOfItemsInSection:");
+    ASDisplayNodeAssert(_asyncDataSourceFlags.collectionNodeNumberOfItemsInSection, @"Data source must implement collectionNode:numberOfItemsInSection:");
     ASDisplayNodeAssert(_asyncDataSourceFlags.collectionNodeNodeBlockForItem
-                        || _asyncDataSourceFlags.collectionNodeNodeForItem
-                        || _asyncDataSourceFlags.collectionViewNodeBlockForItem
-                        || _asyncDataSourceFlags.collectionViewNodeForItem, @"Data source must implement collectionNode:nodeBlockForItemAtIndexPath: or collectionNode:nodeForItemAtIndexPath:");
+                        || _asyncDataSourceFlags.collectionNodeNodeForItem, @"Data source must implement collectionNode:nodeBlockForItemAtIndexPath: or collectionNode:nodeForItemAtIndexPath:");
   }
   
   _dataController.validationErrorSource = asyncDataSource;
@@ -515,23 +465,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     _asyncDelegateFlags.scrollViewDidEndDecelerating = [_asyncDelegate respondsToSelector:@selector(scrollViewDidEndDecelerating:)];
     _asyncDelegateFlags.scrollViewWillBeginDragging = [_asyncDelegate respondsToSelector:@selector(scrollViewWillBeginDragging:)];
     _asyncDelegateFlags.scrollViewDidEndDragging = [_asyncDelegate respondsToSelector:@selector(scrollViewDidEndDragging:willDecelerate:)];
-    _asyncDelegateFlags.collectionViewWillDisplayNodeForItem = [_asyncDelegate respondsToSelector:@selector(collectionView:willDisplayNode:forItemAtIndexPath:)];
-    if (_asyncDelegateFlags.collectionViewWillDisplayNodeForItem == NO) {
-      _asyncDelegateFlags.collectionViewWillDisplayNodeForItemDeprecated = [_asyncDelegate respondsToSelector:@selector(collectionView:willDisplayNodeForItemAtIndexPath:)];
-    }
-    _asyncDelegateFlags.collectionViewDidEndDisplayingNodeForItem = [_asyncDelegate respondsToSelector:@selector(collectionView:didEndDisplayingNode:forItemAtIndexPath:)];
-    _asyncDelegateFlags.collectionViewWillBeginBatchFetch = [_asyncDelegate respondsToSelector:@selector(collectionView:willBeginBatchFetchWithContext:)];
-    _asyncDelegateFlags.shouldBatchFetchForCollectionView = [_asyncDelegate respondsToSelector:@selector(shouldBatchFetchForCollectionView:)];
-    _asyncDelegateFlags.collectionViewShouldSelectItem = [_asyncDelegate respondsToSelector:@selector(collectionView:shouldSelectItemAtIndexPath:)];
-    _asyncDelegateFlags.collectionViewDidSelectItem = [_asyncDelegate respondsToSelector:@selector(collectionView:didSelectItemAtIndexPath:)];
-    _asyncDelegateFlags.collectionViewShouldDeselectItem = [_asyncDelegate respondsToSelector:@selector(collectionView:shouldDeselectItemAtIndexPath:)];
-    _asyncDelegateFlags.collectionViewDidDeselectItem = [_asyncDelegate respondsToSelector:@selector(collectionView:didDeselectItemAtIndexPath:)];
-    _asyncDelegateFlags.collectionViewShouldHighlightItem = [_asyncDelegate respondsToSelector:@selector(collectionView:shouldHighlightItemAtIndexPath:)];
-    _asyncDelegateFlags.collectionViewDidHighlightItem = [_asyncDelegate respondsToSelector:@selector(collectionView:didHighlightItemAtIndexPath:)];
-    _asyncDelegateFlags.collectionViewDidUnhighlightItem = [_asyncDelegate respondsToSelector:@selector(collectionView:didUnhighlightItemAtIndexPath:)];
-    _asyncDelegateFlags.collectionViewShouldShowMenuForItem = [_asyncDelegate respondsToSelector:@selector(collectionView:shouldShowMenuForItemAtIndexPath:)];
-    _asyncDelegateFlags.collectionViewCanPerformActionForItem = [_asyncDelegate respondsToSelector:@selector(collectionView:canPerformAction:forItemAtIndexPath:withSender:)];
-    _asyncDelegateFlags.collectionViewPerformActionForItem = [_asyncDelegate respondsToSelector:@selector(collectionView:performAction:forItemAtIndexPath:withSender:)];
     _asyncDelegateFlags.collectionNodeWillDisplayItem = [_asyncDelegate respondsToSelector:@selector(collectionNode:willDisplayItemWithNode:)];
     _asyncDelegateFlags.collectionNodeDidEndDisplayingItem = [_asyncDelegate respondsToSelector:@selector(collectionNode:didEndDisplayingItemWithNode:)];
     _asyncDelegateFlags.collectionNodeWillBeginBatchFetch = [_asyncDelegate respondsToSelector:@selector(collectionNode:willBeginBatchFetchWithContext:)];
@@ -647,19 +580,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   return [_rangeController tuningParametersForRangeMode:rangeMode rangeType:rangeType];
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (void)setZeroContentInsets:(BOOL)zeroContentInsets
-{
-  _zeroContentInsets = zeroContentInsets;
-}
-
-- (BOOL)zeroContentInsets
-{
-  return _zeroContentInsets;
-}
-#pragma clang diagnostic pop
-
 /// Uses latest size range from data source and -layoutThatFits:.
 - (CGSize)sizeForElement:(ASCollectionElement *)element
 {
@@ -686,17 +606,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     return [node layoutThatFits:element.constrainedSize].size;
   }
 }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (CGSize)calculatedSizeForNodeAtIndexPath:(NSIndexPath *)indexPath
-{
-  ASDisplayNodeAssertMainThread();
-
-  ASCollectionElement *e = [_dataController.visibleMap elementForItemAtIndexPath:indexPath];
-  return [self sizeForElement:e];
-}
-#pragma clang diagnostic pop
 
 - (ASCellNode *)nodeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -1249,14 +1158,7 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 
   if (_asyncDelegateFlags.collectionNodeWillDisplayItem && self.collectionNode != nil) {
     [_asyncDelegate collectionNode:self.collectionNode willDisplayItemWithNode:cellNode];
-  } else if (_asyncDelegateFlags.collectionViewWillDisplayNodeForItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [_asyncDelegate collectionView:self willDisplayNode:cellNode forItemAtIndexPath:indexPath];
-  } else if (_asyncDelegateFlags.collectionViewWillDisplayNodeForItemDeprecated) {
-    [_asyncDelegate collectionView:self willDisplayNodeForItemAtIndexPath:indexPath];
   }
-#pragma clang diagnostic pop
   
   [_rangeController setNeedsUpdate];
   
@@ -1295,11 +1197,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (ASCollectionNode *collectionNode = self.collectionNode) {
     	[_asyncDelegate collectionNode:collectionNode didEndDisplayingItemWithNode:cellNode];
     }
-  } else if (_asyncDelegateFlags.collectionViewDidEndDisplayingNodeForItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [_asyncDelegate collectionView:self didEndDisplayingNode:cellNode forItemAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
   
   [_rangeController setNeedsUpdate];
@@ -1389,11 +1286,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (indexPath != nil) {
       return [_asyncDelegate collectionNode:collectionNode shouldSelectItemAtIndexPath:indexPath];
     }
-  } else if (_asyncDelegateFlags.collectionViewShouldSelectItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return [_asyncDelegate collectionView:self shouldSelectItemAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
   return YES;
 }
@@ -1406,11 +1298,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (indexPath != nil) {
       [_asyncDelegate collectionNode:collectionNode didSelectItemAtIndexPath:indexPath];
     }
-  } else if (_asyncDelegateFlags.collectionViewDidSelectItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [_asyncDelegate collectionView:self didSelectItemAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
 }
 
@@ -1422,11 +1309,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (indexPath != nil) {
       return [_asyncDelegate collectionNode:collectionNode shouldDeselectItemAtIndexPath:indexPath];
     }
-  } else if (_asyncDelegateFlags.collectionViewShouldDeselectItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return [_asyncDelegate collectionView:self shouldDeselectItemAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
   return YES;
 }
@@ -1439,11 +1321,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (indexPath != nil) {
       [_asyncDelegate collectionNode:collectionNode didDeselectItemAtIndexPath:indexPath];
     }
-  } else if (_asyncDelegateFlags.collectionViewDidDeselectItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [_asyncDelegate collectionView:self didDeselectItemAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
 }
 
@@ -1457,11 +1334,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     } else {
       return YES;
     }
-  } else if (_asyncDelegateFlags.collectionViewShouldHighlightItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return [_asyncDelegate collectionView:self shouldHighlightItemAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
   return YES;
 }
@@ -1474,11 +1346,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (indexPath != nil) {
       [_asyncDelegate collectionNode:collectionNode didHighlightItemAtIndexPath:indexPath];
     }
-  } else if (_asyncDelegateFlags.collectionViewDidHighlightItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [_asyncDelegate collectionView:self didHighlightItemAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
 }
 
@@ -1490,11 +1357,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (indexPath != nil) {
       [_asyncDelegate collectionNode:collectionNode didUnhighlightItemAtIndexPath:indexPath];
     }
-  } else if (_asyncDelegateFlags.collectionViewDidUnhighlightItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [_asyncDelegate collectionView:self didUnhighlightItemAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
 }
 
@@ -1506,11 +1368,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (indexPath != nil) {
       return [_asyncDelegate collectionNode:collectionNode shouldShowMenuForItemAtIndexPath:indexPath];
     }
-  } else if (_asyncDelegateFlags.collectionViewShouldShowMenuForItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return [_asyncDelegate collectionView:self shouldShowMenuForItemAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
   return NO;
 }
@@ -1523,11 +1380,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (indexPath != nil) {
       return [_asyncDelegate collectionNode:collectionNode canPerformAction:action forItemAtIndexPath:indexPath sender:sender];
     }
-  } else if (_asyncDelegateFlags.collectionViewCanPerformActionForItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return [_asyncDelegate collectionView:self canPerformAction:action forItemAtIndexPath:indexPath withSender:sender];
-#pragma clang diagnostic pop
   }
   return NO;
 }
@@ -1540,11 +1392,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     if (indexPath != nil) {
       [_asyncDelegate collectionNode:collectionNode performAction:action forItemAtIndexPath:indexPath sender:sender];
     }
-  } else if (_asyncDelegateFlags.collectionViewPerformActionForItem) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [_asyncDelegate collectionView:self performAction:action forItemAtIndexPath:indexPath withSender:sender];
-#pragma clang diagnostic pop
   }
 }
 
@@ -1782,15 +1629,10 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 - (BOOL)canBatchFetch
 {
   // if the delegate does not respond to this method, there is no point in starting to fetch
-  BOOL canFetch = _asyncDelegateFlags.collectionNodeWillBeginBatchFetch || _asyncDelegateFlags.collectionViewWillBeginBatchFetch;
+  BOOL canFetch = _asyncDelegateFlags.collectionNodeWillBeginBatchFetch;
   if (canFetch && _asyncDelegateFlags.shouldBatchFetchForCollectionNode) {
     GET_COLLECTIONNODE_OR_RETURN(collectionNode, NO);
     return [_asyncDelegate shouldBatchFetchForCollectionNode:collectionNode];
-  } else if (canFetch && _asyncDelegateFlags.shouldBatchFetchForCollectionView) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return [_asyncDelegate shouldBatchFetchForCollectionView:self];
-#pragma clang diagnostic pop
   } else {
     return canFetch;
   }
@@ -1840,13 +1682,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
       GET_COLLECTIONNODE_OR_RETURN(collectionNode, (void)0);
       os_log_debug(ASCollectionLog(), "Beginning batch fetch for %@ with context %@", collectionNode, self->_batchContext);
       [self->_asyncDelegate collectionNode:collectionNode willBeginBatchFetchWithContext:self->_batchContext];
-    });
-  } else if (_asyncDelegateFlags.collectionViewWillBeginBatchFetch) {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-      [self->_asyncDelegate collectionView:self willBeginBatchFetchWithContext:self->_batchContext];
-#pragma clang diagnostic pop
     });
   }
 }
@@ -1905,15 +1740,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
     GET_COLLECTIONNODE_OR_RETURN(collectionNode, ^{ return [[ASCellNode alloc] init]; });
     cell = [_asyncDataSource collectionNode:collectionNode nodeForItemAtIndexPath:indexPath];
   }
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
- if (!block && !cell && _asyncDataSourceFlags.collectionViewNodeBlockForItem) {
-    block = [_asyncDataSource collectionView:self nodeBlockForItemAtIndexPath:indexPath];
-  }
-  if (!block && !cell && _asyncDataSourceFlags.collectionViewNodeForItem) {
-    cell = [_asyncDataSource collectionView:self nodeForItemAtIndexPath:indexPath];
-  }
-#pragma clang diagnostic pop
 
   if (block == nil) {
     if (cell == nil || ASDynamicCast(cell, ASCellNode) == nil) {
@@ -1956,11 +1782,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   if (_asyncDataSourceFlags.collectionNodeNumberOfItemsInSection) {
     GET_COLLECTIONNODE_OR_RETURN(collectionNode, 0);
     return [_asyncDataSource collectionNode:collectionNode numberOfItemsInSection:section];
-  } else if (_asyncDataSourceFlags.collectionViewNumberOfItemsInSection) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return [_asyncDataSource collectionView:self numberOfItemsInSection:section];
-#pragma clang diagnostic pop
   } else {
     return 0;
   }
@@ -1970,11 +1791,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   if (_asyncDataSourceFlags.numberOfSectionsInCollectionNode) {
     GET_COLLECTIONNODE_OR_RETURN(collectionNode, 0);
     return [_asyncDataSource numberOfSectionsInCollectionNode:collectionNode];
-  } else if (_asyncDataSourceFlags.numberOfSectionsInCollectionView) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    return [_asyncDataSource numberOfSectionsInCollectionView:self];
-#pragma clang diagnostic pop
   } else {
     return 1;
   }
@@ -2011,12 +1827,6 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   if (!block && !cell && _asyncDataSourceFlags.collectionNodeNodeForSupplementaryElement) {
     GET_COLLECTIONNODE_OR_RETURN(collectionNode, ^{ return [[ASCellNode alloc] init]; });
     cell = [_asyncDataSource collectionNode:collectionNode nodeForSupplementaryElementOfKind:kind atIndexPath:indexPath];
-  }
-  if (!block && !cell && _asyncDataSourceFlags.collectionViewNodeForSupplementaryElement) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    cell = [_asyncDataSource collectionView:self nodeForSupplementaryElementOfKind:kind atIndexPath:indexPath];
-#pragma clang diagnostic pop
   }
 
   if (block == nil) {
