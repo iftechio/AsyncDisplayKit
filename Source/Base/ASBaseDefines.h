@@ -37,10 +37,6 @@
 # endif
 #endif
 
-#ifndef AS_ENABLE_TIPS
-#define AS_ENABLE_TIPS 0
-#endif
-
 #ifndef __has_feature      // Optional.
 #define __has_feature(x) 0 // Compatibility with non-clang compilers.
 #endif

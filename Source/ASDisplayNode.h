@@ -94,15 +94,7 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
  *
  */
 
-@interface ASDisplayNode : NSObject <ASLocking> {
-@public
-  /**
-   * The _displayNodeContext ivar is unused by Texture, but provided to enable advanced clients to make powerful extensions to base class functionality.
-   * For example, _displayNodeContext can be used to implement category methods on ASDisplayNode that add functionality to all node subclass types.
-   * Code demonstrating this technique can be found in the CatDealsCollectionView example.
-   */
-  void *_displayNodeContext;
-}
+@interface ASDisplayNode : NSObject <ASLocking>
 
 /** @name Initializing a node object */
 
@@ -265,26 +257,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
  * @see ASInterfaceState
  */
 @property (readonly) ASInterfaceState interfaceState;
-
-/**
- * @abstract Adds a delegate to receive notifications on interfaceState changes.
- *
- * @warning This must be called from the main thread.
- * There is a hard limit on the number of delegates a node can have; see
- * AS_MAX_INTERFACE_STATE_DELEGATES above.
- *
- * @see ASInterfaceState
- */
-- (void)addInterfaceStateDelegate:(id <ASInterfaceStateDelegate>)interfaceStateDelegate;
-
-/**
- * @abstract Removes a delegate from receiving notifications on interfaceState changes.
- *
- * @warning This must be called from the main thread.
- *
- * @see ASInterfaceState
- */
-- (void)removeInterfaceStateDelegate:(id <ASInterfaceStateDelegate>)interfaceStateDelegate;
 
 /**
  * @abstract Class property that allows to set a block that can be called on non-fatal errors. This

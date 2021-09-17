@@ -2979,10 +2979,6 @@ ASDISPLAYNODE_INLINE BOOL subtreeIsRasterized(ASDisplayNode *node) {
   [self enumerateInterfaceStateDelegates:^(id<ASInterfaceStateDelegate> del) {
     [del didEnterVisibleState];
   }];
-  
-#if AS_ENABLE_TIPS
-  [ASTipsController.shared nodeDidAppear:self];
-#endif
 }
 
 - (void)_didExitVisibleState
