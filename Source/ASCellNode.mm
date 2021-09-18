@@ -375,7 +375,7 @@
 
 // TODO: Consider if other calls, such as willDisplayCell, should be bridged to this class.
 @implementation ASWrapperCellNode : ASCellNode
-`
+
 - (BOOL)shouldUseUIKitCell
 {
   return YES;
