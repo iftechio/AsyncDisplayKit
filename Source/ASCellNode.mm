@@ -382,3 +382,101 @@
 }
 
 @end
+
+
+#pragma mark -
+#pragma mark ASTextCellNode
+
+@implementation ASTextCellNode {
+  NSDictionary<NSAttributedStringKey, id> *_textAttributes;
+  UIEdgeInsets _textInsets;
+  NSString *_text;
+}
+
+static const CGFloat kASTextCellNodeDefaultFontSize = 18.0f;
+static const CGFloat kASTextCellNodeDefaultHorizontalPadding = 15.0f;
+static const CGFloat kASTextCellNodeDefaultVerticalPadding = 11.0f;
+
+- (instancetype)init
+{
+  return [self initWithAttributes:[ASTextCellNode defaultTextAttributes] insets:[ASTextCellNode defaultTextInsets]];
+}
+
+- (instancetype)initWithAttributes:(NSDictionary *)textAttributes insets:(UIEdgeInsets)textInsets
+{
+  self = [super init];
+  if (self) {
+    _textInsets = textInsets;
+    _textAttributes = [textAttributes copy];
+    _textNode = [[ASTextNode alloc] init];
+    self.automaticallyManagesSubnodes = YES;
+  }
+  return self;
+}
+
+- (ASLayoutSpec *)layoutSpecThatFits:(ASSizeRange)constrainedSize
+{
+  return [ASInsetLayoutSpec insetLayoutSpecWithInsets:self.textInsets child:self.textNode];
+}
+
++ (NSDictionary *)defaultTextAttributes
+{
+  return @{NSFontAttributeName : [UIFont systemFontOfSize:kASTextCellNodeDefaultFontSize]};
+}
+
++ (UIEdgeInsets)defaultTextInsets
+{
+    return UIEdgeInsetsMake(kASTextCellNodeDefaultVerticalPadding, kASTextCellNodeDefaultHorizontalPadding, kASTextCellNodeDefaultVerticalPadding, kASTextCellNodeDefaultHorizontalPadding);
+}
+
+- (NSDictionary *)textAttributes
+{
+  return ASLockedSelf(_textAttributes);
+}
+
+- (void)setTextAttributes:(NSDictionary *)textAttributes
+{
+  ASDisplayNodeAssertNotNil(textAttributes, @"Invalid text attributes");
+  ASLockScopeSelf();
+  if (ASCompareAssignCopy(_textAttributes, textAttributes)) {
+    [self locked_updateAttributedText];
+  }
+}
+
+- (UIEdgeInsets)textInsets
+{
+  return ASLockedSelf(_textInsets);
+}
+
+- (void)setTextInsets:(UIEdgeInsets)textInsets
+{
+  if (ASLockedSelfCompareAssignCustom(_textInsets, textInsets, UIEdgeInsetsEqualToEdgeInsets)) {
+    [self setNeedsLayout];
+  }
+}
+
+- (NSString *)text
+{
+  return ASLockedSelf(_text);
+}
+
+- (void)setText:(NSString *)text
+{
+  ASLockScopeSelf();
+  if (ASCompareAssignCopy(_text, text)) {
+    [self locked_updateAttributedText];
+  }
+}
+
+- (void)locked_updateAttributedText
+{
+  if (_text == nil) {
+    _textNode.attributedText = nil;
+    return;
+  }
+  
+  _textNode.attributedText = [[NSAttributedString alloc] initWithString:_text attributes:_textAttributes];
+  [self setNeedsLayout];
+}
+
+@end
