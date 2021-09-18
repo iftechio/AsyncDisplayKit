@@ -49,11 +49,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, weak) id<ASNetworkImageNodeDelegate> delegate;
 
 /**
- * The delegate will receive callbacks on main thread. Default to YES.
- */
-@property (class) BOOL useMainThreadDelegateCallbacks;
-
-/**
  * The image to display.
  *
  * @discussion By setting an image to the image property the ASNetworkImageNode will act like a plain ASImageNode.
@@ -79,66 +74,6 @@ NS_ASSUME_NONNULL_BEGIN
  * while loading and the final image after the new image data was downloaded and processed.
  */
 @property (nullable, copy) NSURL *URL;
-
-/**
-  * An array of URLs of increasing cost to download.
-  *
-  * @discussion By setting an array of URLs, the image property of this node will be managed internally. This means previously
-  * directly set images to the image property will be cleared out and replaced by the placeholder (<defaultImage>) image
-  * while loading and the final image after the new image data was downloaded and processed.
-  *
-  * @deprecated This API has been removed for now due to the increased complexity to the class that it brought.
-  * Please use .URL instead.
-  */
-@property (nullable, copy) NSArray <NSURL *> *URLs ASDISPLAYNODE_DEPRECATED_MSG("Please use URL instead.");
-
-/**
- * Download and display a new image.
- *
- * @param URL The URL of a new image to download and display.
- * @param reset Whether to display a placeholder (<defaultImage>) while loading the new image.
- *
- * @discussion By setting an URL, the image property of this node will be managed internally. This means previously
- * directly set images to the image property will be cleared out and replaced by the placeholder (<defaultImage>) image
- * while loading and the final image after the new image data was downloaded and processed.
- */
-- (void)setURL:(nullable NSURL *)URL resetToDefault:(BOOL)reset;
-
-/**
- * If <URL> is a local file, set this property to YES to take advantage of UIKit's image caching.  Defaults to YES.
- */
-@property BOOL shouldCacheImage;
-
-/**
- * If the downloader implements progressive image rendering and this value is YES progressive renders of the
- * image will be displayed as the image downloads. Regardless of this properties value, progress renders will
- * only occur when the node is visible. Defaults to YES.
- */
-@property BOOL shouldRenderProgressImages;
-
-/**
- * The image quality of the current image.
- *
- * If the URL is set, this is a number between 0 and 1 and can be used to track
- * progressive progress. Calculated by dividing number of bytes / expected number of total bytes.
- * This is zero until the first progressive render or the final display.
- *
- * If the URL is unset, this is 1 if defaultImage or image is set to non-nil.
- *
- */
-@property (readonly) CGFloat currentImageQuality;
-
-/**
- * The currentImageQuality (value between 0 and 1) of the last image that completed displaying.
- */
-@property (readonly) CGFloat renderedImageQuality;
-
-/**
- * Download progress of the current image.
- * When downloading a network image, this value would be updated to track download progress (value between 0 and 1)
- * This is 1 if image load from cache or network successfully.
- */
-@property (readonly) CGFloat downloadProgress;
 
 @end
 

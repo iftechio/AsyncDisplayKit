@@ -15,7 +15,6 @@
 #import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASAvailability.h>
 #import <AsyncDisplayKit/ASBaseDefines.h>
-#import <AsyncDisplayKit/ASConfigurationInternal.h>
 #import <AsyncDisplayKit/ASLog.h>
 #import <AsyncDisplayKit/ASObjectDescriptionHelpers.h>
 #import <AsyncDisplayKit/ASRecursiveUnfairLock.h>

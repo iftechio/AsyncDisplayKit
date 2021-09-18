@@ -9,8 +9,6 @@
 
 #import <AsyncDisplayKit/ASTextKitRenderer+Positioning.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <CoreText/CoreText.h>
 #import <tgmath.h>
 
@@ -382,5 +380,3 @@ static const CGFloat ASTextKitRendererTextCapHeightPadding = 1.3;
 }
 
 @end
-
-#endif

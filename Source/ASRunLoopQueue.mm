@@ -8,7 +8,6 @@
 //
 
 #import <AsyncDisplayKit/ASAvailability.h>
-#import <AsyncDisplayKit/ASConfigurationInternal.h>
 #import <AsyncDisplayKit/ASLog.h>
 #import <AsyncDisplayKit/ASRunLoopQueue.h>
 #import <AsyncDisplayKit/ASThread.h>
@@ -424,7 +423,7 @@ dispatch_once_t _ASSharedCATransactionQueueOnceToken;
 
 - (BOOL)isEnabled
 {
-  return ASActivateExperimentalFeature(ASExperimentalInterfaceStateCoalescing);
+  return false;
 }
 
 @end

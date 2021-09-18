@@ -15,9 +15,6 @@
 #import <AsyncDisplayKit/ASControlTargetAction.h>
 #import <AsyncDisplayKit/ASDisplayNode+FrameworkPrivate.h>
 #import <AsyncDisplayKit/ASThread.h>
-#if TARGET_OS_TV
-#import <AsyncDisplayKit/ASControlNode+Private.h>
-#endif
 
 // UIControl allows dragging some distance outside of the control itself during
 // tracking. This value depends on the device idiom (25 or 70 points), so
@@ -90,20 +87,6 @@ CGRect _ASControlNodeGetExpandedBounds(ASControlNode *controlNode);
   
   return self;
 }
-
-#if TARGET_OS_TV
-- (void)didLoad
-{
-  [super didLoad];
-  
-  // On tvOS all controls, such as buttons, interact with the focus system even if they don't have a target set on them.
-  // Here we add our own internal tap gesture to handle this behaviour.
-  self.userInteractionEnabled = YES;
-  UITapGestureRecognizer *tapGestureRec = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(_pressDown)];
-  tapGestureRec.allowedPressTypes = @[@(UIPressTypeSelect)];
-  [self.view addGestureRecognizer:tapGestureRec];
-}
-#endif
 
 - (void)setUserInteractionEnabled:(BOOL)userInteractionEnabled
 {

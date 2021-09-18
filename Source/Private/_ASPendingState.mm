@@ -82,13 +82,11 @@ typedef struct {
   int setAccessibilityIdentifier:1;
   int setAccessibilityNavigationStyle:1;
   int setAccessibilityCustomActions:1;
-  int setAccessibilityHeaderElements:1;
   int setAccessibilityActivationPoint:1;
   int setAccessibilityPath:1;
   int setSemanticContentAttribute:1;
   int setLayoutMargins:1;
   int setPreservesSuperviewLayoutMargins:1;
-  int setInsetsLayoutMarginsFromSafeArea:1;
   int setActions:1;
   int setMaskedCorners : 1;
 } ASPendingStateFlags;
@@ -149,7 +147,6 @@ static constexpr ASPendingStateFlags kZeroFlags = {0};
   struct {
     unsigned int asyncTransactionContainer:1;
     unsigned int preservesSuperviewLayoutMargins:1;
-    unsigned int insetsLayoutMarginsFromSafeArea:1;
     unsigned int isAccessibilityElement:1;
     unsigned int accessibilityElementsHidden:1;
     unsigned int accessibilityViewIsModal:1;
@@ -223,7 +220,6 @@ ASDISPLAYNODE_INLINE void ASPendingStateApplyMetricsToLayer(_ASPendingState *sta
 @synthesize semanticContentAttribute=semanticContentAttribute;
 @synthesize layoutMargins=layoutMargins;
 @synthesize preservesSuperviewLayoutMargins=preservesSuperviewLayoutMargins;
-@synthesize insetsLayoutMarginsFromSafeArea=insetsLayoutMarginsFromSafeArea;
 @synthesize actions=actions;
 @synthesize maskedCorners = maskedCorners;
 
@@ -280,7 +276,6 @@ static CGColorRef blackColorRef = NULL;
   borderColor = blackColorRef;
   layoutMargins = UIEdgeInsetsMake(8, 8, 8, 8);
   _flags.preservesSuperviewLayoutMargins = NO;
-  _flags.insetsLayoutMarginsFromSafeArea = YES;
   _flags.isAccessibilityElement = NO;
   accessibilityLabel = nil;
   accessibilityAttributedLabel = nil;
@@ -658,17 +653,6 @@ static CGColorRef blackColorRef = NULL;
     return _flags.preservesSuperviewLayoutMargins;
 }
 
-- (void)setInsetsLayoutMarginsFromSafeArea:(BOOL)flag
-{
-  _flags.insetsLayoutMarginsFromSafeArea = flag;
-  _stateToApplyFlags.setInsetsLayoutMarginsFromSafeArea = YES;
-}
-
-- (BOOL)insetsLayoutMarginsFromSafeArea
-{
-    return _flags.insetsLayoutMarginsFromSafeArea;
-}
-
 - (void)setSemanticContentAttribute:(UISemanticContentAttribute)attribute API_AVAILABLE(ios(9.0), tvos(9.0)) {
   semanticContentAttribute = attribute;
   _stateToApplyFlags.setSemanticContentAttribute = YES;
@@ -883,22 +867,6 @@ static CGColorRef blackColorRef = NULL;
     accessibilityCustomActions = [newAccessibilityCustomActions copy];
   }
 }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (NSArray *)accessibilityHeaderElements
-{
-  return accessibilityHeaderElements;
-}
-
-- (void)setAccessibilityHeaderElements:(NSArray *)newAccessibilityHeaderElements
-{
-  _stateToApplyFlags.setAccessibilityHeaderElements = YES;
-  if (accessibilityHeaderElements != newAccessibilityHeaderElements) {
-    accessibilityHeaderElements = [newAccessibilityHeaderElements copy];
-  }
-}
-#pragma clang diagnostic pop
 
 - (CGPoint)accessibilityActivationPoint
 {
@@ -1182,12 +1150,6 @@ static CGColorRef blackColorRef = NULL;
   if (flags.setPreservesSuperviewLayoutMargins)
     view.preservesSuperviewLayoutMargins = _flags.preservesSuperviewLayoutMargins;
 
-  if (AS_AVAILABLE_IOS_TVOS(11.0, 11.0)) {
-    if (flags.setInsetsLayoutMarginsFromSafeArea) {
-      view.insetsLayoutMarginsFromSafeArea = _flags.insetsLayoutMarginsFromSafeArea;
-    }
-  }
-
   if (flags.setSemanticContentAttribute) {
     view.semanticContentAttribute = semanticContentAttribute;
   }
@@ -1243,11 +1205,6 @@ static CGColorRef blackColorRef = NULL;
   if (flags.setAccessibilityCustomActions) {
     view.accessibilityCustomActions = accessibilityCustomActions;
   }
-
-#if TARGET_OS_TV
-  if (flags.setAccessibilityHeaderElements)
-    view.accessibilityHeaderElements = accessibilityHeaderElements;
-#endif
   
   if (flags.setAccessibilityActivationPoint)
     view.accessibilityActivationPoint = accessibilityActivationPoint;
@@ -1360,9 +1317,6 @@ static CGColorRef blackColorRef = NULL;
   pendingState.semanticContentAttribute = view.semanticContentAttribute;
   pendingState.layoutMargins = view.layoutMargins;
   pendingState.preservesSuperviewLayoutMargins = view.preservesSuperviewLayoutMargins;
-  if (AS_AVAILABLE_IOS_TVOS(11, 11)) {
-    pendingState.insetsLayoutMarginsFromSafeArea = view.insetsLayoutMarginsFromSafeArea;
-  }
   pendingState.isAccessibilityElement = view.isAccessibilityElement;
   pendingState.accessibilityLabel = view.accessibilityLabel;
   pendingState.accessibilityHint = view.accessibilityHint;
@@ -1381,9 +1335,6 @@ static CGColorRef blackColorRef = NULL;
   pendingState.accessibilityIdentifier = view.accessibilityIdentifier;
   pendingState.accessibilityNavigationStyle = view.accessibilityNavigationStyle;
   pendingState.accessibilityCustomActions = view.accessibilityCustomActions;
-#if TARGET_OS_TV
-  pendingState.accessibilityHeaderElements = view.accessibilityHeaderElements;
-#endif
   pendingState.accessibilityActivationPoint = view.accessibilityActivationPoint;
   pendingState.accessibilityPath = view.accessibilityPath;
   return pendingState;

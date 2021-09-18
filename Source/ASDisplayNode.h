@@ -94,15 +94,7 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
  *
  */
 
-@interface ASDisplayNode : NSObject <ASLocking> {
-@public
-  /**
-   * The _displayNodeContext ivar is unused by Texture, but provided to enable advanced clients to make powerful extensions to base class functionality.
-   * For example, _displayNodeContext can be used to implement category methods on ASDisplayNode that add functionality to all node subclass types.
-   * Code demonstrating this technique can be found in the CatDealsCollectionView example.
-   */
-  void *_displayNodeContext;
-}
+@interface ASDisplayNode : NSObject <ASLocking>
 
 /** @name Initializing a node object */
 
@@ -265,26 +257,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
  * @see ASInterfaceState
  */
 @property (readonly) ASInterfaceState interfaceState;
-
-/**
- * @abstract Adds a delegate to receive notifications on interfaceState changes.
- *
- * @warning This must be called from the main thread.
- * There is a hard limit on the number of delegates a node can have; see
- * AS_MAX_INTERFACE_STATE_DELEGATES above.
- *
- * @see ASInterfaceState
- */
-- (void)addInterfaceStateDelegate:(id <ASInterfaceStateDelegate>)interfaceStateDelegate;
-
-/**
- * @abstract Removes a delegate from receiving notifications on interfaceState changes.
- *
- * @warning This must be called from the main thread.
- *
- * @see ASInterfaceState
- */
-- (void)removeInterfaceStateDelegate:(id <ASInterfaceStateDelegate>)interfaceStateDelegate;
 
 /**
  * @abstract Class property that allows to set a block that can be called on non-fatal errors. This
@@ -547,13 +519,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 @property (readonly) BOOL supportsLayerBacking;
 
 /**
- * Whether or not the node layout should be automatically updated when it receives safeAreaInsetsDidChange.
- *
- * Defaults to NO.
- */
-@property BOOL automaticallyRelayoutOnSafeAreaChanges;
-
-/**
  * Whether or not the node layout should be automatically updated when it receives layoutMarginsDidChange.
  *
  * Defaults to NO.
@@ -753,19 +718,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 @property           BOOL preservesSuperviewLayoutMargins;  // default is NO - set to enable pass-through or cascading behavior of margins from this view’s parent to its children
 - (void)layoutMarginsDidChange;
 
-/**
- * @abstract Safe area insets
- *
- * @discussion This property is bridged to its UIVIew counterpart.
- *
- * If your layout depends on this property, you should probably enable automaticallyRelayoutOnSafeAreaChanges to ensure
- * that the layout gets automatically updated when the value of this property changes. Or you can override safeAreaInsetsDidChange
- * and make all the necessary updates manually.
- */
-@property (readonly)         UIEdgeInsets safeAreaInsets;
-@property           BOOL insetsLayoutMarginsFromSafeArea;  // Default: YES
-- (void)safeAreaInsetsDidChange;
-
 
 // UIResponder methods
 // By default these fall through to the underlying view, but can be overridden.
@@ -775,16 +727,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 - (BOOL)resignFirstResponder;                                               // default==NO (no-op)
 - (BOOL)isFirstResponder;
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender;
-
-#if TARGET_OS_TV
-//Focus Engine
-- (void)setNeedsFocusUpdate;
-- (BOOL)canBecomeFocused;
-- (void)updateFocusIfNeeded;
-- (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator;
-- (BOOL)shouldUpdateFocusInContext:(UIFocusUpdateContext *)context;
-- (nullable UIView *)preferredFocusedView;
-#endif
 
 @end
 
@@ -808,9 +750,6 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 @property           BOOL shouldGroupAccessibilityChildren;
 @property           UIAccessibilityNavigationStyle accessibilityNavigationStyle;
 @property (nullable, copy)   NSArray *accessibilityCustomActions API_AVAILABLE(ios(8.0),tvos(9.0));
-#if TARGET_OS_TV
-@property (nullable, copy) 	NSArray *accessibilityHeaderElements;
-#endif
 
 // Accessibility identification support
 @property (nullable, copy)   NSString *accessibilityIdentifier;
@@ -842,17 +781,7 @@ ASDK_EXTERN NSInteger const ASDefaultDrawingPriority;
 
 @end
 
-typedef NS_ENUM(NSInteger, ASLayoutEngineType) {
-  ASLayoutEngineTypeLayoutSpec,
-  ASLayoutEngineTypeYoga
-};
-
 @interface ASDisplayNode (ASLayout)
-
-/**
- * @abstract Returns the current layout type the node uses for layout the subtree.
- */
-@property (readonly) ASLayoutEngineType layoutEngineType;
 
 /**
  * @abstract Return the calculated size.

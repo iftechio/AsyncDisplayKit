@@ -11,12 +11,6 @@
 #import <AsyncDisplayKit/ASDisplayNode.h>
 #import <AsyncDisplayKit/ASLayoutRangeType.h>
 
-#if YOGA
-  #import YOGA_HEADER_PATH
-  #import <AsyncDisplayKit/ASYogaUtilities.h>
-  #import <AsyncDisplayKit/ASDisplayNode+Yoga.h>
-#endif
-
 NS_ASSUME_NONNULL_BEGIN
 
 ASDK_EXTERN void ASPerformBlockOnMainThread(void (^block)(void));
@@ -49,7 +43,7 @@ typedef struct {
  *
  * This property defaults to NO. It will be removed in a future release.
  */
-+ (BOOL)suppressesInvalidCollectionUpdateExceptions AS_WARN_UNUSED_RESULT ASDISPLAYNODE_DEPRECATED_MSG("Collection update exceptions are thrown if assertions are enabled.");
++ (BOOL)suppressesInvalidCollectionUpdateExceptions AS_WARN_UNUSED_RESULT;
 + (void)setSuppressesInvalidCollectionUpdateExceptions:(BOOL)suppresses;
 
 /**
@@ -125,12 +119,6 @@ typedef struct {
  */
 AS_CATEGORY_IMPLEMENTABLE
 - (void)hierarchyDisplayDidFinish NS_REQUIRES_SUPER;
-
-/**
- * Only called on the root during yoga layout.
- */
-AS_CATEGORY_IMPLEMENTABLE
-- (void)willCalculateLayout:(ASSizeRange)constrainedSize NS_REQUIRES_SUPER;
 
 /**
  * Only ASLayoutRangeModeVisibleOnly or ASLayoutRangeModeLowMemory are recommended.  Default is ASLayoutRangeModeVisibleOnly,

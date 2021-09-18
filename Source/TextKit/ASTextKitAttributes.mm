@@ -9,8 +9,6 @@
 
 #import <AsyncDisplayKit/ASTextKitAttributes.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <AsyncDisplayKit/ASHashing.h>
 
 NSString *const ASTextKitTruncationAttributeName = @"ck_truncation";
@@ -46,5 +44,3 @@ size_t ASTextKitAttributes::hash() const
   };
   return ASHashBytes(&data, sizeof(data));
 }
-
-#endif

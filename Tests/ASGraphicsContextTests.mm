@@ -11,7 +11,6 @@
 #import <AsyncDisplayKit/ASGraphicsContext.h>
 #import <AsyncDisplayKit/ASBaseDefines.h>
 #import <AsyncDisplayKit/ASAvailability.h>
-#import <AsyncDisplayKit/ASConfigurationInternal.h>
 
 @interface ASGraphicsContextTests : XCTestCase
 @end
@@ -21,9 +20,6 @@
 - (void)setUp
 {
   [super setUp];
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalDrawingGlobal;
-  [ASConfigurationManager test_resetWithConfiguration:config];
 }
 
 

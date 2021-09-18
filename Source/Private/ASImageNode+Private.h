@@ -7,6 +7,13 @@
 //  Licensed under Apache 2.0: http://www.apache.org/licenses/LICENSE-2.0
 //
 
+@interface ASImageNode ()
+{
+  unsigned int _regenerateFromImageAsset:1; //Defaults to NO.
+}
+
+@end
+
 #pragma once
 
 @interface ASImageNode (Private)

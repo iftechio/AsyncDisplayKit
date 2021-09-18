@@ -7,7 +7,6 @@
 //
 
 #import <AsyncDisplayKit/ASDispatch.h>
-#import <AsyncDisplayKit/ASConfigurationInternal.h>
 
 // Prefer C atomics in this file because ObjC blocks can't capture C++ atomics well.
 #import <stdatomic.h>

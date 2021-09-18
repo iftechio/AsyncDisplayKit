@@ -9,8 +9,6 @@
 
 #import <AsyncDisplayKit/ASTextKitRenderer.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <AsyncDisplayKit/ASAssert.h>
 
 #import <AsyncDisplayKit/ASTextKitContext.h>
@@ -290,5 +288,3 @@ static NSCharacterSet *_defaultAvoidTruncationCharacterSet()
 }
 
 @end
-
-#endif

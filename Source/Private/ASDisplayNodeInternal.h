@@ -27,7 +27,6 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol _ASDisplayLayerDelegate;
 @class _ASDisplayLayer;
 @class _ASPendingState;
-@class ASNodeController;
 struct ASDisplayNodeFlags;
 
 BOOL ASDisplayNodeSubclassOverridesSelector(Class subclass, SEL selector);
@@ -121,9 +120,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
     unsigned visibilityNotificationsDisabled:VISIBILITY_NOTIFICATIONS_DISABLED_BITS;
     unsigned isDeallocating:1;
 
-#if YOGA
-      unsigned willApplyNextYogaCalculatedLayout:1;
-#endif
       // Automatically manages subnodes
       unsigned automaticallyManagesSubnodes:1; // Main thread only
       unsigned placeholderEnabled:1;
@@ -133,8 +129,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
       unsigned accessibilityViewIsModal:1;
       unsigned shouldGroupAccessibilityChildren:1;
       unsigned isAccessibilityContainer:1;
-      unsigned fallbackInsetsLayoutMarginsFromSafeArea:1;
-      unsigned automaticallyRelayoutOnSafeAreaChanges:1;
       unsigned automaticallyRelayoutOnLayoutMarginsChanges:1;
       unsigned isViewControllerRoot:1;
       unsigned hasHadInterfaceStateDelegates:1;
@@ -157,9 +151,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
   ASDisplayNode * __weak _supernode;
   NSMutableArray<ASDisplayNode *> *_subnodes;
 
-  ASNodeController *_strongNodeController;
-  __weak ASNodeController *_weakNodeController;
-
   // Set this to nil whenever you modify _subnodes
   NSArray<ASDisplayNode *> *_cachedSubnodes;
 
@@ -177,15 +168,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
   // Layout Spec
   ASLayoutSpecBlock _layoutSpecBlock;
   NSString *_debugName;
-
-#if YOGA
-  // Only ASDisplayNodes are supported in _yogaChildren currently. This means that it is necessary to
-  // create ASDisplayNodes to make a stack layout when using Yoga.
-  // However, the implementation is mostly ready for id <ASLayoutElement>, with a few areas requiring updates.
-  NSMutableArray<ASDisplayNode *> *_yogaChildren;
-  __weak ASDisplayNode *_yogaParent;
-  ASLayout *_yogaCalculatedLayout;
-#endif
 
   // Layout Transition
   _ASTransitionContext *_pendingLayoutTransitionContext;
@@ -254,11 +236,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
   UIBezierPath *_accessibilityPath;
 
 
-  // Safe Area support
-  // These properties are used on iOS 10 and lower, where safe area is not supported by UIKit.
-  UIEdgeInsets _fallbackSafeAreaInsets;
-
-
 
 #pragma mark - ASDisplayNode (Debugging)
   ASLayout *_unflattenedLayout;
@@ -292,16 +269,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
  * Invoked after a call to setNeedsDisplay to the underlying view
  */
 - (void)__setNeedsDisplay;
-
-/**
- * Setup the node -> controller reference. Strong or weak is based on
- * the "shouldInvertStrongReference" property of the controller.
- *
- * Note: To prevent lock-ordering deadlocks, this method does not take the node's lock.
- * In practice, changing the node controller of a node multiple times is not
- * supported behavior.
- */
-- (void)__setNodeController:(ASNodeController *)controller;
 
 /**
  * Called whenever the node needs to layout its subnodes and, if it's already loaded, its subviews. Executes the layout pass for the node
@@ -367,9 +334,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
  */
 - (void)nodeViewDidAddGestureRecognizer;
 
-// Recalculates fallbackSafeAreaInsets for the subnodes
-- (void)_fallbackUpdateSafeAreaOnChildren;
-
 @end
 
 @interface ASDisplayNode (InternalPropertyBridge)
@@ -379,7 +343,6 @@ static constexpr CACornerMask kASCACornerAllCorners =
 /// NOTE: Changing this to non-default under iOS < 11 will make an assertion (for the end user to see.)
 @property (nonatomic) CACornerMask layerMaskedCorners;
 
-- (BOOL)_locked_insetsLayoutMarginsFromSafeArea;
 
 @end
 

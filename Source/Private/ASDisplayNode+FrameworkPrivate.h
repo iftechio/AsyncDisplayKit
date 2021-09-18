@@ -231,15 +231,6 @@ __unused static NSString * _Nonnull NSStringFromASHierarchyStateChange(ASHierarc
 - (BOOL)shouldScheduleDisplayWithNewInterfaceState:(ASInterfaceState)newInterfaceState;
 
 /**
- * @abstract safeAreaInsets will fallback to this value if the corresponding UIKit property is not available
- * (due to an old iOS version).
- *
- * @discussion This should be set by the owning view controller based on it's layout guides.
- * If this is not a view controllet's node the value will be calculated automatically by the parent node.
- */
-@property (nonatomic) UIEdgeInsets fallbackSafeAreaInsets;
-
-/**
  * @abstract Indicates if this node is a view controller's root node. Defaults to NO.
  *
  * @discussion Set to YES in -[ASDKViewController initWithNode:].

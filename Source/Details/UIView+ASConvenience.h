@@ -71,7 +71,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, getter=asyncdisplaykit_isAsyncTransactionContainer, setter = asyncdisplaykit_setAsyncTransactionContainer:) BOOL asyncdisplaykit_asyncTransactionContainer;
 @property (nonatomic)           UIEdgeInsets layoutMargins;
 @property (nonatomic)           BOOL preservesSuperviewLayoutMargins;
-@property (nonatomic)           BOOL insetsLayoutMarginsFromSafeArea;
 
 /**
  Following properties of the UIAccessibility informal protocol are supported as well.

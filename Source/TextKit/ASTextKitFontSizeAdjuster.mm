@@ -10,8 +10,6 @@
 
 #import <AsyncDisplayKit/ASTextKitFontSizeAdjuster.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <tgmath.h>
 
 #import <AsyncDisplayKit/ASLayoutManager.h>
@@ -236,5 +234,3 @@
 }
 
 @end
-
-#endif

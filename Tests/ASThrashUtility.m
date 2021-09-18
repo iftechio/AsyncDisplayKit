@@ -236,22 +236,6 @@ static atomic_uint ASThrashTestSectionNextID = 1;
   _data = data;
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
-{
-    return self.data[section].items.count;
-}
-#pragma clang diagnostic pop
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
-{
-    return self.data.count;
-}
-#pragma clang diagnostic pop
-
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
 {
     return self.data[section].headerHeight;
@@ -301,17 +285,6 @@ static atomic_uint ASThrashTestSectionNextID = 1;
   [self.allNodes addObject:node];
   return node;
 }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (ASCellNode *)tableView:(ASTableView *)tableView nodeForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    ASThrashTestNode *node = [[ASThrashTestNode alloc] init];
-    node.item = self.data[indexPath.section].items[indexPath.item];
-    [self.allNodes addObject:node];
-    return node;
-}
-#pragma clang diagnostic pop
 
 #endif
 

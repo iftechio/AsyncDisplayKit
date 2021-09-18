@@ -11,8 +11,6 @@
 
 #import <AsyncDisplayKit/ASAvailability.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <AsyncDisplayKit/ASBaseDefines.h>
 
 /**
@@ -50,5 +48,3 @@ AS_SUBCLASSING_RESTRICTED
                                                           NSTextContainer *textContainer))block;
 
 @end
-
-#endif

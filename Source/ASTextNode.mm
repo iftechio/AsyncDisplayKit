@@ -8,11 +8,6 @@
 //
 
 #import <AsyncDisplayKit/ASTextNode.h>
-
-#if AS_ENABLE_TEXTNODE
-
-#import <AsyncDisplayKit/ASTextNode2.h>
-
 #import <AsyncDisplayKit/ASTextNode+Beta.h>
 
 #import <mutex>
@@ -193,17 +188,13 @@ willDisplayNodeContentWithRenderingContext:(ASDisplayNodeContextModifier)willDis
   CGColorRef _shadowColor;
   UIColor *_cachedShadowUIColor;
   UIColor *_cachedTintColor;
-  UIColor *_placeholderColor;
   CGFloat _shadowOpacity;
   CGFloat _shadowRadius;
   
   UIEdgeInsets _textContainerInset;
 
-  NSArray *_exclusionPaths;
-
   NSAttributedString *_attributedText;
   NSAttributedString *_truncationAttributedText;
-  NSAttributedString *_additionalTruncationMessage;
   NSAttributedString *_composedTruncationText;
   NSArray<NSNumber *> *_pointSizeScaleFactors;
   NSLineBreakMode _truncationMode;
@@ -221,7 +212,6 @@ willDisplayNodeContentWithRenderingContext:(ASDisplayNodeContextModifier)willDis
   BOOL _passthroughNonlinkTouches;
   BOOL _alwaysHandleTruncationTokenTap;
 }
-@dynamic placeholderEnabled;
 
 static NSArray *DefaultLinkAttributeNames() {
   static NSArray *names;
@@ -256,12 +246,6 @@ static NSArray *DefaultLinkAttributeNames() {
     // Accessibility
     self.isAccessibilityElement = YES;
     self.accessibilityTraits = self.defaultAccessibilityTraits;
-
-    // Placeholders
-    // Disabled by default in ASDisplayNode, but add a few options for those who toggle
-    // on the special placeholder behavior of ASTextNode.
-    _placeholderColor = ASDisplayNodeDefaultPlaceholderColor();
-    _placeholderInsets = UIEdgeInsetsMake(1.0, 0.0, 1.0, 0.0);
 
     // Tint color is applied when text nodes are within controls and indicate user action
     // Most text nodes do not require interaction and this matches the default value of UILabel
@@ -385,7 +369,6 @@ static NSArray *DefaultLinkAttributeNames() {
     .truncationAttributedString = [self _locked_composedTruncationText],
     .lineBreakMode = _truncationMode,
     .maximumNumberOfLines = _maximumNumberOfLines,
-    .exclusionPaths = _exclusionPaths,
     // use the property getter so a subclass can provide these scale factors on demand if desired
     .pointSizeScaleFactors = self.pointSizeScaleFactors,
     .shadowOffset = _shadowOffset,
@@ -531,21 +514,6 @@ static NSArray *DefaultLinkAttributeNames() {
 #if AS_TEXTNODE_RECORD_ATTRIBUTED_STRINGS
   [ASTextNode _registerAttributedText:_attributedText];
 #endif
-}
-
-#pragma mark - Text Layout
-
-- (void)setExclusionPaths:(NSArray *)exclusionPaths
-{
-  if (ASLockedSelfCompareAssignCopy(_exclusionPaths, exclusionPaths)) {
-    [self setNeedsLayout];
-    [self setNeedsDisplay];
-  }
-}
-
-- (NSArray *)exclusionPaths
-{
-  return ASLockedSelf(_exclusionPaths);
 }
 
 #pragma mark - Drawing
@@ -1009,55 +977,6 @@ static CGRect ASTextNodeAdjustRenderRectForShadowPadding(CGRect rendererRect, UI
   [self _setNeedsDisplayOnTintedTextColor];
 }
 
-#pragma mark - Placeholders
-
-- (UIColor *)placeholderColor
-{
-  return ASLockedSelf(_placeholderColor);
-}
-
-- (void)setPlaceholderColor:(UIColor *)placeholderColor
-{
-  if (ASLockedSelfCompareAssignCopy(_placeholderColor, placeholderColor)) {
-    self.placeholderEnabled = CGColorGetAlpha(placeholderColor.CGColor) > 0;
-  }
-}
-
-- (UIImage *)placeholderImage
-{
-  // FIXME: Replace this implementation with reusable CALayers that have .backgroundColor set.
-  // This would completely eliminate the memory and performance cost of the backing store.
-  CGSize size = self.calculatedSize;
-  if ((size.width * size.height) < CGFLOAT_EPSILON) {
-    return nil;
-  }
-  
-  ASLockScopeSelf();
-  
-  UIGraphicsBeginImageContextWithOptions(size, NO, 1.0);
-  [self.placeholderColor setFill];
-
-  ASTextKitRenderer *renderer = [self _locked_renderer];
-  NSRange visibleRange = renderer.firstVisibleRange;
-
-  // cap height is both faster and creates less subpixel blending
-  NSArray *lineRects = [self _rectsForTextRange:visibleRange measureOption:ASTextKitRendererMeasureOptionLineHeight];
-
-  // fill each line with the placeholder color
-  for (NSValue *rectValue in lineRects) {
-    CGRect lineRect = [rectValue CGRectValue];
-    CGRect fillBounds = CGRectIntegral(UIEdgeInsetsInsetRect(lineRect, self.placeholderInsets));
-
-    if (fillBounds.size.width > 0.0 && fillBounds.size.height > 0.0) {
-      UIRectFill(fillBounds);
-    }
-  }
-
-  UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-  UIGraphicsEndImageContext();
-  return image;
-}
-
 #pragma mark - Touch Handling
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
@@ -1117,13 +1036,7 @@ static CGRect ASTextNodeAdjustRenderRectForShadowPadding(CGRect rendererRect, UI
   BOOL linkCrossesVisibleRange = (lastCharIndex > range.location) && (lastCharIndex < NSMaxRange(range) - 1);
 
   if (inAdditionalTruncationMessage) {
-    NSRange visibleRange = NSMakeRange(0, 0);
-    {
-      ASLockScopeSelf();
-      visibleRange = [self _locked_renderer].firstVisibleRange;
-    }
-    NSRange truncationMessageRange = [self _additionalTruncationMessageRangeWithVisibleRange:visibleRange];
-    [self _setHighlightRange:truncationMessageRange forAttributeName:ASTextNodeTruncationTokenAttributeName value:nil animated:YES];
+    
   } else if (range.length > 0 && !linkCrossesVisibleRange && linkAttributeValue != nil && linkAttributeName != nil) {
     [self _setHighlightRange:range forAttributeName:linkAttributeName value:linkAttributeValue animated:YES];
   }
@@ -1314,19 +1227,6 @@ static NSAttributedString *DefaultTruncationAttributedString()
   }
 }
 
-- (void)setAdditionalTruncationMessage:(NSAttributedString *)additionalTruncationMessage
-{
-  if (ASLockedSelfCompareAssignCopy(_additionalTruncationMessage, additionalTruncationMessage)) {
-    [self _invalidateTruncationText];
-    [self setNeedsDisplay];
-  }
-}
-
-- (NSAttributedString *)additionalTruncationMessage
-{
-  return ASLockedSelf(_additionalTruncationMessage);
-}
-
 - (void)setTruncationMode:(NSLineBreakMode)truncationMode
 {
   if (ASLockedSelfCompareAssign(_truncationMode, truncationMode)) {
@@ -1397,28 +1297,6 @@ static NSAttributedString *DefaultTruncationAttributedString()
 }
 
 /**
- * @return the additional truncation message range within the as-rendered text.
- * Must be called from main thread
- */
-- (NSRange)_additionalTruncationMessageRangeWithVisibleRange:(NSRange)visibleRange
-{
-  ASLockScopeSelf();
-  
-  // Check if we even have an additional truncation message.
-  if (!_additionalTruncationMessage) {
-    return NSMakeRange(NSNotFound, 0);
-  }
-
-  // Character location of the unicode ellipsis (the first index after the visible range)
-  NSInteger truncationTokenIndex = NSMaxRange(visibleRange);
-
-  NSUInteger additionalTruncationMessageLength = _additionalTruncationMessage.length;
-  // We get the location of the truncation token, then add the length of the
-  // truncation attributed string +1 for the space between.
-  return NSMakeRange(truncationTokenIndex + _truncationAttributedText.length + 1, additionalTruncationMessageLength);
-}
-
-/**
  * @return the truncation message for the string.  If there are both an
  * additional truncation message and a truncation attributed string, they will
  * be properly composed.
@@ -1427,15 +1305,8 @@ static NSAttributedString *DefaultTruncationAttributedString()
 {
   DISABLED_ASAssertLocked(__instanceLock__);
   if (_composedTruncationText == nil) {
-    if (_truncationAttributedText != nil && _additionalTruncationMessage != nil) {
-      NSMutableAttributedString *newComposedTruncationString = [[NSMutableAttributedString alloc] initWithAttributedString:_truncationAttributedText];
-      [newComposedTruncationString.mutableString appendString:@" "];
-      [newComposedTruncationString appendAttributedString:_additionalTruncationMessage];
-      _composedTruncationText = newComposedTruncationString;
-    } else if (_truncationAttributedText != nil) {
+    if (_truncationAttributedText != nil) {
       _composedTruncationText = _truncationAttributedText;
-    } else if (_additionalTruncationMessage != nil) {
-      _composedTruncationText = _additionalTruncationMessage;
     } else {
       _composedTruncationText = DefaultTruncationAttributedString();
     }
@@ -1495,70 +1366,4 @@ static NSAttributedString *DefaultTruncationAttributedString()
 }
 #endif
 
-// All direct descendants of ASTextNode get their superclass replaced by ASTextNode2.
-+ (void)initialize
-{
-  // Texture requires that node subclasses call [super initialize]
-  [super initialize];
-
-  if (class_getSuperclass(self) == [ASTextNode class]
-      && ASActivateExperimentalFeature(ASExperimentalTextNode)) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    class_setSuperclass(self, [ASTextNode2 class]);
-#pragma clang diagnostic pop
-  }
-}
-
-// For direct allocations of ASTextNode itself, we override allocWithZone:
-+ (id)allocWithZone:(struct _NSZone *)zone
-{
-  if (ASActivateExperimentalFeature(ASExperimentalTextNode)) {
-    return (ASTextNode *)[ASTextNode2 allocWithZone:zone];
-  } else {
-    return [super allocWithZone:zone];
-  }
-}
-
 @end
-
-@implementation ASTextNode (Unsupported)
-
-- (void)setTextContainerLinePositionModifier:(id)textContainerLinePositionModifier
-{
-  AS_TEXT_ALERT_UNIMPLEMENTED_FEATURE();
-}
-
-- (id)textContainerLinePositionModifier
-{
-  AS_TEXT_ALERT_UNIMPLEMENTED_FEATURE();
-  return nil;
-}
-
-@end
-
-@implementation ASTextNode (Deprecated)
-
-- (void)setAttributedString:(NSAttributedString *)attributedString
-{
-  self.attributedText = attributedString;
-}
-
-- (NSAttributedString *)attributedString
-{
-  return self.attributedText;
-}
-
-- (void)setTruncationAttributedString:(NSAttributedString *)truncationAttributedString
-{
-  self.truncationAttributedText = truncationAttributedString;
-}
-
-- (NSAttributedString *)truncationAttributedString
-{
-  return self.truncationAttributedText;
-}
-
-@end
-
-#endif

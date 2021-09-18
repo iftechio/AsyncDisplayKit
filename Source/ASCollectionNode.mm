@@ -13,8 +13,6 @@
 #import <AsyncDisplayKit/ASCollectionElement.h>
 #import <AsyncDisplayKit/ASElementMap.h>
 #import <AsyncDisplayKit/ASCollectionInternal.h>
-#import <AsyncDisplayKit/ASCollectionLayout.h>
-#import <AsyncDisplayKit/ASCollectionViewLayoutFacilitatorProtocol.h>
 #import <AsyncDisplayKit/ASDisplayNode+Beta.h>
 #import <AsyncDisplayKit/ASDisplayNode+Subclasses.h>
 #import <AsyncDisplayKit/ASDisplayNode+FrameworkPrivate.h>
@@ -34,7 +32,6 @@
 
   // Keep these enums by the bitfield struct to save memory.
   ASLayoutRangeMode _rangeMode;
-  ASCellLayoutMode _cellLayoutMode;
   struct {
     unsigned int allowsSelection:1; // default is YES
     unsigned int allowsMultipleSelection:1; // default is NO
@@ -54,7 +51,6 @@
 @property (nonatomic) BOOL allowsSelection; // default is YES
 @property (nonatomic) BOOL allowsMultipleSelection; // default is NO
 @property (nonatomic) BOOL inverted; //default is NO
-@property (nonatomic) ASCellLayoutMode cellLayoutMode;
 @property (nonatomic) CGFloat leadingScreensForBatching;
 @property (nonatomic, weak) id <ASCollectionViewLayoutInspecting> layoutInspector;
 @property (nonatomic) BOOL alwaysBounceVertical;
@@ -100,16 +96,6 @@
 - (void)setRangeMode:(ASLayoutRangeMode)rangeMode
 {
   _rangeMode = rangeMode;
-}
-
-- (ASCellLayoutMode)cellLayoutMode
-{
-  return _cellLayoutMode;
-}
-
-- (void)setCellLayoutMode:(ASCellLayoutMode)cellLayoutMode
-{
-  _cellLayoutMode = cellLayoutMode;
 }
 
 - (BOOL)allowsSelection
@@ -260,20 +246,10 @@
 
 - (instancetype)initWithCollectionViewLayout:(UICollectionViewLayout *)layout
 {
-  return [self initWithFrame:CGRectZero collectionViewLayout:layout layoutFacilitator:nil];
+  return [self initWithFrame:CGRectZero collectionViewLayout:layout];
 }
 
 - (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout
-{
-  return [self initWithFrame:frame collectionViewLayout:layout layoutFacilitator:nil];
-}
-
-- (instancetype)initWithLayoutDelegate:(id<ASCollectionLayoutDelegate>)layoutDelegate layoutFacilitator:(id<ASCollectionViewLayoutFacilitatorProtocol>)layoutFacilitator
-{
-  return [self initWithFrame:CGRectZero collectionViewLayout:[[ASCollectionLayout alloc] initWithLayoutDelegate:layoutDelegate] layoutFacilitator:layoutFacilitator];
-}
-
-- (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout layoutFacilitator:(id<ASCollectionViewLayoutFacilitatorProtocol>)layoutFacilitator
 {
   if (self = [super init]) {
     // Must call the setter here to make sure pendingState is created and the layout is configured.
@@ -282,7 +258,7 @@
     __weak __typeof__(self) weakSelf = self;
     [self setViewBlock:^{
       __typeof__(self) strongSelf = weakSelf;
-      return [[[strongSelf collectionViewClass] alloc] _initWithFrame:frame collectionViewLayout:strongSelf->_pendingState.collectionViewLayout layoutFacilitator:layoutFacilitator owningNode:strongSelf];
+      return [[[strongSelf collectionViewClass] alloc] _initWithFrame:frame collectionViewLayout:strongSelf->_pendingState.collectionViewLayout owningNode:strongSelf];
     }];
   }
   return self;
@@ -319,7 +295,6 @@
     view.inverted                       = pendingState.inverted;
     view.allowsSelection                = pendingState.allowsSelection;
     view.allowsMultipleSelection        = pendingState.allowsMultipleSelection;
-    view.cellLayoutMode                 = pendingState.cellLayoutMode;
     view.layoutInspector                = pendingState.layoutInspector;
     view.showsVerticalScrollIndicator   = pendingState.showsVerticalScrollIndicator;
     view.showsHorizontalScrollIndicator = pendingState.showsHorizontalScrollIndicator;
@@ -682,10 +657,8 @@
 - (void)setCollectionViewLayout:(UICollectionViewLayout *)layout
 {
   if ([self pendingState]) {
-    [self _configureCollectionViewLayout:layout];
     _pendingState.collectionViewLayout = layout;
   } else {
-    [self _configureCollectionViewLayout:layout];
     self.view.collectionViewLayout = layout;
   }
 }
@@ -760,15 +733,6 @@
   return self.dataController.visibleMap;
 }
 
-- (id<ASCollectionLayoutDelegate>)layoutDelegate
-{
-  UICollectionViewLayout *layout = self.collectionViewLayout;
-  if ([layout isKindOfClass:[ASCollectionLayout class]]) {
-    return ((ASCollectionLayout *)layout).layoutDelegate;
-  }
-  return nil;
-}
-
 - (void)setBatchFetchingDelegate:(id<ASBatchFetchingDelegate>)batchFetchingDelegate
 {
   _batchFetchingDelegate = batchFetchingDelegate;
@@ -777,24 +741,6 @@
 - (id<ASBatchFetchingDelegate>)batchFetchingDelegate
 {
   return _batchFetchingDelegate;
-}
-
-- (ASCellLayoutMode)cellLayoutMode
-{
-  if ([self pendingState]) {
-    return _pendingState.cellLayoutMode;
-  } else {
-    return self.view.cellLayoutMode;
-  }
-}
-
-- (void)setCellLayoutMode:(ASCellLayoutMode)cellLayoutMode
-{
-  if ([self pendingState]) {
-    _pendingState.cellLayoutMode = cellLayoutMode;
-  } else {
-    self.view.cellLayoutMode = cellLayoutMode;
-  }
 }
 
 #pragma mark - Range Tuning
@@ -1034,14 +980,6 @@
   }
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (void)waitUntilAllUpdatesAreCommitted
-{
-  [self waitUntilAllUpdatesAreProcessed];
-}
-#pragma clang diagnostic pop
-
 - (void)reloadDataWithCompletion:(void (^)())completion
 {
   ASDisplayNodeAssertMainThread();
@@ -1070,30 +1008,6 @@
   	[self.view relayoutItems];
   }
 }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (void)beginUpdates
-{
-  ASDisplayNodeAssertMainThread();
-  if (self.nodeLoaded) {
-    [self.view beginUpdates];
-  }
-}
-
-- (void)endUpdatesAnimated:(BOOL)animated
-{
-  [self endUpdatesAnimated:animated completion:nil];
-}
-
-- (void)endUpdatesAnimated:(BOOL)animated completion:(void (^)(BOOL))completion
-{
-  ASDisplayNodeAssertMainThread();
-  if (self.nodeLoaded) {
-    [self.view endUpdatesAnimated:animated completion:completion];
-  }
-}
-#pragma clang diagnostic pop
 
 - (void)invalidateFlowLayoutDelegateMetrics {
   ASDisplayNodeAssertMainThread();
@@ -1221,16 +1135,6 @@ ASLayoutElementCollectionTableSetTraitCollection(_environmentStateLock)
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldBeRequiredToFailByGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
 {
     return NO;
-}
-
-#pragma mark - Private methods
-
-- (void)_configureCollectionViewLayout:(UICollectionViewLayout *)layout
-{
-  if ([layout isKindOfClass:[ASCollectionLayout class]]) {
-    ASCollectionLayout *collectionLayout = (ASCollectionLayout *)layout;
-    collectionLayout.collectionNode = self;
-  }
 }
 
 @end

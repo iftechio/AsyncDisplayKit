@@ -290,26 +290,4 @@ ASDISPLAYNODE_INLINE AS_WARN_UNUSED_RESULT BOOL ASSizeRangeEqualToSizeRange(ASSi
  */
 ASDK_EXTERN AS_WARN_UNUSED_RESULT NSString *NSStringFromASSizeRange(ASSizeRange sizeRange);
 
-#if YOGA
-
-#pragma mark - ASEdgeInsets
-
-typedef struct {
-  ASDimension top;
-  ASDimension left;
-  ASDimension bottom;
-  ASDimension right;
-  ASDimension start;
-  ASDimension end;
-  ASDimension horizontal;
-  ASDimension vertical;
-  ASDimension all;
-} ASEdgeInsets;
-
-ASDK_EXTERN ASEdgeInsets const ASEdgeInsetsZero;
-
-ASDK_EXTERN ASEdgeInsets ASEdgeInsetsMake(UIEdgeInsets edgeInsets);
-
-#endif
-
 NS_ASSUME_NONNULL_END

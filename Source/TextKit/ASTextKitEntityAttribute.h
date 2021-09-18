@@ -11,8 +11,6 @@
 
 #import <AsyncDisplayKit/ASAvailability.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <AsyncDisplayKit/ASBaseDefines.h>
 
 /**
@@ -32,5 +30,3 @@ AS_SUBCLASSING_RESTRICTED
 - (instancetype)initWithEntity:(id<NSObject>)entity;
 
 @end
-
-#endif

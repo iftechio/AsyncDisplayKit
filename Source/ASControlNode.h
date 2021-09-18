@@ -43,20 +43,6 @@ typedef NS_OPTIONS(NSUInteger, ASControlNodeEvent)
 };
 
 /**
- * Compatibility aliases for @c ASControlState enum.
- * We previously provided our own enum, but when it was imported
- * into Swift, the @c normal (0) option disappeared.
- *
- * Apple's UIControlState enum gets special treatment here, and
- * UIControlStateNormal is available in Swift.
- */
-typedef UIControlState ASControlState ASDISPLAYNODE_DEPRECATED_MSG("Use UIControlState.");
-static UIControlState const ASControlStateNormal ASDISPLAYNODE_DEPRECATED_MSG("Use UIControlStateNormal.") = UIControlStateNormal;
-static UIControlState const ASControlStateDisabled ASDISPLAYNODE_DEPRECATED_MSG("Use UIControlStateDisabled.") = UIControlStateDisabled;
-static UIControlState const ASControlStateHighlighted ASDISPLAYNODE_DEPRECATED_MSG("Use UIControlStateHighlighted.") = UIControlStateHighlighted;
-static UIControlState const ASControlStateSelected ASDISPLAYNODE_DEPRECATED_MSG("Use UIControlStateSelected.") = UIControlStateSelected;
-
-/**
   @abstract ASControlNode is the base class for control nodes (such as buttons), or nodes that track touches to invoke targets with action messages.
   @discussion ASControlNode cannot be used directly. It instead defines the common interface and behavior structure for all its subclasses. Subclasses should import "ASControlNode+Subclasses.h" for information on methods intended to be overriden.
  */
@@ -134,16 +120,5 @@ static UIControlState const ASControlStateSelected ASDISPLAYNODE_DEPRECATED_MSG(
  */
 - (void)sendActionsForControlEvents:(ASControlNodeEvent)controlEvents withEvent:(nullable UIEvent *)event;
 @end
-
-#if TARGET_OS_TV
-@interface ASControlNode (tvOS)
-
-/**
- @abstract How the node looks when it isn't focused. Exposed here so that subclasses can override.
- */
-- (void)setDefaultFocusAppearance;
-
-@end
-#endif
 
 NS_ASSUME_NONNULL_END

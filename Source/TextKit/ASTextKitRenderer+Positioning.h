@@ -9,8 +9,6 @@
 
 #import <AsyncDisplayKit/ASTextKitRenderer.h>
 
-#if AS_ENABLE_TEXTNODE
-
 typedef void (^as_text_component_index_block_t)(NSUInteger characterIndex,
                                                 CGRect glyphBoundingRect,
                                                 BOOL *stop);
@@ -102,5 +100,3 @@ typedef NS_ENUM(NSUInteger, ASTextKitRendererMeasureOption) {
 - (CGRect)trailingRect;
 
 @end
-
-#endif

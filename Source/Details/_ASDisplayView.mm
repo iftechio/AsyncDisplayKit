@@ -15,7 +15,6 @@
 #import <AsyncDisplayKit/ASDisplayNode+Convenience.h>
 #import <AsyncDisplayKit/ASDisplayNode+Subclasses.h>
 #import <AsyncDisplayKit/ASLayout.h>
-#import <AsyncDisplayKit/ASDKViewController.h>
 
 #pragma mark - _ASDisplayView
 
@@ -174,9 +173,7 @@
   // This is only to help detect issues when a root-of-view-controller node is reused separately from its view controller.
   // Avoid overhead in release.
   if (superview && node.viewControllerRoot) {
-    UIViewController *vc = [node closestViewController];
-
-    ASDisplayNodeAssert(vc != nil && [vc isKindOfClass:[ASDKViewController class]] && ((ASDKViewController*)vc).node == node, @"This node was once used as a view controller's node. You should not reuse it without its view controller.");
+    ASDisplayNodeAssert(false, @"This node was once used as a view controller's node. You should not reuse it without its view controller.");
   }
 #endif
 
@@ -474,14 +471,6 @@
   [node layoutMarginsDidChange];
 }
 
-- (void)safeAreaInsetsDidChange
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  [super safeAreaInsetsDidChange];
-
-  [node safeAreaInsetsDidChange];
-}
-
 - (id)forwardingTargetForSelector:(SEL)aSelector
 {
   // Ideally, we would implement -targetForAction:withSender: and simply return the node where we don't respond personally.
@@ -491,42 +480,4 @@
   return node;
 }
 
-#if TARGET_OS_TV
-#pragma mark - tvOS
-- (BOOL)canBecomeFocused
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node canBecomeFocused];
-}
-
-- (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node didUpdateFocusInContext:context withAnimationCoordinator:coordinator];
-}
-
-- (void)setNeedsFocusUpdate
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node setNeedsFocusUpdate];
-}
-
-- (void)updateFocusIfNeeded
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node updateFocusIfNeeded];
-}
-
-- (BOOL)shouldUpdateFocusInContext:(UIFocusUpdateContext *)context
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node shouldUpdateFocusInContext:context];
-}
-
-- (UIView *)preferredFocusedView
-{
-  ASDisplayNode *node = _asyncdisplaykit_node; // Create strong reference to weak ivar.
-  return [node preferredFocusedView];
-}
-#endif
 @end

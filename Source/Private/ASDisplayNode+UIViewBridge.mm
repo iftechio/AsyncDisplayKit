@@ -85,46 +85,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
  */
 @implementation ASDisplayNode (UIViewBridge)
 
-#if TARGET_OS_TV
-// Focus Engine
-- (BOOL)canBecomeFocused
-{
-  return NO;
-}
-
-- (void)setNeedsFocusUpdate
-{
-  ASDisplayNodeAssertMainThread();
-  [_view setNeedsFocusUpdate];
-}
-
-- (void)updateFocusIfNeeded
-{
-  ASDisplayNodeAssertMainThread();
-  [_view updateFocusIfNeeded];
-}
-
-- (BOOL)shouldUpdateFocusInContext:(UIFocusUpdateContext *)context
-{
-  return NO;
-}
-
-- (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator
-{
-  
-}
-
-- (UIView *)preferredFocusedView
-{
-  if (self.nodeLoaded) {
-    return _view;
-  }
-  else {
-    return nil;
-  }
-}
-#endif
-
 - (BOOL)canBecomeFirstResponder
 {
   if (_view == nil) {
@@ -952,9 +912,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
 {
   _bridge_prologue_write;
   _setToViewOnly(semanticContentAttribute, semanticContentAttribute);
-#if YOGA
-  [self semanticContentAttributeDidChange:semanticContentAttribute];
-#endif
 }
 
 - (UIEdgeInsets)layoutMargins
@@ -962,11 +919,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
   _bridge_prologue_read;
   ASDisplayNodeAssert(!_flags.layerBacked, @"Danger: this property is undefined on layer-backed nodes.");
   UIEdgeInsets margins = _getFromViewOnly(layoutMargins);
-
-  if (!AS_AT_LEAST_IOS11 && self.insetsLayoutMarginsFromSafeArea) {
-    UIEdgeInsets safeArea = self.safeAreaInsets;
-    margins = ASConcatInsets(margins, safeArea);
-  }
 
   return margins;
 }
@@ -1001,48 +953,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
   }
 }
 
-- (UIEdgeInsets)safeAreaInsets
-{
-  _bridge_prologue_read;
-
-  if (AS_AVAILABLE_IOS_TVOS(11.0, 11.0)) {
-    if (!_flags.layerBacked && _loaded(self)) {
-      return self.view.safeAreaInsets;
-    }
-  }
-  return _fallbackSafeAreaInsets;
-}
-
-- (BOOL)insetsLayoutMarginsFromSafeArea
-{
-  _bridge_prologue_read;
-
-  return [self _locked_insetsLayoutMarginsFromSafeArea];
-}
-
-- (void)setInsetsLayoutMarginsFromSafeArea:(BOOL)insetsLayoutMarginsFromSafeArea
-{
-  ASDisplayNodeAssertThreadAffinity(self);
-  BOOL shouldNotifyAboutUpdate;
-  {
-    _bridge_prologue_write;
-
-    _flags.fallbackInsetsLayoutMarginsFromSafeArea = insetsLayoutMarginsFromSafeArea;
-
-    if (AS_AVAILABLE_IOS_TVOS(11.0, 11.0)) {
-      if (!_flags.layerBacked) {
-        _setToViewOnly(insetsLayoutMarginsFromSafeArea, insetsLayoutMarginsFromSafeArea);
-      }
-    }
-
-    shouldNotifyAboutUpdate = _loaded(self) && (!AS_AT_LEAST_IOS11 || _flags.layerBacked);
-  }
-
-  if (shouldNotifyAboutUpdate) {
-    [self layoutMarginsDidChange];
-  }
-}
-
 - (NSDictionary<NSString *,id<CAAction>> *)actions
 {
   _bridge_prologue_read;
@@ -1053,17 +963,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
 {
   _bridge_prologue_write;
   _setToLayer(actions, actions);
-}
-
-- (void)safeAreaInsetsDidChange
-{
-  ASDisplayNodeAssertMainThread();
-
-  if (self.automaticallyRelayoutOnSafeAreaChanges) {
-    [self setNeedsLayout];
-  }
-
-  [self _fallbackUpdateSafeAreaOnChildren];
 }
 
 @end
@@ -1101,17 +1000,6 @@ if (shouldApply) { _layer.layerProperty = (layerValueExpr); } else { ASDisplayNo
     ASDisplayNodeAssert(newLayerMaskedCorners == kASCACornerAllCorners,
                         @"Cannot change maskedCorners property in iOS < 11 while using DefaultSlowCALayer rounding.");
   }
-}
-
-- (BOOL)_locked_insetsLayoutMarginsFromSafeArea
-{
-  DISABLED_ASAssertLocked(__instanceLock__);
-  if (AS_AVAILABLE_IOS_TVOS(11.0, 11.0)) {
-    if (!_flags.layerBacked) {
-      return _getFromViewOnly(insetsLayoutMarginsFromSafeArea);
-    }
-  }
-  return _flags.fallbackInsetsLayoutMarginsFromSafeArea;
 }
 
 @end
@@ -1356,20 +1244,6 @@ nodeProperty = nodeValueExpr; _setToViewOnly(viewAndPendingViewStateProperty, vi
   _bridge_prologue_read;
   return _getAccessibilityFromViewOrProperty(_accessibilityCustomActions, accessibilityCustomActions);
 }
-
-#if TARGET_OS_TV
-- (void)setAccessibilityHeaderElements:(NSArray *)accessibilityHeaderElements
-{
-  _bridge_prologue_write;
-  _setAccessibilityToViewAndProperty(_accessibilityHeaderElements, accessibilityHeaderElements, accessibilityHeaderElements, accessibilityHeaderElements);
-}
-
-- (NSArray *)accessibilityHeaderElements
-{
-  _bridge_prologue_read;
-  return _getAccessibilityFromViewOrProperty(_accessibilityHeaderElements, accessibilityHeaderElements);
-}
-#endif
 
 - (void)setAccessibilityActivationPoint:(CGPoint)accessibilityActivationPoint
 {

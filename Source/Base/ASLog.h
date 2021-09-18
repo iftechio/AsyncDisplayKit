@@ -58,7 +58,7 @@ ASDK_EXTERN os_log_t ASDisplayLog(void);
 #define ASCollectionLogEnabled 1
 ASDK_EXTERN os_log_t ASCollectionLog(void);
 
-/// Log for ASNetworkImageNode and ASMultiplexImageNode events.
+/// Log for ASNetworkImageNode events.
 #define ASImageLoadingLogEnabled 1
 ASDK_EXTERN os_log_t ASImageLoadingLog(void);
 

@@ -24,10 +24,7 @@
 @implementation ASCollectionViewFlowLayoutInspector {
   struct {
     unsigned int implementsSizeRangeForHeader:1;
-    unsigned int implementsReferenceSizeForHeader:1;
     unsigned int implementsSizeRangeForFooter:1;
-    unsigned int implementsReferenceSizeForFooter:1;
-    unsigned int implementsConstrainedSizeForNodeAtIndexPathDeprecated:1;
     unsigned int implementsConstrainedSizeForItemAtIndexPath:1;
   } _delegateFlags;
 }
@@ -53,10 +50,7 @@
     memset(&_delegateFlags, 0, sizeof(_delegateFlags));
   } else {
     _delegateFlags.implementsSizeRangeForHeader = [delegate respondsToSelector:@selector(collectionNode:sizeRangeForHeaderInSection:)];
-    _delegateFlags.implementsReferenceSizeForHeader = [delegate respondsToSelector:@selector(collectionView:layout:referenceSizeForHeaderInSection:)];
     _delegateFlags.implementsSizeRangeForFooter = [delegate respondsToSelector:@selector(collectionNode:sizeRangeForFooterInSection:)];
-    _delegateFlags.implementsReferenceSizeForFooter = [delegate respondsToSelector:@selector(collectionView:layout:referenceSizeForFooterInSection:)];
-    _delegateFlags.implementsConstrainedSizeForNodeAtIndexPathDeprecated = [delegate respondsToSelector:@selector(collectionView:constrainedSizeForNodeAtIndexPath:)];
     _delegateFlags.implementsConstrainedSizeForItemAtIndexPath = [delegate respondsToSelector:@selector(collectionNode:constrainedSizeForItemAtIndexPath:)];
   }
 }
@@ -66,14 +60,9 @@
   ASSizeRange result = ASSizeRangeUnconstrained;
   if (_delegateFlags.implementsConstrainedSizeForItemAtIndexPath) {
     result = [collectionView.asyncDelegate collectionNode:collectionView.collectionNode constrainedSizeForItemAtIndexPath:indexPath];
-  } else if (_delegateFlags.implementsConstrainedSizeForNodeAtIndexPathDeprecated) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    result = [collectionView.asyncDelegate collectionView:collectionView constrainedSizeForNodeAtIndexPath:indexPath];
-#pragma clang diagnostic pop
   } else {
     // With 2.0 `collectionView:constrainedSizeForNodeAtIndexPath:` was moved to the delegate. Assert if not implemented on the delegate but on the data source
-    ASDisplayNodeAssert([collectionView.asyncDataSource respondsToSelector:@selector(collectionView:constrainedSizeForNodeAtIndexPath:)] == NO, @"collectionView:constrainedSizeForNodeAtIndexPath: was moved from the ASCollectionDataSource to the ASCollectionDelegate.");
+    ASDisplayNodeAssert(YES, @"collectionView:constrainedSizeForNodeAtIndexPath: was moved from the ASCollectionDataSource to the ASCollectionDelegate.");
   }
 
   // If we got no size range:
@@ -97,24 +86,12 @@
   if (ASObjectIsEqual(kind, UICollectionElementKindSectionHeader)) {
     if (_delegateFlags.implementsSizeRangeForHeader) {
       result = [[self delegateForCollectionView:collectionView] collectionNode:collectionView.collectionNode sizeRangeForHeaderInSection:indexPath.section];
-    } else if (_delegateFlags.implementsReferenceSizeForHeader) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-      CGSize exactSize = [[self delegateForCollectionView:collectionView] collectionView:collectionView layout:_layout referenceSizeForHeaderInSection:indexPath.section];
-#pragma clang diagnostic pop
-      result = ASSizeRangeMake(exactSize);
     } else {
       result = ASSizeRangeMake(_layout.headerReferenceSize);
     }
   } else if (ASObjectIsEqual(kind, UICollectionElementKindSectionFooter)) {
     if (_delegateFlags.implementsSizeRangeForFooter) {
       result = [[self delegateForCollectionView:collectionView] collectionNode:collectionView.collectionNode sizeRangeForFooterInSection:indexPath.section];
-    } else if (_delegateFlags.implementsReferenceSizeForFooter) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-      CGSize exactSize = [[self delegateForCollectionView:collectionView] collectionView:collectionView layout:_layout referenceSizeForFooterInSection:indexPath.section];
-#pragma clang diagnostic pop
-      result = ASSizeRangeMake(exactSize);
     } else {
       result = ASSizeRangeMake(_layout.footerReferenceSize);
     }

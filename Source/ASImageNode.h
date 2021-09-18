@@ -12,8 +12,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol ASAnimatedImageProtocol;
-
 /**
  * Image modification block.  Use to transform an image before display.
  *
@@ -44,48 +42,6 @@ typedef UIImage * _Nullable (^asimagenode_modification_block_t)(UIImage *image, 
 @property (nullable, copy) UIColor *placeholderColor;
 
 /**
- * @abstract Indicates whether efficient cropping of the receiver is enabled.
- *
- * @discussion Defaults to YES. See -setCropEnabled:recropImmediately:inBounds: for more
- * information.
- */
-@property (getter=isCropEnabled) BOOL cropEnabled;
-
-/**
- * @abstract Indicates that efficient downsizing of backing store should *not* be enabled.
- *
- * @discussion Defaults to NO. @see ASCroppedImageBackingSizeAndDrawRectInBounds for more
- * information.
- */
-@property BOOL forceUpscaling;
-
-/**
- * @abstract Forces image to be rendered at forcedSize.
- * @discussion Defaults to CGSizeZero to indicate that the forcedSize should not be used.
- * Setting forcedSize to non-CGSizeZero will force the backing of the layer contents to 
- * be forcedSize (automatically adjusted for contentsSize).
- */
-@property CGSize forcedSize;
-
-/**
- * @abstract Enables or disables efficient cropping.
- * 
- * @param cropEnabled YES to efficiently crop the receiver's contents such that
- * contents outside of its bounds are not included; NO otherwise.
- *
- * @param recropImmediately If the receiver has an image, YES to redisplay the
- * receiver immediately; NO otherwise.
- *
- * @param cropBounds The bounds into which the receiver will be cropped. Useful
- * if bounds are to change in response to cropping (but have not yet done so).
- *
- * @discussion Efficient cropping is only performed when the receiver's view's
- * contentMode is UIViewContentModeScaleAspectFill. By default, cropping is
- * enabled. The crop alignment may be controlled via cropAlignmentFactor.
- */
-- (void)setCropEnabled:(BOOL)cropEnabled recropImmediately:(BOOL)recropImmediately inBounds:(CGRect)cropBounds;
-
-/**
  * @abstract A value that controls how the receiver's efficient cropping is aligned.
  *
  * @discussion This value defines a rectangle that is to be featured by the
@@ -107,106 +63,6 @@ typedef UIImage * _Nullable (^asimagenode_modification_block_t)(UIImage *image, 
  */
 @property (nullable) asimagenode_modification_block_t imageModificationBlock;
 
-/**
- * @abstract Marks the receiver as needing display and performs a block after
- * display has finished.
- *
- * @param displayCompletionBlock The block to be performed after display has
- * finished.  Its `canceled` property will be YES if display was prevented or
- * canceled (via displaySuspended); NO otherwise.
- * 
- * @discussion displayCompletionBlock will be performed on the main-thread. If
- * `displaySuspended` is YES, `displayCompletionBlock` is will be
- * performed immediately and `YES` will be passed for `canceled`.
- */
-- (void)setNeedsDisplayWithCompletion:(nullable void (^)(BOOL canceled))displayCompletionBlock;
-
-#if TARGET_OS_TV
-/** 
- * A bool to track if the current appearance of the node
- * is the default focus appearance.
- * Exposed here so the category methods can set it.
- */
-@property BOOL isDefaultFocusAppearance;
-#endif
-
 @end
-
-#if TARGET_OS_TV
-@interface ASImageNode (tvOS)
-@end
-#endif
-
-@interface ASImageNode (AnimatedImage)
-
-/**
- * @abstract The animated image to playback
- *
- * @discussion Set this to an object which conforms to ASAnimatedImageProtocol
- * to have the ASImageNode playback an animated image.
- * @warning this method should not be overridden, it may not always be called as
- * another method is used internally. If you need to know when the animatedImage
- * is set, override @c animatedImageSet:previousAnimatedImage:
- */
-@property (nullable) id <ASAnimatedImageProtocol> animatedImage;
-
-/**
- * @abstract Pause the playback of an animated image.
- *
- * @discussion Set to YES to pause playback of an animated image and NO to resume
- * playback.
- */
-@property BOOL animatedImagePaused;
-
-/**
- * @abstract The runloop mode used to animate the image.
- *
- * @discussion Defaults to NSRunLoopCommonModes. Another commonly used mode is NSDefaultRunLoopMode.
- * Setting NSDefaultRunLoopMode will cause animation to pause while scrolling (if the ASImageNode is
- * in a scroll view), which may improve scroll performance in some use cases.
- */
-@property (copy) NSString *animatedImageRunLoopMode;
-
-/**
- * @abstract Method called when animated image has been set
- *
- * @discussion This method is for subclasses to override so they can know if an animated image
- * has been set on the node.
- */
-- (void)animatedImageSet:(nullable id <ASAnimatedImageProtocol>)newAnimatedImage previousAnimatedImage:(nullable id <ASAnimatedImageProtocol>)previousAnimatedImage ASDISPLAYNODE_REQUIRES_SUPER;
-
-@end
-
-@interface ASImageNode (Unavailable)
-
-- (instancetype)initWithLayerBlock:(ASDisplayNodeLayerBlock)viewBlock didLoadBlock:(nullable ASDisplayNodeDidLoadBlock)didLoadBlock AS_UNAVAILABLE();
-
-- (instancetype)initWithViewBlock:(ASDisplayNodeViewBlock)viewBlock didLoadBlock:(nullable ASDisplayNodeDidLoadBlock)didLoadBlock AS_UNAVAILABLE();
-
-@end
-
-/**
- * @abstract Image modification block that rounds (and optionally adds a border to) an image.
- *
- * @param borderWidth The width of the round border to draw, or zero if no border is desired.
- * @param borderColor What colour border to draw.
- *
- * @see <imageModificationBlock>
- *
- * @return An ASImageNode image modification block.
- */
-ASDK_EXTERN asimagenode_modification_block_t ASImageNodeRoundBorderModificationBlock(CGFloat borderWidth, UIColor * _Nullable borderColor);
-
-/**
- * @abstract Image modification block that applies a tint color à la UIImage configured with
- * renderingMode set to UIImageRenderingModeAlwaysTemplate.
- *
- * @param color The color to tint the image.
- *
- * @see <imageModificationBlock>
- *
- * @return An ASImageNode image modification block.
- */
-ASDK_EXTERN asimagenode_modification_block_t ASImageNodeTintColorModificationBlock(UIColor *color);
 
 NS_ASSUME_NONNULL_END

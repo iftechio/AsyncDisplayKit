@@ -61,7 +61,6 @@
   ASButtonNode *buttonNode = [[ASButtonNode alloc] init];
   buttonNode.accessibilityLabel = @"My Test";
   // Make sure the title node is not nil.
-  buttonNode.titleNode.placeholderColor = [UIColor whiteColor];
   buttonNode.selected = YES;
   XCTAssertTrue([buttonNode.accessibilityLabel isEqualToString:@"My Test"]);
 }
