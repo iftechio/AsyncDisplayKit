@@ -213,47 +213,4 @@ typedef NS_ENUM(NSUInteger, ASCellNodeVisibilityEvent) {
 
 @end
 
-@interface ASCellNode (Unavailable)
-
-- (instancetype)initWithLayerBlock:(ASDisplayNodeLayerBlock)viewBlock didLoadBlock:(nullable ASDisplayNodeDidLoadBlock)didLoadBlock NS_UNAVAILABLE;
-
-- (instancetype)initWithViewBlock:(ASDisplayNodeViewBlock)viewBlock didLoadBlock:(nullable ASDisplayNodeDidLoadBlock)didLoadBlock NS_UNAVAILABLE;
-
-- (void)setLayerBacked:(BOOL)layerBacked AS_UNAVAILABLE("ASCellNode does not support layer-backing, although subnodes may be layer-backed.");
-
-@end
-
-
-/**
- * Simple label-style cell node.  Read its source for an example of custom <ASCellNode>s.
- */
-@interface ASTextCellNode : ASCellNode
-
-/**
- * Initializes a text cell with given text attributes and text insets
- */
-- (instancetype)initWithAttributes:(NSDictionary *)textAttributes insets:(UIEdgeInsets)textInsets;
-
-/**
- * Text to display.
- */
-@property (nullable, copy) NSString *text;
-
-/**
- * A dictionary containing key-value pairs for text attributes. You can specify the font, text color, text shadow color, and text shadow offset using the keys listed in NSString UIKit Additions Reference.
- */
-@property (copy) NSDictionary<NSAttributedStringKey, id> *textAttributes;
-
-/**
- * The text inset or outset for each edge. The default value is 15.0 horizontal and 11.0 vertical padding.
- */
-@property UIEdgeInsets textInsets;
-
-/**
- * The text node used by this cell node.
- */
-@property (readonly) ASTextNode *textNode;
-
-@end
-
 NS_ASSUME_NONNULL_END
