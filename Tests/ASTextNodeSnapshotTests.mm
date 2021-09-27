@@ -89,16 +89,6 @@
   ASSnapshotVerifyNode(textNode, nil);
 }
 
-- (void)testThatSlowPathTruncationWorks
-{
-  ASTextNode *textNode = [[ASTextNode alloc] init];
-  textNode.attributedText = [[NSAttributedString alloc] initWithString:@"Quality is Important" attributes:@{ NSForegroundColorAttributeName: [UIColor blueColor], NSFontAttributeName: [UIFont italicSystemFontOfSize:24] }];
-  // Set exclusion paths to trigger slow path
-  textNode.exclusionPaths = @[ [UIBezierPath bezierPath] ];
-  ASDisplayNodeSizeToFitSizeRange(textNode, ASSizeRangeMake(CGSizeZero, CGSizeMake(100, 50)));
-  ASSnapshotVerifyNode(textNode, nil);
-}
-
 - (void)testShadowing
 {
   ASTextNode *textNode = [[ASTextNode alloc] init];
@@ -141,24 +131,6 @@
                                                             attributes:@{ NSParagraphStyleAttributeName: paragraphStyle }];
 
   ASDisplayNodeSizeToFitSizeRange(textNode, ASSizeRangeMake(CGSizeZero, CGSizeMake(INFINITY, INFINITY)));
-  ASSnapshotVerifyNode(textNode, nil);
-}
-
-
-- (void)testUIGraphicsRendererDrawingExperiment
-{
-  // Test to ensure that rendering with UIGraphicsRenderer don't regress
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalDrawingGlobal;
-  [ASConfigurationManager test_resetWithConfiguration:config];
-
-  // trivial test case to ensure ASSnapshotTestCase works
-  ASTextNode *textNode = [[ASTextNode alloc] init];
-  textNode.attributedText = [[NSAttributedString alloc] initWithString:@"judar"
-                                                            attributes:@{NSFontAttributeName : [UIFont italicSystemFontOfSize:24]}];
-  textNode.textContainerInset = UIEdgeInsetsMake(0, 2, 0, 2);
-  ASDisplayNodeSizeToFitSizeRange(textNode, ASSizeRangeMake(CGSizeZero, CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX)));
-
   ASSnapshotVerifyNode(textNode, nil);
 }
 

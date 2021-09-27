@@ -13,7 +13,6 @@
 #import <AsyncDisplayKit/_ASScopeTimer.h>
 #import <AsyncDisplayKit/ASCellNode.h>
 #import <AsyncDisplayKit/ASCollectionElement.h>
-#import <AsyncDisplayKit/ASCollectionLayoutContext.h>
 #import <AsyncDisplayKit/ASDispatch.h>
 #import <AsyncDisplayKit/ASDisplayNodeExtras.h>
 #import <AsyncDisplayKit/ASElementMap.h>
@@ -568,12 +567,10 @@ typedef void (^ASDataControllerSynchronizationBlock)();
     os_log_debug(ASCollectionLog(), "performBatchUpdates %@ %@", ASViewToDisplayNode(ASDynamicCast(self.dataSource, UIView)), changeSet);
   }
 
-  if (!ASActivateExperimentalFeature(ASExperimentalOptimizeDataControllerPipeline)) {
-    NSTimeInterval transactionQueueFlushDuration = 0.0f;
-    {
-      AS::ScopeTimer t(transactionQueueFlushDuration);
-      dispatch_group_wait(_editingTransactionGroup, DISPATCH_TIME_FOREVER);
-    }
+  NSTimeInterval transactionQueueFlushDuration = 0.0f;
+  {
+    AS::ScopeTimer t(transactionQueueFlushDuration);
+    dispatch_group_wait(_editingTransactionGroup, DISPATCH_TIME_FOREVER);
   }
 
   // If the initial reloadData has not been called, just bail because we don't have our old data source counts.
@@ -660,29 +657,12 @@ typedef void (^ASDataControllerSynchronizationBlock)();
     }
   };
 
-  // Step 3 can be done on the main thread or on _editingTransactionQueue
-  // depending on an experiment.
-  BOOL mainThreadOnly = ASActivateExperimentalFeature(ASExperimentalMainThreadOnlyDataController);
-  if (mainThreadOnly) {
-    // In main-thread-only mode allocate and layout all nodes serially on the main thread.
-    //
-    // After this step, we'll still dispatch to _editingTransactionQueue only to schedule a block
-    // to _mainSerialQueue to execute next steps. This is not optimized because
-    // in theory we can skip _editingTransactionQueue entirely, but it's much safer
-    // because change sets will still flow through the pipeline in pretty the same way
-    // (main thread -> _editingTransactionQueue -> _mainSerialQueue) and so
-    // any methods that block on _editingTransactionQueue will still work.
-    step3(YES);
-  }
-
   ++_editingTransactionGroupCount;
   dispatch_group_async(_editingTransactionGroup, _editingTransactionQueue, ^{
     __block __unused os_activity_scope_state_s preparationScope = {}; // unused if deployment target < iOS10
     as_activity_scope_enter(as_activity_create("Prepare nodes for collection update", AS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT), &preparationScope);
 
-    if (!mainThreadOnly) {
-      step3(NO);
-    }
+    step3(NO);
 
     // Step 4: Inform the delegate on main thread
     [self->_mainSerialQueue performBlockOnMainThread:^{

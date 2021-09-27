@@ -29,7 +29,6 @@
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 #import <AsyncDisplayKit/ASLayoutElementStylePrivate.h>
 #import <AsyncDisplayKit/ASMainThreadDeallocation.h>
-#import <AsyncDisplayKit/ASNodeController+Beta.h>
 #import <AsyncDisplayKit/ASRunLoopQueue.h>
 #import <AsyncDisplayKit/ASSignpost.h>
 #import <AsyncDisplayKit/ASWeakProxy.h>
@@ -243,9 +242,6 @@ static ASDisplayNodeMethodOverrides GetASDisplayNodeMethodOverrides(Class c)
     class_addMethod(self, @selector(hierarchyDisplayDidFinish), noArgsImp, "v@:");
     class_addMethod(self, @selector(calculatedLayoutDidChange), noArgsImp, "v@:");
     
-    auto type0 = "v@:" + std::string(@encode(ASSizeRange));
-    class_addMethod(self, @selector(willCalculateLayout:), (IMP)StubImplementationWithSizeRange, type0.c_str());
-    
     auto interfaceStateType = std::string(@encode(ASInterfaceState));
     auto type1 = "v@:" + interfaceStateType + interfaceStateType;
     class_addMethod(self, @selector(interfaceStateDidChange:fromState:), (IMP)StubImplementationWithTwoInterfaceStates, type1.c_str());
@@ -304,13 +300,8 @@ __attribute__((constructor)) static void ASLoadFrameworkInitializer(void)
   
   _flags.canClearContentsOfLayer = YES;
   _flags.canCallSetNeedsDisplayOfLayer = YES;
-
-  _fallbackSafeAreaInsets = UIEdgeInsetsZero;
-  _flags.fallbackInsetsLayoutMarginsFromSafeArea = YES;
+  
   _flags.isViewControllerRoot = NO;
-
-  _flags.automaticallyRelayoutOnSafeAreaChanges = NO;
-  _flags.automaticallyRelayoutOnLayoutMarginsChanges = NO;
 
   [self baseDidInit];
 }
@@ -808,67 +799,6 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
   _flags.viewEverHadAGestureRecognizerAttached = YES;
 }
 
-- (UIEdgeInsets)fallbackSafeAreaInsets
-{
-  MutexLocker l(__instanceLock__);
-  return _fallbackSafeAreaInsets;
-}
-
-- (void)setFallbackSafeAreaInsets:(UIEdgeInsets)insets
-{
-  BOOL needsManualUpdate;
-  BOOL updatesLayoutMargins;
-
-  {
-    MutexLocker l(__instanceLock__);
-    ASDisplayNodeAssertThreadAffinity(self);
-
-    if (UIEdgeInsetsEqualToEdgeInsets(insets, _fallbackSafeAreaInsets)) {
-      return;
-    }
-
-    _fallbackSafeAreaInsets = insets;
-    needsManualUpdate = !AS_AT_LEAST_IOS11 || _flags.layerBacked;
-    updatesLayoutMargins = needsManualUpdate && [self _locked_insetsLayoutMarginsFromSafeArea];
-  }
-
-  if (needsManualUpdate) {
-    [self safeAreaInsetsDidChange];
-  }
-
-  if (updatesLayoutMargins) {
-    [self layoutMarginsDidChange];
-  }
-}
-
-- (void)_fallbackUpdateSafeAreaOnChildren
-{
-  ASDisplayNodeAssertThreadAffinity(self);
-
-  UIEdgeInsets insets = self.safeAreaInsets;
-  CGRect bounds = self.bounds;
-
-  for (ASDisplayNode *child in self.subnodes) {
-    if (AS_AT_LEAST_IOS11 && !child.layerBacked) {
-      // In iOS 11 view-backed nodes already know what their safe area is.
-      continue;
-    }
-
-    if (child.viewControllerRoot) {
-      // Its safe area is controlled by a view controller. Don't override it.
-      continue;
-    }
-
-    CGRect childFrame = child.frame;
-    UIEdgeInsets childInsets = UIEdgeInsetsMake(MAX(insets.top    - (CGRectGetMinY(childFrame) - CGRectGetMinY(bounds)), 0),
-                                                MAX(insets.left   - (CGRectGetMinX(childFrame) - CGRectGetMinX(bounds)), 0),
-                                                MAX(insets.bottom - (CGRectGetMaxY(bounds) - CGRectGetMaxY(childFrame)), 0),
-                                                MAX(insets.right  - (CGRectGetMaxX(bounds) - CGRectGetMaxX(childFrame)), 0));
-
-    child.fallbackSafeAreaInsets = childInsets;
-  }
-}
-
 - (BOOL)isViewControllerRoot
 {
   MutexLocker l(__instanceLock__);
@@ -879,18 +809,6 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
 {
   MutexLocker l(__instanceLock__);
   _flags.isViewControllerRoot = flag;
-}
-
-- (BOOL)automaticallyRelayoutOnSafeAreaChanges
-{
-  MutexLocker l(__instanceLock__);
-  return _flags.automaticallyRelayoutOnSafeAreaChanges;
-}
-
-- (void)setAutomaticallyRelayoutOnSafeAreaChanges:(BOOL)flag
-{
-  MutexLocker l(__instanceLock__);
-  _flags.automaticallyRelayoutOnSafeAreaChanges = flag;
 }
 
 - (BOOL)automaticallyRelayoutOnLayoutMarginsChanges
@@ -915,18 +833,6 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
 {
   MutexLocker l(__instanceLock__);
   _flags.placeholderEnabled = flag;
-}
-
-- (void)__setNodeController:(ASNodeController *)controller
-{
-  // See docs for why we don't lock.
-  if (controller.shouldInvertStrongReference) {
-    _strongNodeController = controller;
-    _weakNodeController = nil;
-  } else {
-    _weakNodeController = controller;
-    _strongNodeController = nil;
-  }
 }
 
 - (void)checkResponderCompatibility
@@ -985,10 +891,6 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
   _layoutVersion++;
   
   _unflattenedLayout = nil;
-
-#if YOGA
-  [self invalidateCalculatedYogaLayout];
-#endif
 }
 
 - (void)__layout
@@ -1037,8 +939,6 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
       [self _layoutDidFinish];
     });
   }
-
-  [self _fallbackUpdateSafeAreaOnChildren];
 }
 
 - (void)_layoutDidFinish
@@ -1085,23 +985,7 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
 {
   __ASDisplayNodeCheckForLayoutMethodOverrides;
 
-  switch (self.layoutEngineType) {
-    case ASLayoutEngineTypeLayoutSpec:
-      return [self calculateLayoutLayoutSpec:constrainedSize];
-#if YOGA
-    case ASLayoutEngineTypeYoga:
-      return [self calculateLayoutYoga:constrainedSize];
-#endif
-      // If YOGA is not defined but for some reason the layout type engine is Yoga
-      // we explicitly fallthrough here
-    default:
-      break;
-  }
-
-  // If this case is reached a layout type engine was defined for a node that is currently
-  // not supported.
-  ASDisplayNodeAssert(NO, @"No layout type determined");
-  return nil;
+  return [self calculateLayoutLayoutSpec:constrainedSize];
 }
 
 - (CGSize)calculateSizeThatFits:(CGSize)constrainedSize
@@ -1700,11 +1584,6 @@ static void _recursivelySetDisplaySuspended(ASDisplayNode *node, CALayer *layer,
 - (void)willDisplayAsyncLayer:(_ASDisplayLayer *)layer asynchronously:(BOOL)asynchronously
 {
   // Subclass hook.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  [self displayWillStart];
-#pragma clang diagnostic pop
-
   [self displayWillStartAsynchronously:asynchronously];
 }
 
@@ -1714,10 +1593,6 @@ static void _recursivelySetDisplaySuspended(ASDisplayNode *node, CALayer *layer,
   [self displayDidFinish];
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-implementations"
-- (void)displayWillStart {}
-#pragma clang diagnostic pop
 - (void)displayWillStartAsynchronously:(BOOL)asynchronously
 {
   ASDisplayNodeAssertMainThread();
@@ -3104,10 +2979,6 @@ ASDISPLAYNODE_INLINE BOOL subtreeIsRasterized(ASDisplayNode *node) {
   [self enumerateInterfaceStateDelegates:^(id<ASInterfaceStateDelegate> del) {
     [del didEnterVisibleState];
   }];
-  
-#if AS_ENABLE_TIPS
-  [ASTipsController.shared nodeDidAppear:self];
-#endif
 }
 
 - (void)_didExitVisibleState
@@ -3192,7 +3063,7 @@ ASDISPLAYNODE_INLINE BOOL subtreeIsRasterized(ASDisplayNode *node) {
   // (see -__layout and -_u_measureNodeWithBoundsIfNecessary:). This scenario is uncommon,
   // and running a measurement pass here is a fine trade-off because preloading any time after this point would be late.
   
-  if (self.automaticallyManagesSubnodes && !ASActivateExperimentalFeature(ASExperimentalDidEnterPreloadSkipASMLayout)) {
+  if (self.automaticallyManagesSubnodes) {
     [self layoutIfNeeded];
   }
   [self enumerateInterfaceStateDelegates:^(id<ASInterfaceStateDelegate> del) {

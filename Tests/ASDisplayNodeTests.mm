@@ -29,7 +29,6 @@
 #import <AsyncDisplayKit/ASBackgroundLayoutSpec.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 #import <AsyncDisplayKit/ASDisplayNodeExtras.h>
-#import <AsyncDisplayKit/ASDKViewController.h>
 
 #import "ASXCTExtensions.h"
 #import "ASDisplayNodeTestsHelper.h"
@@ -274,12 +273,6 @@ for (ASDisplayNode *n in @[ nodes ]) {\
 }
 @end
 
-@interface ASTestViewController: ASDKViewController<ASDisplayNode *>
-@end
-@implementation ASTestViewController
-- (BOOL)prefersStatusBarHidden { return YES; }
-@end
-
 @interface UIResponderNodeTestDisplayViewCallingSuper : _ASDisplayView
 @end
 @implementation UIResponderNodeTestDisplayViewCallingSuper
@@ -513,8 +506,6 @@ for (ASDisplayNode *n in @[ nodes ]) {\
     XCTAssertEqual(UIViewAutoresizingNone, node.autoresizingMask, @"default autoresizingMask broken %@", hasLoadedView);
     XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsetsMake(8, 8, 8, 8), node.layoutMargins), @"default layoutMargins broken %@", hasLoadedView);
     XCTAssertEqual(NO, node.preservesSuperviewLayoutMargins, @"default preservesSuperviewLayoutMargins broken %@", hasLoadedView);
-    XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsetsZero, node.safeAreaInsets), @"default safeAreaInsets broken %@", hasLoadedView);
-    XCTAssertEqual(YES, node.insetsLayoutMarginsFromSafeArea, @"default insetsLayoutMarginsFromSafeArea broken %@", hasLoadedView);
     if (node.nodeLoaded) {
       XCTAssertNotNil(node.tintColor, @"default tintColor broken %@", hasLoadedView); // It has been populated by the UIView.
     } else {
@@ -642,7 +633,6 @@ for (ASDisplayNode *n in @[ nodes ]) {\
     XCTAssertEqual(NO, node.autoresizesSubviews, @"autoresizesSubviews broken %@", hasLoadedView);
     XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsetsMake(3, 5, 8, 11), node.layoutMargins), @"layoutMargins broken %@", hasLoadedView);
     XCTAssertEqual(YES, node.preservesSuperviewLayoutMargins, @"preservesSuperviewLayoutMargins broken %@", hasLoadedView);
-    XCTAssertEqual(NO, node.insetsLayoutMarginsFromSafeArea, @"insetsLayoutMarginsFromSafeArea broken %@", hasLoadedView);
   }
 }
 
@@ -715,7 +705,6 @@ for (ASDisplayNode *n in @[ nodes ]) {\
       node.exclusiveTouch = YES;
       node.autoresizesSubviews = NO;
       node.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin;
-      node.insetsLayoutMarginsFromSafeArea = NO;
       node.layoutMargins = UIEdgeInsetsMake(3, 5, 8, 11);
       node.preservesSuperviewLayoutMargins = YES;
     }
@@ -2671,52 +2660,6 @@ static bool stringContainsPointer(NSString *description, id p) {
   // Have to split into two lines because XCTAssert macro can't handle the stringWithFormat:.
   BOOL hasVC = [debugDescription containsString:[NSString stringWithFormat:@"%p", vc]];
   XCTAssert(hasVC);
-}
-
-- (void)testThatSubnodeSafeAreaInsetsAreCalculatedCorrectly
-{
-  ASDisplayNode *rootNode = [[ASDisplayNode alloc] init];
-  ASDisplayNode *subnode = [[ASDisplayNode alloc] init];
-
-  rootNode.automaticallyManagesSubnodes = YES;
-  rootNode.layoutSpecBlock = ^ASLayoutSpec * _Nonnull(__kindof ASDisplayNode * _Nonnull node, ASSizeRange constrainedSize) {
-    return [ASInsetLayoutSpec insetLayoutSpecWithInsets:UIEdgeInsetsMake(1, 2, 3, 4) child:subnode];
-  };
-
-  ASTestViewController *viewController = [[ASTestViewController alloc] initWithNode:rootNode];
-  viewController.additionalSafeAreaInsets = UIEdgeInsetsMake(10, 10, 10, 10);
-
-  // It looks like iOS 11 suppresses safeAreaInsets calculation for the views that are not on screen.
-  UIWindow *window = [[UIWindow alloc] init];
-  window.rootViewController = viewController;
-  [window setHidden:NO];
-
-  [window.rootViewController.view setNeedsLayout];
-  [window.rootViewController.view layoutIfNeeded];
-
-  UIEdgeInsets expectedRootNodeSafeArea = UIEdgeInsetsMake(10, 10, 10, 10);
-  UIEdgeInsets expectedSubnodeSafeArea = UIEdgeInsetsMake(9, 8, 7, 6);
-
-  UIEdgeInsets windowSafeArea = UIEdgeInsetsZero;
-  if (AS_AVAILABLE_IOS(11.0)) {
-    windowSafeArea = window.safeAreaInsets;
-  }
-
-  expectedRootNodeSafeArea = ASConcatInsets(expectedRootNodeSafeArea, windowSafeArea);
-  expectedSubnodeSafeArea = ASConcatInsets(expectedSubnodeSafeArea, windowSafeArea);
-
-  XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(expectedRootNodeSafeArea, rootNode.safeAreaInsets),
-                @"expected rootNode.safeAreaInsets to be %@ but got %@ (window.safeAreaInsets %@)",
-                NSStringFromUIEdgeInsets(expectedRootNodeSafeArea),
-                NSStringFromUIEdgeInsets(rootNode.safeAreaInsets),
-                NSStringFromUIEdgeInsets(windowSafeArea));
-  XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(expectedSubnodeSafeArea, subnode.safeAreaInsets),
-                @"expected subnode.safeAreaInsets to be %@ but got %@ (window.safeAreaInsets %@)",
-                NSStringFromUIEdgeInsets(expectedSubnodeSafeArea),
-                NSStringFromUIEdgeInsets(subnode.safeAreaInsets),
-                NSStringFromUIEdgeInsets(windowSafeArea));
-
-  [window setHidden:YES];
 }
 
 - (void)testScreenScale

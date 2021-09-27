@@ -17,27 +17,6 @@
   #define AS_TLS_AVAILABLE 1
 #endif
 
-#ifndef AS_ENABLE_TEXTNODE
-  #define AS_ENABLE_TEXTNODE 1 // Enable old TextNode by default
-#endif
-
-// This needs to stay in sync with Weaver
-#ifndef AS_USE_VIDEO
-  #define AS_USE_VIDEO 0
-#endif
-
-#ifndef AS_USE_PHOTOS
-  #define AS_USE_PHOTOS 0
-#endif
-
-#ifndef AS_USE_MAPKIT
-  #define AS_USE_MAPKIT 0
-#endif
-
-#ifndef AS_USE_ASSETS_LIBRARY
-  #define AS_USE_ASSETS_LIBRARY 0
-#endif
-
 #ifndef kCFCoreFoundationVersionNumber_iOS_10_0
   #define kCFCoreFoundationVersionNumber_iOS_10_0 1348.00
 #endif
@@ -68,28 +47,3 @@
   #define AS_AVAILABLE_TVOS(ver)              (TARGET_OS_TV && AS_AT_LEAST_IOS##ver)
   #define AS_AVAILABLE_IOS_TVOS(ver1, ver2)   (AS_AVAILABLE_IOS(ver1) || AS_AVAILABLE_TVOS(ver2))
 #endif
-
-// If Yoga is available, make it available anywhere we use ASAvailability.
-// This reduces Yoga-specific code in other files.
-// NOTE: Yoga integration is experimental and not fully tested. Use with caution and test layouts carefully.
-#ifndef YOGA_HEADER_PATH
-  #define YOGA_HEADER_PATH <yoga/Yoga.h>
-#endif
-
-#ifndef YOGA
-  #define YOGA __has_include(YOGA_HEADER_PATH)
-#endif
-
-#ifdef ASTEXTNODE_EXPERIMENT_GLOBAL_ENABLE
-  #error "ASTEXTNODE_EXPERIMENT_GLOBAL_ENABLE is unavailable. See ASConfiguration.h."
-#endif
-
-#define AS_PIN_REMOTE_IMAGE __has_include(<PINRemoteImage/PINRemoteImage.h>)
-#define AS_IG_LIST_KIT __has_include(<IGListKit/IGListKit.h>)
-#define AS_IG_LIST_DIFF_KIT __has_include(<IGListDiffKit/IGListDiffKit.h>)
-
-/**
- * For IGListKit versions < 3.0, you have to use IGListCollectionView.
- * For 3.0 and later, that class is removed and you use UICollectionView.
- */
-#define IG_LIST_COLLECTION_VIEW __has_include(<IGListKit/IGListCollectionView.h>)

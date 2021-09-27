@@ -16,13 +16,8 @@
 #import <AsyncDisplayKit/ASEqualityHelpers.h>
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 #import <AsyncDisplayKit/ASImageNode+Private.h>
-#import <AsyncDisplayKit/ASImageNode+AnimatedImagePrivate.h>
 #import <AsyncDisplayKit/ASImageContainerProtocolCategories.h>
 #import <AsyncDisplayKit/ASNetworkImageLoadInfo+Private.h>
-
-#if AS_PIN_REMOTE_IMAGE
-#import <AsyncDisplayKit/ASPINRemoteImageDownloader.h>
-#endif
 
 @interface ASNetworkImageNode ()
 {
@@ -36,10 +31,6 @@
   id _downloadIdentifier;
   // The download identifier that we have set a progress block on, if any.
   id _downloadIdentifierForProgressBlock;
-
-  CGFloat _currentImageQuality;
-  CGFloat _renderedImageQuality;
-  CGFloat _downloadProgress;
 
     // Immutable and set on init only. We don't need to lock in this case.
   __weak id<ASImageDownloaderProtocol> _downloader;
@@ -62,7 +53,6 @@
 
       unsigned int downloaderImplementsSetProgress:1;
       unsigned int downloaderImplementsSetPriority:1;
-      unsigned int downloaderImplementsAnimatedImage:1;
       unsigned int downloaderImplementsCancelWithResume:1;
       unsigned int downloaderImplementsDownloadWithPriority:1;
 
@@ -71,16 +61,12 @@
 
       unsigned int imageLoaded:1;
       unsigned int imageWasSetExternally:1;
-      unsigned int shouldRenderProgressImages:1;
-      unsigned int shouldCacheImage:1;
   } _networkImageNodeFlags;
 }
 
 @end
 
 @implementation ASNetworkImageNode
-
-static std::atomic_bool _useMainThreadDelegateCallbacks(true);
 
 @dynamic image;
 
@@ -94,15 +80,12 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   
   _networkImageNodeFlags.downloaderImplementsSetProgress = [downloader respondsToSelector:@selector(setProgressImageBlock:callbackQueue:withDownloadIdentifier:)];
   _networkImageNodeFlags.downloaderImplementsSetPriority = [downloader respondsToSelector:@selector(setPriority:withDownloadIdentifier:)];
-  _networkImageNodeFlags.downloaderImplementsAnimatedImage = [downloader respondsToSelector:@selector(animatedImageWithData:)];
   _networkImageNodeFlags.downloaderImplementsCancelWithResume = [downloader respondsToSelector:@selector(cancelImageDownloadWithResumePossibilityForIdentifier:)];
   _networkImageNodeFlags.downloaderImplementsDownloadWithPriority = [downloader respondsToSelector:@selector(downloadImageWithURL:priority:callbackQueue:downloadProgress:completion:)];
 
   _networkImageNodeFlags.cacheSupportsClearing = [cache respondsToSelector:@selector(clearFetchedImageFromCacheWithURL:)];
   _networkImageNodeFlags.cacheSupportsSynchronousFetch = [cache respondsToSelector:@selector(synchronouslyFetchedCachedImageWithURL:)];
   
-  _networkImageNodeFlags.shouldCacheImage = YES;
-  _networkImageNodeFlags.shouldRenderProgressImages = YES;
   self.shouldBypassEnsureDisplay = YES;
 
   return self;
@@ -110,11 +93,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
 
 - (instancetype)init
 {
-#if AS_PIN_REMOTE_IMAGE
-  return [self initWithCache:[ASPINRemoteImageDownloader sharedDownloader] downloader:[ASPINRemoteImageDownloader sharedDownloader]];
-#else
   return [self initWithCache:nil downloader:[ASBasicImageDownloader sharedImageDownloader]];
-#endif
 }
 
 - (void)dealloc
@@ -149,12 +128,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
     [self _locked_cancelDownloadAndClearImageWithResumePossibility:NO];
   }
   
-  // If our image is being set externally, the image quality is 100%
-  if (imageWasSetExternally) {
-    [self _setCurrentImageQuality:1.0];
-    [self _setDownloadProgress:1.0];
-  }
-  
   [self _locked__setImage:image];
 }
 
@@ -171,24 +144,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   [super _locked_setImage:image];
 }
 
-// Deprecated
-- (void)setURLs:(NSArray<NSURL *> *)URLs
-{
-  [self setURL:[URLs firstObject]];
-}
-
-// Deprecated
-- (NSArray<NSURL *> *)URLs
-{
-  return @[self.URL];
-}
-
 - (void)setURL:(NSURL *)URL
-{
-  [self setURL:URL resetToDefault:YES];
-}
-
-- (void)setURL:(NSURL *)URL resetToDefault:(BOOL)reset
 {
   {
     ASLockScopeSelf();
@@ -205,18 +161,14 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
     
     [self _locked_cancelImageDownloadWithResumePossibility:NO];
     
-    [self _setDownloadProgress:0.0];
-    
     _networkImageNodeFlags.imageLoaded = NO;
     
     _URL = URL;
     
     // If URL is nil and URL was not equal to _URL (checked at the top), then we previously had a URL but it's been nil'd out.
     BOOL hadURL = (URL == nil);
-    if (reset || hadURL) {
-      [self _setCurrentImageQuality:(hadURL ? 0.0 : 1.0)];
+    if (hadURL) {
       [self _locked__setImage:_defaultImage];
-      [self _locked_setAnimatedImage:nil];
     }
   }
 
@@ -244,7 +196,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   _defaultImage = defaultImage;
 
   if (!_networkImageNodeFlags.imageLoaded) {
-    [self _setCurrentImageQuality:((_URL == nil) ? 0.0 : 1.0)];
     [self _locked__setImage:defaultImage];
   }
 }
@@ -252,66 +203,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
 - (UIImage *)defaultImage
 {
   return ASLockedSelf(_defaultImage);
-}
-
-- (void)setCurrentImageQuality:(CGFloat)currentImageQuality
-{
-  ASLockScopeSelf();
-  _currentImageQuality = currentImageQuality;
-}
-
-- (CGFloat)currentImageQuality
-{
-  return ASLockedSelf(_currentImageQuality);
-}
-
-/**
- * Always use these methods internally to update the current image quality
- * We want to maintain the order that currentImageQuality is set regardless of the calling thread,
- * so we always have to dispatch to the main thread to ensure that we queue the operations in the correct order.
- * (see comment in displayDidFinish)
- */
-- (void)_setCurrentImageQuality:(CGFloat)imageQuality
-{
-  dispatch_async(dispatch_get_main_queue(), ^{
-    self.currentImageQuality = imageQuality;
-  });
-}
-
-- (void)setDownloadProgress:(CGFloat)downloadProgress
-{
-  ASLockScopeSelf();
-  _downloadProgress = downloadProgress;
-}
-
-- (CGFloat)downloadProgress
-{
-  return ASLockedSelf(_downloadProgress);
-}
-
-/**
- * Always use these methods internally to update the current download progress
- * We want to maintain the order that downloadProgress is set regardless of the calling thread,
- * so we always have to dispatch to the main thread to ensure that we queue the operations in the correct order.
- * (see comment in displayDidFinish)
- */
-- (void)_setDownloadProgress:(CGFloat)downloadProgress
-{
-  dispatch_async(dispatch_get_main_queue(), ^{
-    self.downloadProgress = downloadProgress;
-  });
-}
-
-- (void)setRenderedImageQuality:(CGFloat)renderedImageQuality
-{
-  ASLockScopeSelf();
-  _renderedImageQuality = renderedImageQuality;
-}
-
-- (CGFloat)renderedImageQuality
-{
-  ASLockScopeSelf();
-  return _renderedImageQuality;
 }
 
 - (void)setDelegate:(id<ASNetworkImageNodeDelegate>)delegate
@@ -337,34 +228,10 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   return _delegate;
 }
 
-- (void)setShouldRenderProgressImages:(BOOL)shouldRenderProgressImages
-{
-  if (ASLockedSelfCompareAssign(_networkImageNodeFlags.shouldRenderProgressImages, shouldRenderProgressImages)) {
-    [self _updateProgressImageBlockOnDownloaderIfNeeded];
-  }
-}
-
-- (BOOL)shouldRenderProgressImages
-{
-  ASLockScopeSelf();
-  return _networkImageNodeFlags.shouldRenderProgressImages;
-}
-
-- (void)setShouldCacheImage:(BOOL)shouldCacheImage
-{
-    ASLockedSelfCompareAssign(_networkImageNodeFlags.shouldCacheImage, shouldCacheImage);
-}
-
-- (BOOL)shouldCacheImage
-{
-    ASLockScopeSelf();
-    return _networkImageNodeFlags.shouldCacheImage;
-}
-
 - (BOOL)placeholderShouldPersist
 {
   ASLockScopeSelf();
-  return (self.image == nil && self.animatedImage == nil && _URL != nil);
+  return (self.image == nil && _URL != nil);
 }
 
 /* displayWillStartAsynchronously: in ASMultiplexImageNode has a very similar implementation. Changes here are likely necessary
@@ -391,8 +258,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
     if (_networkImageNodeFlags.imageLoaded == NO && url && _downloadIdentifier == nil) {
       UIImage *result = [[_cache synchronouslyFetchedCachedImageWithURL:url] asdk_image];
       if (result) {
-        [self _setCurrentImageQuality:1.0];
-        [self _setDownloadProgress:1.0];
         [self _locked__setImage:result];
         _networkImageNodeFlags.imageLoaded = YES;
         
@@ -456,16 +321,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   [self _lazilyLoadImageIfNecessary];
 }
 
-+ (void)setUseMainThreadDelegateCallbacks:(BOOL)useMainThreadDelegateCallbacks
-{
-  _useMainThreadDelegateCallbacks = useMainThreadDelegateCallbacks;
-}
-
-+ (BOOL)useMainThreadDelegateCallbacks
-{
-  return _useMainThreadDelegateCallbacks;
-}
-
 #pragma mark - Progress
 
 - (void)_updateDownloadedProgress:(CGFloat)progress
@@ -476,7 +331,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   if (ASObjectIsEqual(_downloadIdentifier, downloadIdentifier) == NO && downloadIdentifier != nil) {
     return;
   }
-  [self _setDownloadProgress:progress];
 }
 
 - (void)handleProgressImage:(UIImage *)progressImage progress:(CGFloat)progress downloadIdentifier:(nullable id)downloadIdentifier
@@ -489,7 +343,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   }
   
   as_log_verbose(ASImageLoadingLog(), "Received progress image for %@ q: %.2g id: %@", self, progress, progressImage);
-  [self _setCurrentImageQuality:progress];
   [self _locked__setImage:progressImage];
 }
 
@@ -514,7 +367,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
 
   // Read state.
   [self lock];
-    BOOL shouldRender = _networkImageNodeFlags.shouldRenderProgressImages && ASInterfaceStateIncludesVisible(_interfaceState);
+    BOOL shouldRender = ASInterfaceStateIncludesVisible(_interfaceState);
     id oldDownloadIDForProgressBlock = _downloadIdentifierForProgressBlock;
     id newDownloadIDForProgressBlock = shouldRender ? _downloadIdentifier : nil;
     BOOL clearAndReattempt = NO;
@@ -573,9 +426,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
   
   [self _locked_cancelImageDownloadWithResumePossibility:storeResume];
   
-  [self _locked_setAnimatedImage:nil];
-  [self _setCurrentImageQuality:0.0];
-  [self _setDownloadProgress:0.0];
   [self _locked__setImage:_defaultImage];
 
   _networkImageNodeFlags.imageLoaded = NO;
@@ -665,7 +515,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
       /*
         Kick off a download with default priority.
         The actual "default" value is decided by the downloader.
-        ASBasicImageDownloader and ASPINRemoteImageDownloader both use ASImageDownloaderPriorityImminent
+        ASBasicImageDownloader use ASImageDownloaderPriorityImminent
         which is mapped to NSURLSessionTaskPriorityDefault.
 
         This means that preload and display nodes use the same priority
@@ -733,47 +583,9 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
           return;
         }
         
-        if (self->_networkImageNodeFlags.shouldCacheImage) {
-          [self _locked__setImage:[UIImage imageNamed:URL.path.lastPathComponent]];
-        } else {
-          // First try to load the path directly, for efficiency assuming a developer who
-          // doesn't want caching is trying to be as minimal as possible.
-          auto nonAnimatedImage = [[UIImage alloc] initWithContentsOfFile:URL.path];
-          if (nonAnimatedImage == nil) {
-            // If we couldn't find it, execute an -imageNamed:-like search so we can find resources even if the
-            // extension is not provided in the path.  This allows the same path to work regardless of shouldCacheImage.
-            NSString *filename = [[NSBundle mainBundle] pathForResource:URL.path.lastPathComponent ofType:nil];
-            if (filename != nil) {
-              nonAnimatedImage = [[UIImage alloc] initWithContentsOfFile:filename];
-              // Update URL to point to newly-resolved file URL for animated image load.
-              URL = nonAnimatedImage ? [NSURL URLWithString:filename] : URL;
-            }
-          }
-
-          // If the file may be an animated gif and then created an animated image.
-          id<ASAnimatedImageProtocol> animatedImage = nil;
-          if (self->_networkImageNodeFlags.downloaderImplementsAnimatedImage) {
-            const auto data = [[NSData alloc] initWithContentsOfURL:URL];
-            if (data != nil) {
-              animatedImage = [self->_downloader animatedImageWithData:data];
-
-              if ([animatedImage respondsToSelector:@selector(isDataSupported:)] && [animatedImage isDataSupported:data] == NO) {
-                animatedImage = nil;
-              }
-            }
-          }
-
-          if (animatedImage != nil) {
-            [self _locked_setAnimatedImage:animatedImage];
-          } else {
-            [self _locked__setImage:nonAnimatedImage];
-          }
-        }
+        [self _locked__setImage:[UIImage imageNamed:URL.path.lastPathComponent]];
 
         self->_networkImageNodeFlags.imageLoaded = YES;
-
-        [self _setCurrentImageQuality:1.0];
-        [self _setDownloadProgress:1.0];
 
         if (self->_networkImageNodeFlags.delegateDidLoadImageWithInfo) {
           ASUnlockScope(self);
@@ -812,16 +624,8 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
           
           UIImage *newImage;
           if (imageContainer != nil) {
-            [strongSelf _setCurrentImageQuality:1.0];
-            [strongSelf _setDownloadProgress:1.0];
-            NSData *animatedImageData = [imageContainer asdk_animatedImageData];
-            if (animatedImageData && strongSelf->_networkImageNodeFlags.downloaderImplementsAnimatedImage) {
-              id animatedImage = [strongSelf->_downloader animatedImageWithData:animatedImageData];
-              [strongSelf _locked_setAnimatedImage:animatedImage];
-            } else {
-              newImage = [imageContainer asdk_image];
-              [strongSelf _locked__setImage:newImage];
-            }
+            newImage = [imageContainer asdk_image];
+            [strongSelf _locked__setImage:newImage];
             strongSelf->_networkImageNodeFlags.imageLoaded = YES;
           }
           
@@ -848,15 +652,11 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
           }
           
           if (calloutBlock) {
-            if (ASNetworkImageNode.useMainThreadDelegateCallbacks) {
-              ASPerformBlockOnMainThread(^{
-                if (auto strongSelf = weakSelf) {
-                  calloutBlock(strongSelf);
-                }
-              });
-            } else {
-              calloutBlock(strongSelf);
-            }
+            ASPerformBlockOnMainThread(^{
+              if (auto strongSelf = weakSelf) {
+                calloutBlock(strongSelf);
+              }
+            });
           }
         });
       };
@@ -874,7 +674,7 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
             return;
           }
           
-          if ([imageContainer asdk_image] == nil && [imageContainer asdk_animatedImageData] == nil && self->_downloader != nil) {
+          if ([imageContainer asdk_image] == nil && self->_downloader != nil) {
             if (delegateDidFailToLoadImageFromCache) {
               [delegate imageNodeDidFailToLoadImageFromCache:self];
             }
@@ -929,8 +729,6 @@ static std::atomic_bool _useMainThreadDelegateCallbacks(true);
        but before the displayDidFinish of the previous display pass is called. In this situation, displayDidFinish would be called and we
        would set _renderedImageQuality to the new _currentImageQuality, but the actual quality of the rendered image should be the previous 
        value stored in _currentImageQuality. */
-
-      _renderedImageQuality = _currentImageQuality;
       
       // Assign the delegate to be used
       delegate = _delegate;

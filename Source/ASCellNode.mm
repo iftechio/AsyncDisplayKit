@@ -20,7 +20,6 @@
 #import <AsyncDisplayKit/ASTextNode.h>
 #import <AsyncDisplayKit/ASCollectionNode.h>
 
-#import <AsyncDisplayKit/ASDKViewController.h>
 #import <AsyncDisplayKit/ASInsetLayoutSpec.h>
 #import <AsyncDisplayKit/ASDisplayNodeInternal.h>
 
@@ -79,17 +78,11 @@
     _viewController = _viewControllerBlock();
     _viewControllerBlock = nil;
 
-    if ([_viewController isKindOfClass:[ASDKViewController class]]) {
-      ASDKViewController *asViewController = (ASDKViewController *)_viewController;
-      _viewControllerNode = asViewController.node;
-      [_viewController loadViewIfNeeded];
-    } else {
-      // Careful to avoid retain cycle
-      UIViewController *viewController = _viewController;
-      _viewControllerNode = [[ASDisplayNode alloc] initWithViewBlock:^{
-        return viewController.view;
-      }];
-    }
+    // Careful to avoid retain cycle
+    UIViewController *viewController = _viewController;
+    _viewControllerNode = [[ASDisplayNode alloc] initWithViewBlock:^{
+      return viewController.view;
+    }];
     [self addSubnode:_viewControllerNode];
 
     // Since we just loaded our node, and added _viewControllerNode as a subnode,

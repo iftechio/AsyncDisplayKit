@@ -79,6 +79,3 @@ ASDK_EXTERN UIImage *ASDisplayNodeStretchableBoxContentsWithColor(UIColor *color
  @return YES if the layer has ongoing animations, otherwise NO
  */
 ASDK_EXTERN BOOL ASDisplayNodeLayerHasAnimations(CALayer *layer);
-
-// This function is a less generalized version of ASDisplayNodeSetResizableContents.
-ASDK_EXTERN void ASDisplayNodeSetupLayerContentsWithResizableImage(CALayer *layer, UIImage *image) ASDISPLAYNODE_DEPRECATED;

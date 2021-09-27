@@ -9,8 +9,6 @@
 
 #import <AsyncDisplayKit/ASTextKitContext.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <AsyncDisplayKit/ASLayoutManager.h>
 #import <AsyncDisplayKit/ASThread.h>
 
@@ -36,15 +34,12 @@
     static AS::Mutex *mutex = NULL;
     static dispatch_once_t onceToken;
     
-    BOOL useGlobalTextKitLock = !ASActivateExperimentalFeature(ASExperimentalDisableGlobalTextkitLock);
-    if (useGlobalTextKitLock) {
-        // Concurrently initialising TextKit components crashes (rdar://18448377) so we use a global lock.
-        dispatch_once(&onceToken, ^{
-            mutex = new AS::Mutex();
-        });
-        if (mutex != NULL) {
-          mutex->lock();
-        }
+    // Concurrently initialising TextKit components crashes (rdar://18448377) so we use a global lock.
+    dispatch_once(&onceToken, ^{
+        mutex = new AS::Mutex();
+    });
+    if (mutex != NULL) {
+      mutex->lock();
     }
     
     __instanceLock__ = std::make_shared<AS::Mutex>();
@@ -80,7 +75,7 @@
     _textContainer.exclusionPaths = exclusionPaths;
     [_layoutManager addTextContainer:_textContainer];
     
-    if (useGlobalTextKitLock && mutex != NULL) {
+    if (mutex != NULL) {
       mutex->unlock();
     }
   }
@@ -98,5 +93,3 @@
 }
 
 @end
-
-#endif

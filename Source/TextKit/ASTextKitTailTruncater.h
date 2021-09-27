@@ -11,11 +11,7 @@
 
 #import <AsyncDisplayKit/ASTextKitTruncating.h>
 
-#if AS_ENABLE_TEXTNODE
-
 AS_SUBCLASSING_RESTRICTED
 @interface ASTextKitTailTruncater : NSObject <ASTextKitTruncating>
 
 @end
-
-#endif

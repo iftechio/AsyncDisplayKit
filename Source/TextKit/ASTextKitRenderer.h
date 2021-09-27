@@ -11,8 +11,6 @@
 
 #import <AsyncDisplayKit/ASAvailability.h>
 
-#if AS_ENABLE_TEXTNODE
-
 #import <AsyncDisplayKit/ASTextKitAttributes.h>
 
 #import <vector>
@@ -104,5 +102,3 @@
 @property (nonatomic, readonly) NSRange firstVisibleRange;
 
 @end
-
-#endif

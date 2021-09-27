@@ -39,58 +39,10 @@ Pod::Spec.new do |spec|
       'Source/TextKit/*.h',
     ]
   end
-  
-  spec.subspec 'PINRemoteImage' do |pin|
-    pin.dependency 'PINRemoteImage/iOS', '~> 3.0.0'
-    pin.dependency 'PINRemoteImage/PINCache'
-    pin.dependency 'Texture/Core'
-  end
-
-  spec.subspec 'IGListKit' do |igl|
-    igl.dependency 'IGListKit', '~> 4.0'
-    igl.dependency 'IGListDiffKit', '~> 4.0'
-    igl.dependency 'Texture/Core'
-  end
-
-  spec.subspec 'Yoga' do |yoga|
-    yoga.xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) YOGA=1' }
-    yoga.dependency 'Yoga', '1.6.0'
-    yoga.dependency 'Texture/Core'
-  end
-  
-  # If flag is enabled the old TextNode with all dependencies will be compiled out
-  spec.subspec 'TextNode2' do |text_node|
-    text_node.xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) AS_ENABLE_TEXTNODE=0' }
-    text_node.dependency 'Texture/Core'
-  end
-
-  spec.subspec 'Video' do |video|
-    video.frameworks = ['AVFoundation', 'CoreMedia']
-    video.xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) AS_USE_VIDEO=1' }
-    video.dependency 'Texture/Core'
-  end 
-
-  spec.subspec 'MapKit' do |map|
-    map.frameworks = ['CoreLocation', 'MapKit']
-    map.xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) AS_USE_MAPKIT=1' }
-    map.dependency 'Texture/Core'
-  end
-
-  spec.subspec 'Photos' do |photos|
-    photos.frameworks = 'Photos'
-    photos.xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) AS_USE_PHOTOS=1' }
-    photos.dependency 'Texture/Core'
-  end
-
-  spec.subspec 'AssetsLibrary' do |assetslib|
-    assetslib.frameworks = 'AssetsLibrary'
-    assetslib.xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) AS_USE_ASSETS_LIBRARY=1' }
-    assetslib.dependency 'Texture/Core'
-  end
 
   # Include these by default for backwards compatibility.
   # This will change in 3.0.
-  spec.default_subspecs = 'Core', 'PINRemoteImage', 'Video', 'MapKit', 'AssetsLibrary', 'Photos'
+  spec.default_subspecs = 'Core'
 
   spec.social_media_url = 'https://twitter.com/TextureiOS'
   spec.library = 'c++'

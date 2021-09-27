@@ -15,12 +15,6 @@ typedef NS_ENUM(unsigned char, ASStackLayoutDirection) {
   ASStackLayoutDirectionVertical,
   /** Children are stacked horizontally */
   ASStackLayoutDirectionHorizontal,
-#if YOGA
-  /** Children are stacked vertically, but in reverse. Only used by Yoga spec. */
-  ASStackLayoutDirectionVerticalReverse,
-  /** Children are stacked horizontally, but in reverse. Only used by Yoga spec. */
-  ASStackLayoutDirectionHorizontalReverse,
-#endif
 };
 
 /** If no children are flexible, how should this spec justify its children in the available space? */
@@ -117,14 +111,6 @@ typedef NS_ENUM(unsigned char, ASHorizontalAlignment) {
   ASHorizontalAlignmentMiddle,
   /** Right aligned */
   ASHorizontalAlignmentRight,
-
-  // After 2.0 has landed, we'll add ASDISPLAYNODE_DEPRECATED here - for now, avoid triggering errors for projects with -Werror
-  /** @deprecated Use ASHorizontalAlignmentLeft instead */
-  ASAlignmentLeft ASDISPLAYNODE_DEPRECATED = ASHorizontalAlignmentLeft,
-  /** @deprecated Use ASHorizontalAlignmentMiddle instead */
-  ASAlignmentMiddle ASDISPLAYNODE_DEPRECATED = ASHorizontalAlignmentMiddle,
-  /** @deprecated Use ASHorizontalAlignmentRight instead */
-  ASAlignmentRight ASDISPLAYNODE_DEPRECATED = ASHorizontalAlignmentRight,
 };
 
 /** Orientation of children along vertical axis */
@@ -137,12 +123,4 @@ typedef NS_ENUM(unsigned char, ASVerticalAlignment) {
   ASVerticalAlignmentCenter,
   /** Bottom aligned */
   ASVerticalAlignmentBottom,
-
-  // After 2.0 has landed, we'll add ASDISPLAYNODE_DEPRECATED here - for now, avoid triggering errors for projects with -Werror
-  /** @deprecated Use ASVerticalAlignmentTop instead */
-  ASAlignmentTop ASDISPLAYNODE_DEPRECATED = ASVerticalAlignmentTop,
-  /** @deprecated Use ASVerticalAlignmentCenter instead */
-  ASAlignmentCenter ASDISPLAYNODE_DEPRECATED = ASVerticalAlignmentCenter,
-  /** @deprecated Use ASVerticalAlignmentBottom instead */
-  ASAlignmentBottom ASDISPLAYNODE_DEPRECATED = ASVerticalAlignmentBottom,
 };

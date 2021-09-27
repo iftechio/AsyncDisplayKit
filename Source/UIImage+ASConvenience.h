@@ -66,38 +66,12 @@ NS_ASSUME_NONNULL_BEGIN
  * @param cornerRadius The radius of the rounded-corner
  * @param cornerColor  The fill color of the corners (For Alpha corners use clearColor)
  * @param fillColor    The fill color of the rounded-corner image
- */
-+ (UIImage *)as_resizableRoundedImageWithCornerRadius:(CGFloat)cornerRadius
-                                          cornerColor:(nullable UIColor *)cornerColor
-                                            fillColor:(UIColor *)fillColor NS_RETURNS_RETAINED AS_WARN_UNUSED_RESULT ASDISPLAYNODE_DEPRECATED_MSG("Use as_resizableRoundedImageWithCornerRadius:cornerColor:fillColor:traitCollection: instead");
-
-/**
- * This generates a flat-color, rounded-corner resizeable image
- *
- * @param cornerRadius The radius of the rounded-corner
- * @param cornerColor  The fill color of the corners (For Alpha corners use clearColor)
- * @param fillColor    The fill color of the rounded-corner image
  * @param traitCollection The trait collection.
  */
 + (UIImage *)as_resizableRoundedImageWithCornerRadius:(CGFloat)cornerRadius
                                           cornerColor:(nullable UIColor *)cornerColor
                                             fillColor:(UIColor *)fillColor
                                       traitCollection:(ASPrimitiveTraitCollection) traitCollection NS_RETURNS_RETAINED AS_WARN_UNUSED_RESULT;
-
-/**
- * This generates a flat-color, rounded-corner resizeable image with a border
- *
- * @param cornerRadius The radius of the rounded-corner
- * @param cornerColor  The fill color of the corners (For Alpha corners use clearColor)
- * @param fillColor    The fill color of the rounded-corner image
- * @param borderColor  The border color. Set to nil for no border.
- * @param borderWidth  The border width. Dummy value if borderColor = nil.
- */
-+ (UIImage *)as_resizableRoundedImageWithCornerRadius:(CGFloat)cornerRadius
-                                          cornerColor:(UIColor *)cornerColor
-                                            fillColor:(UIColor *)fillColor
-                                          borderColor:(nullable UIColor *)borderColor
-                                          borderWidth:(CGFloat)borderWidth NS_RETURNS_RETAINED AS_WARN_UNUSED_RESULT ASDISPLAYNODE_DEPRECATED_MSG("Use as_resizableRoundedImageWithCornerRadius:cornerColor:fillColor:borderColor:borderWidth:traitCollection: instead");
 
 /**
  * This generates a flat-color, rounded-corner resizeable image with a border
@@ -115,25 +89,6 @@ NS_ASSUME_NONNULL_BEGIN
                                           borderColor:(nullable UIColor *)borderColor
                                           borderWidth:(CGFloat)borderWidth traitCollection:(ASPrimitiveTraitCollection) traitCollection NS_RETURNS_RETAINED AS_WARN_UNUSED_RESULT;
 
-/**
- * This generates a flat-color, rounded-corner resizeable image with a border
- *
- * @param cornerRadius    The radius of the rounded-corner
- * @param cornerColor     The fill color of the corners (For Alpha corners use clearColor)
- * @param fillColor       The fill color of the rounded-corner image
- * @param borderColor     The border color. Set to nil for no border.
- * @param borderWidth     The border width. Dummy value if borderColor = nil.
- * @param roundedCorners  Select individual or multiple corners to round. Set to UIRectCornerAllCorners to round all 4 corners.
- * @param scale           The number of pixels per point. Provide 0.0 to use the screen scale.
- */
-+ (UIImage *)as_resizableRoundedImageWithCornerRadius:(CGFloat)cornerRadius
-                                          cornerColor:(nullable UIColor *)cornerColor
-                                            fillColor:(UIColor *)fillColor
-                                          borderColor:(nullable UIColor *)borderColor
-                                          borderWidth:(CGFloat)borderWidth
-                                       roundedCorners:(UIRectCorner)roundedCorners
-                                                scale:(CGFloat)scale NS_RETURNS_RETAINED AS_WARN_UNUSED_RESULT ASDISPLAYNODE_DEPRECATED_MSG("Use as_resizableRoundedImageWithCornerRadius:cornerColor:fillColor:borderColor:borderWidth:roundedCorners:traitCollection: instead");
-;
 
 /**
  * This generates a flat-color, rounded-corner resizeable image with a border

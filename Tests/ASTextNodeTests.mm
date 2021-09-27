@@ -118,13 +118,6 @@
   XCTAssertTrue([_textNode.truncationAttributedText isEqualToAttributedString:truncation], @"Failed to set truncation message");
 }
 
-- (void)testSettingAdditionalTruncationMessage
-{
-  NSAttributedString *additionalTruncationMessage = [[NSAttributedString alloc] initWithString:@"read more" attributes:nil];
-  _textNode.additionalTruncationMessage = additionalTruncationMessage;
-  XCTAssertTrue([_textNode.additionalTruncationMessage isEqualToAttributedString:additionalTruncationMessage], @"Failed to set additionalTruncationMessage message");
-}
-
 - (void)testCalculatedSizeIsGreaterThanOrEqualToConstrainedSize
 {
   for (NSInteger i = 10; i < 500; i += 50) {
@@ -243,25 +236,6 @@
   XCTAssertFalse(delegate.tappedLinkValue, @"Expected the delegate to be told that the value %@ was tapped, instead it thinks the tapped attribute value is %@", linkAttributeValue, delegate.tappedLinkValue);
 }
 
-#pragma mark exclusion Paths
-
-- (void)testSettingExclusionPaths
-{
-  NSArray *exclusionPaths = @[[UIBezierPath bezierPathWithRect:CGRectMake(10, 20, 30, 40)]];
-  _textNode.exclusionPaths = exclusionPaths;
-  XCTAssertTrue([_textNode.exclusionPaths isEqualToArray:exclusionPaths], @"Failed to set exclusion paths");
-}
-
-- (void)testAddingExclusionPathsShouldInvalidateAndIncreaseTheSize
-{
-  CGSize constrainedSize = CGSizeMake(100, CGFLOAT_MAX);
-  CGSize sizeWithoutExclusionPaths = [_textNode layoutThatFits:ASSizeRangeMake(CGSizeZero, constrainedSize)].size;
-  _textNode.exclusionPaths = @[[UIBezierPath bezierPathWithRect:CGRectMake(50, 20, 30, 40)]];
-  CGSize sizeWithExclusionPaths = [_textNode layoutThatFits:ASSizeRangeMake(CGSizeZero, constrainedSize)].size;
-
-  XCTAssertGreaterThan(sizeWithExclusionPaths.height, sizeWithoutExclusionPaths.height, @"Setting exclusions paths should invalidate the calculated size and return a greater size");
-}
-
 - (void)testEmptyStringSize
 {
   CGSize constrainedSize = CGSizeMake(100, CGFLOAT_MAX);
@@ -270,77 +244,6 @@
   XCTAssertTrue(ASIsCGSizeValidForSize(sizeWithEmptyString));
   XCTAssertTrue(sizeWithEmptyString.width == 0);
 }
-
-#if AS_ENABLE_TEXTNODE
-- (void)testThatTheExperimentWorksCorrectly
-{
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalTextNode;
-  [ASConfigurationManager test_resetWithConfiguration:config];
-  
-  ASTextNode *plainTextNode = [[ASTextNode alloc] init];
-  XCTAssertEqualObjects(plainTextNode.class, [ASTextNode2 class]);
-  
-  ASTextNodeSecondSubclass *sc2 = [[ASTextNodeSecondSubclass alloc] init];
-  XCTAssertEqualObjects([ASTextNodeSubclass superclass], [ASTextNode2 class]);
-  XCTAssertEqualObjects(sc2.superclass, [ASTextNodeSubclass class]);
-}
-
-- (void)testTextNodeSwitchWorksInMultiThreadEnvironment
-{
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalTextNode;
-  [ASConfigurationManager test_resetWithConfiguration:config];
-  XCTestExpectation *exp = [self expectationWithDescription:@"wait for full bucket"];
-
-  dispatch_queue_t queue = dispatch_queue_create("com.texture.AsyncDisplayKit.ASTextNodeTestsQueue", DISPATCH_QUEUE_CONCURRENT);
-  dispatch_group_t g = dispatch_group_create();
-  for (int i = 0; i < 20; i++) {
-    dispatch_group_async(g, queue, ^{
-      ASTextNode *textNode = [[ASTextNodeSecondSubclass alloc] init];
-      XCTAssert([textNode isKindOfClass:[ASTextNode2 class]]);
-      @synchronized(self.textNodeBucket) {
-        [self.textNodeBucket addObject:textNode];
-        if (self.textNodeBucket.count == 20) {
-          [exp fulfill];
-        }
-      }
-    });
-  }
-  [self waitForExpectations:@[exp] timeout:3];
-  exp = nil;
-  [self.textNodeBucket removeAllObjects];
-}
-
-- (void)testTextNodeSwitchWorksInMultiThreadEnvironment2
-{
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalTextNode;
-  [ASConfigurationManager test_resetWithConfiguration:config];
-  XCTestExpectation *exp = [self expectationWithDescription:@"wait for full bucket"];
- 
-  NSLock *lock = [[NSLock alloc] init];
-  NSMutableArray *textNodeBucket = [[NSMutableArray alloc] init];
-  
-  dispatch_queue_t queue = dispatch_queue_create("com.texture.AsyncDisplayKit.ASTextNodeTestsQueue", DISPATCH_QUEUE_CONCURRENT);
-  dispatch_group_t g = dispatch_group_create();
-  for (int i = 0; i < 20; i++) {
-    dispatch_group_async(g, queue, ^{
-      ASTextNode *textNode = [[ASTextNodeSecondSubclass alloc] init];
-      XCTAssert([textNode isKindOfClass:[ASTextNode2 class]]);
-      [lock lock];
-      [textNodeBucket addObject:textNode];
-      if (textNodeBucket.count == 20) {
-        [exp fulfill];
-      }
-      [lock unlock];
-    });
-  }
-  [self waitForExpectations:@[exp] timeout:3];
-  exp = nil;
-  [textNodeBucket removeAllObjects];
-}
-#endif
 
 @end
 

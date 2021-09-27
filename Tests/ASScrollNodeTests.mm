@@ -179,11 +179,11 @@
   node.accessibilityLabel = @"node";
   [scrollNode addSubnode:node];
   node.frame = CGRectMake(0,0,100,100);
-  ASTextNode2 *text = [[ASTextNode2 alloc] init];
+  ASTextNode *text = [[ASTextNode alloc] init];
   text.attributedText = [[NSAttributedString alloc] initWithString:@"text"];
   [node addSubnode:text];
 
-  ASTextNode2 *text2 = [[ASTextNode2 alloc] init];
+  ASTextNode *text2 = [[ASTextNode alloc] init];
   text2.attributedText = [[NSAttributedString alloc] initWithString:@"text2"];
   [node addSubnode:text2];
   __unused UIView *view = scrollNode.view;

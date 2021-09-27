@@ -176,9 +176,6 @@
 - (void)setUp
 {
   [super setUp];
-  ASConfiguration *config = [ASConfiguration new];
-  config.experimentalFeatures = ASExperimentalOptimizeDataControllerPipeline;
-  [ASConfigurationManager test_resetWithConfiguration:config];
 }
 
 - (void)testDataSourceImplementsNecessaryMethods
@@ -1070,23 +1067,14 @@
 
 - (void)testInitialRangeBounds
 {
-  [self testInitialRangeBoundsWithCellLayoutMode:ASCellLayoutModeNone
-           shouldWaitUntilAllUpdatesAreProcessed:YES];
+  [self testInitialRangeBoundsShouldWaitUntilAllUpdatesAreProcessed:YES];
 }
 
-- (void)testInitialRangeBoundsCellLayoutModeAlwaysAsync
-{
-  [self testInitialRangeBoundsWithCellLayoutMode:ASCellLayoutModeAlwaysAsync
-           shouldWaitUntilAllUpdatesAreProcessed:YES];
-}
-
-- (void)testInitialRangeBoundsWithCellLayoutMode:(ASCellLayoutMode)cellLayoutMode
-           shouldWaitUntilAllUpdatesAreProcessed:(BOOL)shouldWait
+- (void)testInitialRangeBoundsShouldWaitUntilAllUpdatesAreProcessed:(BOOL)shouldWait
 {
   UIWindow *window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   ASCollectionViewTestController *testController = [[ASCollectionViewTestController alloc] initWithNibName:nil bundle:nil];
   ASCollectionNode *cn = testController.collectionNode;
-  cn.cellLayoutMode = cellLayoutMode;
   [cn setTuningParameters:{ .leadingBufferScreenfuls = 2, .trailingBufferScreenfuls = 0 } forRangeMode:ASLayoutRangeModeMinimum rangeType:ASLayoutRangeTypePreload];
   window.rootViewController = testController;
 

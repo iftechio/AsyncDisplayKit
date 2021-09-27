@@ -13,13 +13,6 @@
 #import <AsyncDisplayKit/ASDisplayNode+Beta.h>
 #import <AsyncDisplayKit/ASTextNodeCommon.h>
 
-#if (!AS_ENABLE_TEXTNODE)
-
-// Pull in ASTextNode2 to replace ASTextNode with ASTextNode2
-#import <AsyncDisplayKit/ASTextNode2.h>
-
-#else
-
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -44,13 +37,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, copy) NSAttributedString *truncationAttributedText;
 
 /**
- @summary The second attributed string appended for truncation.
- @discussion This string will be highlighted on touches.
- @default nil
- */
-@property (nullable, copy) NSAttributedString *additionalTruncationMessage;
-
-/**
  @abstract Determines how the text is truncated to fit within the receiver's maximum size.
  @discussion Defaults to NSLineBreakByWordWrapping.
  @note Setting a truncationMode in attributedString will override the truncation mode set here.
@@ -72,37 +58,6 @@ NS_ASSUME_NONNULL_BEGIN
  @abstract The number of lines in the text. Text must have been sized first.
  */
 @property (readonly) NSUInteger lineCount;
-
-/**
- * An array of path objects representing the regions where text should not be displayed.
- *
- * @discussion The default value of this property is an empty array. You can
- * assign an array of UIBezierPath objects to exclude text from one or more regions in
- * the text node's bounds. You can use this property to have text wrap around images,
- * shapes or other text like a fancy magazine.
- */
-@property (nullable, copy) NSArray<UIBezierPath *> *exclusionPaths;
-
-#pragma mark - Placeholders
-
-/**
- * @abstract ASTextNode has a special placeholder behavior when placeholderEnabled is YES.
- *
- * @discussion Defaults to NO.  When YES, it draws rectangles for each line of text,
- * following the true shape of the text's wrapping.  This visually mirrors the overall
- * shape and weight of paragraphs, making the appearance of the finished text less jarring.
- */
-@property BOOL placeholderEnabled;
-
-/**
- @abstract The placeholder color.
- */
-@property (nullable, copy) UIColor *placeholderColor;
-
-/**
- @abstract Inset each line of the placeholder.
- */
-@property UIEdgeInsets placeholderInsets;
 
 #pragma mark - Shadow
 
@@ -232,47 +187,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface ASTextNode (Unavailable)
-
-- (instancetype)initWithLayerBlock:(ASDisplayNodeLayerBlock)viewBlock didLoadBlock:(nullable ASDisplayNodeDidLoadBlock)didLoadBlock NS_UNAVAILABLE;
-
-- (instancetype)initWithViewBlock:(ASDisplayNodeViewBlock)viewBlock didLoadBlock:(nullable ASDisplayNodeDidLoadBlock)didLoadBlock NS_UNAVAILABLE;
-
-@end
-
-/**
- * @abstract Text node unsupported properties
- */
-@interface ASTextNode (Unsupported)
-
-@property (nullable, nonatomic) id textContainerLinePositionModifier;
-
-@end
-
-/**
- * @abstract Text node deprecated properties
- */
-@interface ASTextNode (Deprecated)
-
-/**
- The attributedString and attributedText properties are equivalent, but attributedText is now the standard API
- name in order to match UILabel and ASEditableTextNode.
- 
- @see attributedText
- */
-@property (nullable, copy) NSAttributedString *attributedString ASDISPLAYNODE_DEPRECATED_MSG("Use .attributedText instead.");
-
-
-/**
- The truncationAttributedString and truncationAttributedText properties are equivalent, but truncationAttributedText is now the
- standard API name in order to match UILabel and ASEditableTextNode.
- 
- @see truncationAttributedText
- */
-@property (nullable, copy) NSAttributedString *truncationAttributedString ASDISPLAYNODE_DEPRECATED_MSG("Use .truncationAttributedText instead.");
-
-@end
-
 NS_ASSUME_NONNULL_END
-
-#endif

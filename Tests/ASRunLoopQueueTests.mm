@@ -169,11 +169,6 @@ static NSTimeInterval const kRunLoopRunTime = 0.01; // Allow the RunLoop to run 
 
 - (void)testASCATransactionQueueDisable
 {
-  // Disable coalescing.
-  ASConfiguration *config = [[ASConfiguration alloc] init];
-  config.experimentalFeatures = kNilOptions;
-  [ASConfigurationManager test_resetWithConfiguration:config];
-  
   ASCATransactionQueue *queue = [[ASCATransactionQueue alloc] init];
   QueueObject *object = [[QueueObject alloc] init];
   XCTAssertFalse(object.queueObjectProcessed);
@@ -181,21 +176,6 @@ static NSTimeInterval const kRunLoopRunTime = 0.01; // Allow the RunLoop to run 
   XCTAssertTrue(object.queueObjectProcessed);
   XCTAssertTrue([queue isEmpty]);
   XCTAssertFalse(queue.enabled);
-}
-
-- (void)testASCATransactionQueueProcess
-{
-  ASConfiguration *config = [[ASConfiguration alloc] initWithDictionary:nil];
-  config.experimentalFeatures = ASExperimentalInterfaceStateCoalescing;
-  [ASConfigurationManager test_resetWithConfiguration:config];
-
-  ASCATransactionQueue *queue = [[ASCATransactionQueue alloc] init];
-  QueueObject *object = [[QueueObject alloc] init];
-  [queue enqueue:object];
-  XCTAssertFalse(object.queueObjectProcessed);
-  ASCATransactionQueueWait(queue);
-  XCTAssertTrue(object.queueObjectProcessed);
-  XCTAssertTrue(queue.enabled);
 }
 
 @end

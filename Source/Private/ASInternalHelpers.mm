@@ -9,7 +9,6 @@
 
 #import <AsyncDisplayKit/ASInternalHelpers.h>
 
-#import <AsyncDisplayKit/ASConfigurationInternal.h>
 #import <AsyncDisplayKit/ASRunLoopQueue.h>
 #import <AsyncDisplayKit/ASSignpost.h>
 #import <AsyncDisplayKit/ASThread.h>
@@ -67,14 +66,9 @@ void ASInitializeFrameworkMainThread(void)
   dispatch_once(&onceToken, ^{
     ASDisplayNodeCAssertMainThread();
     // Ensure these values are cached on the main thread before needed in the background.
-    if (ASActivateExperimentalFeature(ASExperimentalLayerDefaults)) {
-      // Nop. We will gather default values on-demand in ASDefaultAllowsGroupOpacity and ASDefaultAllowsEdgeAntialiasing
-    } else {
-      CALayer *layer = [[[UIView alloc] init] layer];
-      allowsGroupOpacityFromUIKitOrNil = @(layer.allowsGroupOpacity);
-      allowsEdgeAntialiasingFromUIKitOrNil = @(layer.allowsEdgeAntialiasing);
-    }
-    ASNotifyInitialized();
+    CALayer *layer = [[[UIView alloc] init] layer];
+    allowsGroupOpacityFromUIKitOrNil = @(layer.allowsGroupOpacity);
+    allowsEdgeAntialiasingFromUIKitOrNil = @(layer.allowsEdgeAntialiasing);
 #if AS_SIGNPOST_ENABLE
     _ASInitializeSignpostObservers();
 #endif
