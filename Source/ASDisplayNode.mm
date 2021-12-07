@@ -444,7 +444,7 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
     ASPrimitiveTraitCollection primitiveTraitCollection = _primitiveTraitCollection;
     __instanceLock__.unlock();
     if (primitiveTraitCollection.userInterfaceStyle != previousTraitCollection.userInterfaceStyle) {
-      if (loaded) {
+//      if (loaded) {
         // we need to run that on main thread, cause accessing CALayer properties.
         // It seems than in iOS 13 sometimes it causes deadlock.
         ASPerformBlockOnMainThread(^{
@@ -455,23 +455,24 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
           self->__instanceLock__.unlock();
           // TODO: we should resolve color using node's trait collection
           // but Texture changes it from many places, so we may receive the wrong one.
-          CGColorRef cgBackgroundColor = backgroundColor.CGColor;
-          if (!CGColorEqualToColor(self->_layer.backgroundColor, cgBackgroundColor)) {
-            // Background colors do not dynamically update for layer backed nodes since they utilize CGColorRef
-            // instead of UIColor. Non layer backed node also receive color to the layer (see [_ASPendingState -applyToView:withSpecialPropertiesHandling:]).
-            // We utilize the _backgroundColor instance variable to track the full dynamic color
-            // and apply any changes here when trait collection updates occur.
-            self->_layer.backgroundColor = cgBackgroundColor;
+          if (loaded) {
+            CGColorRef cgBackgroundColor = backgroundColor.CGColor;
+            if (!CGColorEqualToColor(self->_layer.backgroundColor, cgBackgroundColor)) {
+              // Background colors do not dynamically update for layer backed nodes since they utilize CGColorRef
+              // instead of UIColor. Non layer backed node also receive color to the layer (see [_ASPendingState -applyToView:withSpecialPropertiesHandling:]).
+              // We utilize the _backgroundColor instance variable to track the full dynamic color
+              // and apply any changes here when trait collection updates occur.
+              self->_layer.backgroundColor = cgBackgroundColor;
+            }
+
+            [self setNeedsDisplay];
           }
 
-          // If we have clipping corners, re-render the clipping corner layer upon user interface style change
           if (cornerRoundingType == ASCornerRoundingTypeClipping && cornerRadius > 0.0f) {
             [self _updateClipCornerLayerContentsWithRadius:cornerRadius backgroundColor:backgroundColor];
           }
-          
-          [self setNeedsDisplay];
+
         });
-      }
     }
   }
 }
