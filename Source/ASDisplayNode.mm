@@ -444,35 +444,38 @@ ASSynthesizeLockingMethodsWithMutex(__instanceLock__);
     ASPrimitiveTraitCollection primitiveTraitCollection = _primitiveTraitCollection;
     __instanceLock__.unlock();
     if (primitiveTraitCollection.userInterfaceStyle != previousTraitCollection.userInterfaceStyle) {
-//      if (loaded) {
-        // we need to run that on main thread, cause accessing CALayer properties.
-        // It seems than in iOS 13 sometimes it causes deadlock.
-        ASPerformBlockOnMainThread(^{
-          self->__instanceLock__.lock();
-          CGFloat cornerRadius = self->_cornerRadius;
-          ASCornerRoundingType cornerRoundingType = self->_cornerRoundingType;
-          UIColor *backgroundColor = self->_backgroundColor;
-          self->__instanceLock__.unlock();
-          // TODO: we should resolve color using node's trait collection
-          // but Texture changes it from many places, so we may receive the wrong one.
-          if (loaded) {
-            CGColorRef cgBackgroundColor = backgroundColor.CGColor;
-            if (!CGColorEqualToColor(self->_layer.backgroundColor, cgBackgroundColor)) {
-              // Background colors do not dynamically update for layer backed nodes since they utilize CGColorRef
-              // instead of UIColor. Non layer backed node also receive color to the layer (see [_ASPendingState -applyToView:withSpecialPropertiesHandling:]).
-              // We utilize the _backgroundColor instance variable to track the full dynamic color
-              // and apply any changes here when trait collection updates occur.
-              self->_layer.backgroundColor = cgBackgroundColor;
-            }
+      // we need to run that on main thread, cause accessing CALayer properties.
+      // It seems than in iOS 13 sometimes it causes deadlock.
+      ASPerformBlockOnMainThread(^{
+        self->__instanceLock__.lock();
+        CGFloat cornerRadius = self->_cornerRadius;
+        ASCornerRoundingType cornerRoundingType = self->_cornerRoundingType;
+        UIColor *backgroundColor = self->_backgroundColor;
+        self->__instanceLock__.unlock();
 
-            [self setNeedsDisplay];
+        BOOL didUpdate = NO;
+        if (cornerRoundingType == ASCornerRoundingTypeClipping && cornerRadius > 0.0f) {
+          [self _updateClipCornerLayerContentsWithRadius:cornerRadius backgroundColor:backgroundColor];
+          didUpdate = YES;
+        }
+        // TODO: we should resolve color using node's trait collection
+        // but Texture changes it from many places, so we may receive the wrong one.
+        if (loaded) {
+          CGColorRef cgBackgroundColor = backgroundColor.CGColor;
+          if (!CGColorEqualToColor(self->_layer.backgroundColor, cgBackgroundColor)) {
+            // Background colors do not dynamically update for layer backed nodes since they utilize CGColorRef
+            // instead of UIColor. Non layer backed node also receive color to the layer (see [_ASPendingState -applyToView:withSpecialPropertiesHandling:]).
+            // We utilize the _backgroundColor instance variable to track the full dynamic color
+            // and apply any changes here when trait collection updates occur.
+            self->_layer.backgroundColor = cgBackgroundColor;
+            didUpdate = YES;
           }
+        }
 
-          if (cornerRoundingType == ASCornerRoundingTypeClipping && cornerRadius > 0.0f) {
-            [self _updateClipCornerLayerContentsWithRadius:cornerRadius backgroundColor:backgroundColor];
-          }
-
-        });
+        if (didUpdate) {
+          [self setNeedsDisplay];
+        }
+      });
     }
   }
 }
