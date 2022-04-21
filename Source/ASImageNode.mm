@@ -487,7 +487,7 @@ static ASWeakMap<ASImageNodeContentsKey *, UIImage *> *workingKeySourceImageMap 
   }
 
   // cache miss
-  UIImage *contents = [self createContentsForkey:contentsKey sourceImage:sourceImage drawParameters:drawParameters isCancelled:isCancelled];
+  UIImage *contents = [self createContentsForkey:key sourceImage:sourceImage drawParameters:drawParameters isCancelled:isCancelled];
   if (contents == nil) { // If nil, we were cancelled
     return nil;
   }
