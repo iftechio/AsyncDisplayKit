@@ -456,6 +456,7 @@ typedef void (^ASImageNodeDrawParametersBlock)(ASWeakMapEntry *entry);
 }
 
 static ASWeakMap<ASImageNodeContentsKey *, UIImage *> *cache = nil;
+static ASWeakMap<ASImageNodeContentsKey *, UIImage *> *workingKeySourceImageMap = nil;
 
 + (ASWeakMapEntry *)contentsForkey:(ASImageNodeContentsKey *)key drawParameters:(id)drawParameters isCancelled:(asdisplaynode_iscancelled_block_t)isCancelled
 {
@@ -464,20 +465,29 @@ static ASWeakMap<ASImageNodeContentsKey *, UIImage *> *cache = nil;
   dispatch_once(&onceToken, ^{
     cacheLock = new AS::Mutex();
   });
+  
+  UIImage *sourceImage = key.image;
 
   {
     AS::MutexLocker l(*cacheLock);
     if (!cache) {
       cache = [[ASWeakMap alloc] init];
+      workingKeySourceImageMap = [[ASWeakMap alloc] init];  
     }
     ASWeakMapEntry *entry = [cache entryForKey:key];
     if (entry != nil) {
       return entry;
     }
+    ASWeakMapEntry *sourceImageEntry = [workingKeySourceImageMap entryForKey: key];
+    if (sourceImageEntry != nil) {
+      sourceImage = sourceImageEntry.value;
+    } else {
+      [workingKeySourceImageMap setObject:sourceImage forKey:key];
+    }
   }
 
   // cache miss
-  UIImage *contents = [self createContentsForkey:key drawParameters:drawParameters isCancelled:isCancelled];
+  UIImage *contents = [self createContentsForkey:key sourceImage:sourceImage drawParameters:drawParameters isCancelled:isCancelled];
   if (contents == nil) { // If nil, we were cancelled
     return nil;
   }
@@ -488,7 +498,7 @@ static ASWeakMap<ASImageNodeContentsKey *, UIImage *> *cache = nil;
   }
 }
 
-+ (UIImage *)createContentsForkey:(ASImageNodeContentsKey *)key drawParameters:(id)parameter isCancelled:(asdisplaynode_iscancelled_block_t)isCancelled
++ (UIImage *)createContentsForkey:(ASImageNodeContentsKey *)key sourceImage:(UIImage *)sourceImage drawParameters:(id)parameter isCancelled:(asdisplaynode_iscancelled_block_t)isCancelled
 {
   // The following `ASGraphicsCreateImage` call will sometimes take take longer than 5ms on an
   // A5 processor for a 400x800 backingSize.
@@ -537,7 +547,7 @@ static ASWeakMap<ASImageNodeContentsKey *, UIImage *> *cache = nil;
       [key.tintColor setFill];
     }
 
-    @synchronized(image) {
+    @synchronized(sourceImage) {
       [image drawInRect:key.imageDrawRect blendMode:blendMode alpha:1];
     }
 
