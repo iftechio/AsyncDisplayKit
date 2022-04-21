@@ -328,10 +328,15 @@ typedef void (^ASImageNodeDrawParametersBlock)(ASWeakMapEntry *entry);
   // Especially tintColor because it needs to walk up the view hierarchy
   drawParameters->_bounds = [self threadSafeBounds];
   drawParameters->_opaque = self.opaque;
-  drawParameters->_backgroundColor = self.backgroundColor;
+  // On iOS 13, we can't simply compare two UIColor, because UIColor might be dynamic, we resolve color here to get a stabilized color which is comparable.
+  if (@available(iOS 13, *)) {
+    drawParameters->_backgroundColor = [self.backgroundColor resolvedColorWithTraitCollection:ASPrimitiveTraitCollectionToUITraitCollection(_primitiveTraitCollection)];
+    drawParameters->_tintColor = [self.tintColor resolvedColorWithTraitCollection:ASPrimitiveTraitCollectionToUITraitCollection(_primitiveTraitCollection)];
+  } else {
+    drawParameters->_backgroundColor = self.backgroundColor;
+    drawParameters->_tintColor = self.tintColor;
+  }
   drawParameters->_contentMode = self.contentMode;
-  drawParameters->_tintColor = self.tintColor;
-
   return drawParameters;
 }
 
