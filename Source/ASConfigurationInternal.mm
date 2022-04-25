@@ -10,6 +10,30 @@
 #import <AsyncDisplayKit/ASAssert.h>
 #import <AsyncDisplayKit/ASConfigurationDelegate.h>
 #import <stdatomic.h>
+#import <objc/runtime.h>
+
+// SVG Multi Thread access crash hook
+typedef NSData*(*RAWData__IMP)(NSObject* self, SEL _cmd);
+static RAWData__IMP original_CUIThemeSVGRendition_rawData;
+
+NSData* as_swizzled_rawData(NSObject* source, SEL _cmd) {
+    @synchronized (source) {
+        return original_CUIThemeSVGRendition_rawData(source, _cmd);
+    }
+}
+
+void installSVGCrashHook() {
+    Class svgRenditionClass = NSClassFromString(@"_CUIThemeSVGRendition");
+    if (svgRenditionClass != nil) {
+        SEL oldSelector = NSSelectorFromString(@"rawData");
+        Method oldMethod = class_getInstanceMethod(svgRenditionClass, oldSelector);
+        if (oldMethod != nil) {
+            IMP oldImp = method_getImplementation(oldMethod);
+            original_CUIThemeSVGRendition_rawData = *(RAWData__IMP)oldImp;
+            method_setImplementation(oldMethod, as_swizzled_rawData);
+        }
+    }
+}
 
 static ASConfigurationManager *ASSharedConfigurationManager;
 static dispatch_once_t ASSharedConfigurationManagerOnceToken;
@@ -61,6 +85,9 @@ NS_INLINE ASConfigurationManager *ASConfigurationManagerGet() {
   const auto delegate = _config.delegate;
   if ([delegate respondsToSelector:@selector(textureDidInitialize)]) {
     [delegate textureDidInitialize];
+  }
+  if (!ASActivateExperimentalFeature(ASExperimentalDisableSVGRawDataLock)) {
+    installSVGCrashHook(); 
   }
 }
 

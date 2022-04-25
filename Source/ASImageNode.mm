@@ -537,9 +537,7 @@ static ASWeakMap<ASImageNodeContentsKey *, UIImage *> *cache = nil;
       [key.tintColor setFill];
     }
 
-    @synchronized(image) {
-      [image drawInRect:key.imageDrawRect blendMode:blendMode alpha:1];
-    }
+    [image drawInRect:key.imageDrawRect blendMode:blendMode alpha:1];
 
     if (context && key.didDisplayNodeContentWithRenderingContext) {
       key.didDisplayNodeContentWithRenderingContext(context, drawParameters);

@@ -30,6 +30,7 @@ typedef NS_OPTIONS(NSUInteger, ASExperimentalFeatures) {
   ASExperimentalOptimizeDataControllerPipeline = 1 << 9,                    // exp_optimize_data_controller_pipeline
   ASExperimentalDisableGlobalTextkitLock = 1 << 10,                         // exp_disable_global_textkit_lock
   ASExperimentalMainThreadOnlyDataController = 1 << 11,                     // exp_main_thread_only_data_controller
+  ASExperimentalDisableSVGRawDataLock = 1 << 12,                            // exp_disable_svg_raw_data_getter_lock
   ASExperimentalFeatureAll = 0xFFFFFFFF
 };
 

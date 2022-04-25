@@ -23,7 +23,9 @@ NSArray<NSString *> *ASExperimentalFeaturesGetNames(ASExperimentalFeatures flags
                                       @"exp_drawing_global",
                                       @"exp_optimize_data_controller_pipeline",
                                       @"exp_disable_global_textkit_lock",
-                                      @"exp_main_thread_only_data_controller"]));
+                                      @"exp_main_thread_only_data_controller",
+                                      @"exp_disable_svg_raw_data_getter_lock",
+                                      ]));
   if (flags == ASExperimentalFeatureAll) {
     return allNames;
   }
