@@ -30,7 +30,7 @@ void installSVGCrashHook() {
         if (oldMethod != nil) {
             IMP oldImp = method_getImplementation(oldMethod);
             original_CUIThemeSVGRendition_rawData = *(RAWData__IMP)oldImp;
-            method_setImplementation(oldMethod, as_swizzled_rawData);
+            method_setImplementation(oldMethod, (IMP)as_swizzled_rawData);
         }
     }
 }
