@@ -257,7 +257,9 @@ static ASDisplayNodeMethodOverrides GetASDisplayNodeMethodOverrides(Class c)
 #if !AS_INITIALIZE_FRAMEWORK_MANUALLY
 __attribute__((constructor)) static void ASLoadFrameworkInitializer(void)
 {
-  ASInitializeFrameworkMainThread();
+  dispatch_async(dispatch_get_main_queue(), ^{
+    ASInitializeFrameworkMainThread();
+  });
 }
 #endif
 
