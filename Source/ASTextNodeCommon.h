@@ -37,6 +37,7 @@ typedef NS_ENUM(unsigned char, ASTextNodeHighlightStyle) {
 /**
  * @abstract Text node delegate.
  */
+__attribute__((swift_attr("@MainActor")))
 @protocol ASTextNodeDelegate <NSObject>
 @optional
 
